@@ -1,5 +1,5 @@
-pub mod planet;
 pub mod life;
+pub mod orbital;
 
 pub fn add(left: usize, right: usize) -> usize {
     left + right

@@ -5,3 +5,4 @@ edition = "2021"
 
 [dependencies]
 dice = { path = "../dice" }
+derivative = "2.2.0"
