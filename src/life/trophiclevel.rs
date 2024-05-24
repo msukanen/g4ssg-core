@@ -3,7 +3,9 @@ use std::collections::HashSet;
 use derivative::Derivative;
 use dice::{low, DiceExt, HiLo};
 
-use crate::orbital::planet::climate::Climate;
+use crate::life::habitat::ArcticOrDesert;
+
+use super::habitat::Habitat;
 
 #[derive(Derivative)]
 #[derivative(PartialEq, Eq, Hash)]
@@ -55,22 +57,22 @@ pub enum TrophicLevel {
 }
 
 impl TrophicLevel {
-    pub fn random(sapient: bool, climate: &Climate) -> HashSet<TrophicLevel> {
-        fn select(sapient: bool, climate: &Climate) -> Vec<TrophicLevel> {
+    pub fn random(sapient: bool, habitat: &Habitat) -> HashSet<TrophicLevel> {
+        fn select(sapient: bool, habitat: &Habitat) -> Vec<TrophicLevel> {
             let mut tlevels = vec![];
             
             let r = 3.d6();
             if r == 3 {
-                tlevels.extend(select(sapient, climate));
-                tlevels.extend(select(sapient, climate));
+                tlevels.extend(select(sapient, habitat));
+                tlevels.extend(select(sapient, habitat));
             } else {
                 tlevels.push(if sapient {
                     match r {
                         ..=4 => if low!() {TrophicLevel::Parasite} else {TrophicLevel::Symbiont},
-                        5 => match climate {
-                            Climate::Arctic |
-                            Climate::Desert => TrophicLevel::Carnivore(Carnivore::Trapping),
-                            _ => TrophicLevel::FilterFeeder
+                        5 => if habitat.is_arctic() || habitat.is_desert() {
+                            TrophicLevel::Carnivore(Carnivore::Trapping)
+                        } else {
+                            TrophicLevel::FilterFeeder
                         },
                         6 => TrophicLevel::Carnivore(Carnivore::Pouncing),
                         7 => TrophicLevel::Scavenger,
@@ -95,10 +97,10 @@ impl TrophicLevel {
                         13 => TrophicLevel::Carnivore(Carnivore::Chasing),
                         14 => TrophicLevel::Carnivore(Carnivore::Trapping),
                         15 => TrophicLevel::Carnivore(Carnivore::Hijacking),
-                        16 => match climate {
-                            Climate::Arctic |
-                            Climate::Desert => TrophicLevel::Carnivore(Carnivore::Trapping),
-                            _ => TrophicLevel::FilterFeeder
+                        16 => if habitat.is_arctic() || habitat.is_desert() {
+                            TrophicLevel::Carnivore(Carnivore::Trapping)
+                        } else {
+                            TrophicLevel::FilterFeeder
                         },
                         _ => if low!() {TrophicLevel::Parasite} else {TrophicLevel::Symbiont}
                     }
@@ -108,6 +110,6 @@ impl TrophicLevel {
             tlevels
         }
 
-        HashSet::from_iter(select(sapient, climate))
+        HashSet::from_iter(select(sapient, habitat))
     }
 }

@@ -1,7 +1,15 @@
+use derivative::Derivative;
 use dice::{DiceExt, HiLo};
 
 use crate::orbital::OrbitElement;
 
+pub trait ArcticOrDesert {
+    fn is_arctic(&self) -> bool;
+    fn is_desert(&self) -> bool;
+}
+
+#[derive(Derivative)]
+#[derivative(PartialEq)]
 pub(crate) enum LandHabitat {
     Plains,
     Desert,
@@ -11,6 +19,16 @@ pub(crate) enum LandHabitat {
     Mountain,
     Arctic,
     Jungle
+}
+
+impl ArcticOrDesert for LandHabitat {
+    fn is_arctic(&self) -> bool {
+        self == &Self::Arctic
+    }
+
+    fn is_desert(&self) -> bool {
+        self == &Self::Desert
+    }
 }
 
 impl LandHabitat {
@@ -39,6 +57,11 @@ pub(crate) enum WaterHabitat {
     Reef
 }
 
+impl ArcticOrDesert for WaterHabitat {
+    fn is_arctic(&self) -> bool { false }
+    fn is_desert(&self) -> bool { false }
+}
+
 impl WaterHabitat {
     pub fn random() -> WaterHabitat {
         match 3.d6() {
@@ -60,6 +83,26 @@ pub(crate) enum Habitat {
     Space,
     Exotica
 }
+
+impl ArcticOrDesert for Habitat {
+    fn is_arctic(&self) -> bool {
+        match self {
+            Self::Land(x) => x.is_arctic(),
+            Self::Water(x) => x.is_arctic(),
+            _ => false
+        }
+    }
+
+    fn is_desert(&self) -> bool {
+        match self {
+            Self::Land(x) => x.is_desert(),
+            Self::Water(x) => x.is_desert(),
+            Self::Space => true,
+            _ => false
+        }
+    }
+}
+
 
 impl From<GenericHabitat> for Habitat {
     fn from(value: GenericHabitat) -> Self {
