@@ -2,7 +2,7 @@ use dice::{low, DiceExt, HiLo};
 
 use super::{habitat::{Habitat, LandHabitat, WaterHabitat}, trophiclevel::{Carnivore, Herbivore, TrophicLevel}};
 
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq)]
 pub enum FlightMode {
     Buoyant,
     Winged,
@@ -11,7 +11,7 @@ pub enum FlightMode {
 }
 
 //NOTE: immobile creatures have Option<Locomotion> = None
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq)]
 pub enum Locomotion {
     Climbing,
     Digging,
