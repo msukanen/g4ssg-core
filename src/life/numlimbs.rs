@@ -35,11 +35,21 @@ impl NumberOfLimbs {
             _ => {
                 let (segments, limbs_per_side) = btr_limbs(modifier);
                 match symmetry {
-                    Symmetry::Trilateral => Self::Trilateral(segments, segments * limbs_per_side * 3),
-                    Symmetry::Radial(n) => Self::Radial(segments, segments * limbs_per_side * n),
-                    _ => Self::Bilateral(segments, segments * limbs_per_side * 2)
+                    Symmetry::Trilateral => Self::Trilateral(segments, limbs_per_side * 3),
+                    Symmetry::Radial(n) => Self::Radial(segments, limbs_per_side * n),
+                    _ => Self::Bilateral(segments, limbs_per_side * 2)
                 }
             }
+        }
+    }
+
+    pub fn count(&self) -> i32 {
+        match self {
+            Self::Asymmetric(n) |
+            Self::Spherical(n)  => *n,
+            Self::Bilateral(s, c) |
+            Self::Trilateral(s, c)|
+            Self::Radial(s, c)    => *s * *c
         }
     }
 }

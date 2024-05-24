@@ -6,3 +6,4 @@ pub mod size;
 pub mod symmetry;
 pub mod numlimbs;
 pub mod tail;
+pub mod manipulators;

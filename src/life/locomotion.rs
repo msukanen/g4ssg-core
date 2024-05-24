@@ -5,15 +5,16 @@ use super::{habitat::{Habitat, LandHabitat, WaterHabitat}, trophiclevel::{Carniv
 #[derive(Clone, Copy, PartialEq)]
 pub enum FlightMode {
     Buoyant,
-    Winged,
+    Gliding,
+    Rocket,
     SolarSail,
-    Rocket
+    Winged,
 }
 
 //NOTE: immobile creatures have Option<Locomotion> = None
 #[derive(Clone, Copy, PartialEq)]
 pub enum Locomotion {
-    Climbing,
+    Climbing(bool),
     Digging,
     Flight(FlightMode),
     Floating,
@@ -102,7 +103,7 @@ impl Locomotion {
                     },
                     6|7 => locomotions.push(Self::Walking),
                     8 => {
-                        let mode = Self::Climbing;
+                        let mode = Self::Climbing(true);
                         locomotions.push(mode);
                         locomotions.extend(Self::random_non_primary(habitat, mode))
                     },
@@ -132,7 +133,7 @@ impl Locomotion {
                         locomotions.extend(Self::random_non_primary(habitat, mode))
                     },
                     8 => {
-                        let mode = Self::Climbing;
+                        let mode = Self::Climbing(false);
                         locomotions.push(mode);
                         locomotions.extend(Self::random_non_primary(habitat, mode))
                     },
@@ -174,7 +175,7 @@ impl Locomotion {
                     },
                     8 => locomotions.push(Self::Walking),
                     9 => {
-                        let mode = Self::Climbing;
+                        let mode = Self::Climbing(1.d2().lo());
                         locomotions.push(mode);
                         locomotions.extend(Self::random_non_primary(habitat, mode))
                     },
@@ -196,7 +197,7 @@ impl Locomotion {
                     },
                     6|7 => locomotions.push(Self::Walking),
                     8|9 => {
-                        let mode = Self::Climbing;
+                        let mode = Self::Climbing(true);
                         locomotions.push(mode);
                         locomotions.extend(Self::random_non_primary(habitat, mode))
                     },
@@ -335,7 +336,7 @@ impl Locomotion {
         let mut locomotions = vec![];
         
         match mode {
-            Self::Climbing => match 2.d6() {
+            Self::Climbing(_) => match 2.d6() {
                 ..=6 => locomotions.push(Self::Slithering),
                 7..=11 => locomotions.push(Self::Walking),
                 _ => ()
@@ -387,7 +388,7 @@ impl Locomotion {
             },
             Self::Flight(FlightMode::Winged) => match 2.d6() {
                 ..=5 => {
-                    let mode = Self::Climbing;
+                    let mode = Self::Climbing(false);
                     locomotions.push(mode);
                     if !tertiary {
                         locomotions.extend(Self::random_2or3(habitat, mode, true));
@@ -414,5 +415,12 @@ impl Locomotion {
         }
         
         locomotions
+    }
+
+    pub fn is_brachiator(&self) -> bool {
+        match self {
+            Self::Climbing(true) => true,
+            _ => false
+        }
     }
 }

@@ -11,6 +11,19 @@ pub enum Feature {
     Branching,
 }
 
+impl std::fmt::Display for Feature {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", match self {
+            Self::Branching => "branching (splits according to body symmetry)".to_string(),
+            Self::Constricting => "constricting".to_string(),
+            Self::Gripping => "gripping (counts as an Extra Arm with Bad Grip)".to_string(),
+            Self::Long => "long".to_string(),
+            Self::Simple => "featureless".to_string(),
+            Self::Striker(barbed) => format!("{}striker", if *barbed {"barbed "} else {""})
+        })
+    }
+}
+
 impl Feature {
     pub fn random(habitat: &Habitat, symmetry: &Symmetry) -> Vec<Feature> {
         if 1.d6() < 4 || match symmetry {
