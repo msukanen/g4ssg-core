@@ -46,6 +46,21 @@ impl LandHabitat {
     }
 }
 
+impl std::fmt::Display for LandHabitat {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", match self {
+            Self::Arctic => "arctic",
+            Self::Desert => "desert",
+            Self::IslandAndBeach => "island/beach",
+            Self::Jungle => "jungle",
+            Self::Mountain => "mountains",
+            Self::Plains => "plains",
+            Self::Swampland => "swampland",
+            Self::Woodlands => "woodlands"
+        })
+    }
+}
+
 pub(crate) enum WaterHabitat {
     Banks,
     OpenOcean,
@@ -77,11 +92,37 @@ impl WaterHabitat {
     }
 }
 
+impl std::fmt::Display for WaterHabitat {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", match self {
+            Self::Banks => "banks",
+            Self::DeepOceanVents => "deep ocean vents",
+            Self::FreshWaterLakes => "fresh water lakes",
+            Self::OpenOcean => "open ocean",
+            Self::Reef => "reef",
+            Self::RiverOrStream => "river/stream",
+            Self::SaltWaterSea => "salt water sea",
+            Self::TropicalLagoon => "tropical lagoon"
+        })
+    }
+}
+
 pub(crate) enum Habitat {
     Land(LandHabitat),
     Water(WaterHabitat),
     Space,
     Exotica
+}
+
+impl std::fmt::Display for Habitat {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", match self {
+            Self::Land(x) => format!("{x}"),
+            Self::Water(x) => format!("{x}"),
+            Self::Space => "space".to_string(),
+            Self::Exotica => "exotica".to_string()
+        })
+    }
 }
 
 impl ArcticOrDesert for Habitat {
