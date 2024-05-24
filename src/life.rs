@@ -5,4 +5,4 @@ pub mod locomotion;
 pub mod size;
 pub mod symmetry;
 pub mod numlimbs;
-pub mod features;
+pub mod tail;
