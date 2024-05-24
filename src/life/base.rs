@@ -1,12 +1,12 @@
 use dice::DiceExt;
 
-pub(crate) enum SiliconBase {
+pub enum SiliconBase {
     SulfuricAcid,
     LiquidSulfur,
     LiquidRock
 }
 
-pub(crate) enum ExoticaBase {
+pub enum ExoticaBase {
     NebulaDwelling,
     Machine,
     Magnetic
@@ -22,7 +22,7 @@ impl ExoticaBase {
     }
 }
 
-pub(crate) enum ChemicalBase {
+pub enum ChemicalBase {
     Hydrogen,
     Ammonia,
     Hydrocarbon,

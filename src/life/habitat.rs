@@ -10,7 +10,7 @@ pub trait ArcticOrDesert {
 
 #[derive(Derivative)]
 #[derivative(PartialEq)]
-pub(crate) enum LandHabitat {
+pub enum LandHabitat {
     Plains,
     Desert,
     IslandAndBeach,
@@ -61,7 +61,7 @@ impl std::fmt::Display for LandHabitat {
     }
 }
 
-pub(crate) enum WaterHabitat {
+pub enum WaterHabitat {
     Banks,
     OpenOcean,
     FreshWaterLakes,
@@ -107,7 +107,7 @@ impl std::fmt::Display for WaterHabitat {
     }
 }
 
-pub(crate) enum Habitat {
+pub enum Habitat {
     Land(LandHabitat),
     Water(WaterHabitat),
     Space,
@@ -156,7 +156,7 @@ impl From<GenericHabitat> for Habitat {
     }
 }
 
-pub(crate) enum GenericHabitat {
+pub enum GenericHabitat {
     Land,
     Water,
     Space,
