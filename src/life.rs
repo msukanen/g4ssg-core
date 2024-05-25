@@ -1,6 +1,6 @@
 use crate::orbital::OrbitElement;
 
-use self::{appendages::{manipulators::Manipulator, numlimbs::NumberOfLimbs}, base::LifeBase, breathing::Breathing, habitat::Habitat, locomotion::Locomotion, size::{Size, SizeCategory}, skeleton::Skeleton, symmetry::Symmetry, tail::Tail, trophiclevel::TrophicLevel};
+use self::{appendages::{manipulators::Manipulator, numlimbs::NumberOfLimbs}, base::LifeBase, bodytemp::TemperatureRegulation, breathing::Breathing, growthpattern::GrowthPattern, habitat::Habitat, locomotion::Locomotion, size::{Size, SizeCategory}, skeleton::Skeleton, symmetry::Symmetry, tail::Tail, trophiclevel::TrophicLevel};
 
 pub mod base;
 pub mod habitat;
@@ -14,6 +14,7 @@ pub mod skin;
 pub mod breathing;
 pub mod appendages;
 pub mod bodytemp;
+pub mod growthpattern;
 
 pub struct Life {
     base: LifeBase,
@@ -27,7 +28,9 @@ pub struct Life {
     tails: Vec<Tail>,
     manipulators: Vec<Manipulator>,
     skeleton: Skeleton,
-    breathing: Option<Breathing>
+    breathing: Option<Breathing>,
+    temperature_regulation: TemperatureRegulation,
+    growth_pattern: GrowthPattern,
 }
 
 impl Life {
@@ -49,13 +52,16 @@ impl Life {
         let manipulators = Manipulator::random(gasgiant_dweller, sapient, &num_of_limbs, &habitat, &trophiclevel, &locomotion);
         let skeleton = Skeleton::random(&size_category, &habitat, &locomotion, &symmetry, local_gravity);
         let breathing = Breathing::random(&habitat, &locomotion);
+        let temperature_regulation = TemperatureRegulation::random(&habitat, &size_category, breathing.as_ref());
+        let growth_pattern = GrowthPattern::random(&skeleton, &size_category, &locomotion);
 
         Life {
             base, habitat, trophiclevel,
             locomotion, size_category,
             size, symmetry, limbs: num_of_limbs,
             tails, manipulators, skeleton,
-            breathing,
+            breathing, temperature_regulation,
+            growth_pattern,
         }
     }
 }
