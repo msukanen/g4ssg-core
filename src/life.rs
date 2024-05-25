@@ -1,6 +1,6 @@
 use crate::orbital::OrbitElement;
 
-use self::{base::LifeBase, habitat::Habitat, locomotion::Locomotion, manipulators::Manipulator, numlimbs::NumberOfLimbs, size::{Size, SizeCategory}, symmetry::Symmetry, tail::Tail, trophiclevel::TrophicLevel};
+use self::{base::LifeBase, habitat::Habitat, locomotion::Locomotion, manipulators::Manipulator, numlimbs::NumberOfLimbs, size::{Size, SizeCategory}, skeleton::Skeleton, symmetry::Symmetry, tail::Tail, trophiclevel::TrophicLevel};
 
 pub mod base;
 pub mod habitat;
@@ -23,7 +23,8 @@ pub struct Life {
     symmetry: Symmetry,
     limbs: NumberOfLimbs,
     tails: Vec<Tail>,
-    manipulators: Vec<Manipulator>
+    manipulators: Vec<Manipulator>,
+    skeleton: Skeleton,
 }
 
 impl Life {
@@ -43,12 +44,13 @@ impl Life {
         let num_of_limbs = NumberOfLimbs::random(&symmetry);
         let tails = Tail::random(&habitat, &symmetry);
         let manipulators = Manipulator::random(gasgiant_dweller, sapient, &num_of_limbs, &habitat, &trophiclevel, &locomotion);
+        let skeleton = Skeleton::random(&size_category, &habitat, &locomotion, &symmetry, local_gravity);
 
         Life {
             base, habitat, trophiclevel,
             locomotion, size_category,
             size, symmetry, limbs: num_of_limbs,
-            tails, manipulators,
+            tails, manipulators, skeleton,
         }
     }
 }
