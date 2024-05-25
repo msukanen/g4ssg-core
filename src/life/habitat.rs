@@ -89,4 +89,11 @@ impl Habitat {
     pub fn is_space(&self) -> bool {
         self == &Habitat::Space
     }
+
+    pub fn is_aquatic(&self) -> bool {
+        match self {
+            Habitat::Water(_) => true,
+            _ => false
+        }
+    }
 }
