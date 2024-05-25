@@ -28,7 +28,7 @@ pub enum Gestation {
 }
 
 impl Gestation {
-    pub fn random(habitat: &Habitat, locomotion: &Locomotion, breathing: &Breathing, temperature_regulation: &TemperatureRegulation) -> Gestation {
+    pub fn random(habitat: &Habitat, locomotion: &Locomotion, breathing: Option<&Breathing>, temperature_regulation: &TemperatureRegulation) -> Gestation {
         let special_method = match 2.d6() {
             ..=11 => None,
             _ => Some(SpecialGestationMethod::random())
@@ -36,13 +36,13 @@ impl Gestation {
         let modifier
          = if habitat.is_aquatic() {-1} else {0}
          + match breathing {
-             Breathing::GillsAndLungs => -1,
-             _ => 0
+            Some(Breathing::GillsAndLungs) => -1,
+            _ => 0
          }
          + if locomotion.is_immobile() {-2} else {0}
          + match temperature_regulation {
-             TemperatureRegulation::WarmBlooded(_) => 1,
-             _ => 0
+            TemperatureRegulation::WarmBlooded(_) => 1,
+            _ => 0
          };
         match 2.d6() + modifier {
             ..=6 => if 1.d2().lo() {Self::Spawning(special_method)} else {Self::Pollinating(special_method)},
