@@ -12,6 +12,7 @@ pub trait ArcticOrDesert {
     fn is_desert(&self) -> bool;
 }
 
+#[derive(PartialEq)]
 pub enum Habitat {
     Land(LandHabitat),
     Water(WaterHabitat),
@@ -49,7 +50,6 @@ impl ArcticOrDesert for Habitat {
     }
 }
 
-
 impl From<GenericHabitat> for Habitat {
     fn from(value: GenericHabitat) -> Self {
         match value {
@@ -84,5 +84,9 @@ impl Habitat {
     pub fn random(location: Option<&OrbitElement>) -> Habitat {
         let generic = GenericHabitat::from(location);
         Habitat::from(generic)
+    }
+
+    pub fn is_space(&self) -> bool {
+        self == &Habitat::Space
     }
 }

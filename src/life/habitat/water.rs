@@ -2,6 +2,7 @@ use dice::DiceExt;
 
 use super::ArcticOrDesert;
 
+#[derive(PartialEq)]
 pub enum WaterHabitat {
     Banks,
     OpenOcean,
