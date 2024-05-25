@@ -130,4 +130,14 @@ impl TrophicLevel {
         };
         false
     }
+
+    pub fn is_autotroph(&self) -> bool {
+        for level in &self.levels {
+            match level {
+                TrophicLevelType::Autotroph(_) => return true,
+                _ => ()
+            }
+        }
+        false
+    }
 }

@@ -2,6 +2,7 @@ use dice::DiceExt;
 
 use super::{habitat::Habitat, locomotion::{FlightMode, Locomotion, LocomotionMode}};
 
+#[derive(PartialEq)]
 pub enum Symmetry {
     Bilateral,
     Trilateral,
@@ -44,5 +45,9 @@ impl Symmetry {
             }),
             11.. => Self::Asymmetric
         }
+    }
+
+    pub fn is(&self, symmetry: &Symmetry) -> bool {
+        self == symmetry
     }
 }
