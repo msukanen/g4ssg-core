@@ -120,4 +120,14 @@ impl TrophicLevel {
     pub fn is(&self, tt: TrophicLevelType) -> bool {
         self.levels.contains(&tt)
     }
+
+    pub fn is_herbivore(&self) -> bool {
+        for level in &self.levels {
+            match level {
+                TrophicLevelType::Herbivore(_) => return true,
+                _ => ()
+            }
+        };
+        false
+    }
 }

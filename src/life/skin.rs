@@ -37,6 +37,11 @@ pub enum SkinToughness {
 
 impl SkinToughness {
     pub fn random(habitat: &Habitat, trophiclevel: &TrophicLevel, locomotion: &Locomotion) -> SkinToughness {
-        
+        let modifier = if habitat.is_arctic() {1} else if habitat.is_desert() {-1} else {0}
+            + match habitat {
+                Habitat::Water(_) => 1,
+                _ => 0
+            } + if locomotion.is_flyer() {-5} else {0}
+            + 
     }
 }
