@@ -12,6 +12,7 @@ pub mod numlimbs;
 pub mod tail;
 pub mod manipulators;
 pub mod skeleton;
+pub mod skin;
 
 pub struct Life {
     base: LifeBase,

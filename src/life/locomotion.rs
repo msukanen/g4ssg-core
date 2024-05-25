@@ -434,4 +434,14 @@ impl Locomotion {
     pub fn is_immobile(&self) -> bool {
         self.modes.is_empty()
     }
+
+    pub fn is_flyer(&self) -> bool {
+        for mode in &self.modes {
+            match mode {
+                LocomotionMode::Flight(_) => return true,
+                _ => ()
+            }
+        };
+        false
+    }
 }

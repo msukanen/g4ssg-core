@@ -50,4 +50,8 @@ impl Skeleton {
     pub fn is(&self, skeleton: SkeletonType) -> bool {
         self.types.contains(&skeleton)
     }
+
+    pub fn is_exoskeleton(&self) -> bool {
+        self.is(SkeletonType::External)
+    }
 }
