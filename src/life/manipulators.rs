@@ -1,6 +1,6 @@
 use dice::DiceExt;
 
-use super::{habitat::{Habitat, WaterHabitat}, locomotion::{FlightMode, Locomotion}, numlimbs::NumberOfLimbs, trophiclevel::{Herbivore, TrophicLevel, TrophicLevelType}};
+use super::{habitat::{Habitat, WaterHabitat}, locomotion::{FlightMode, Locomotion, LocomotionMode}, numlimbs::NumberOfLimbs, trophiclevel::{Herbivore, TrophicLevel, TrophicLevelType}};
 
 pub enum ManipulatorFeature {
     BadGrip,
@@ -16,12 +16,12 @@ pub enum Manipulator {
 
 impl Manipulator {
     pub fn random(
-        gas_giant: bool,
+        gasgiant_dweller: bool,
         sapient: bool,
         num_of_limbs: &NumberOfLimbs,
         habitat: &Habitat,
         trophiclevel: &TrophicLevel,
-        locomotion: &Vec<Locomotion>
+        locomotion: &Locomotion
     ) -> Vec<Manipulator> {
         let modifier =
             if num_of_limbs.count() > 6 {2}
@@ -29,12 +29,12 @@ impl Manipulator {
             else if num_of_limbs.count() <= 2 {-1}
             else {0}
         +   if trophiclevel.is(TrophicLevelType::Herbivore(Herbivore::Gathering)) {1} else {0}
-        +   if locomotion.contains(&Locomotion::Climbing(true)) {2}
+        +   if locomotion.is(LocomotionMode::Climbing(true)) {2}
             else {0}
-        +   if locomotion.contains(&Locomotion::Flight(FlightMode::Winged)) {-1}
-            else if locomotion.contains(&Locomotion::Flight(FlightMode::Gliding)) {-1}
+        +   if locomotion.is(LocomotionMode::Flight(FlightMode::Winged)) {-1}
+            else if locomotion.is(LocomotionMode::Flight(FlightMode::Gliding)) {-1}
             else {0}
-        +   if gas_giant {-2}
+        +   if gasgiant_dweller {-2}
             else if match habitat {
                 Habitat::Water(WaterHabitat::OpenOcean) => true,
                 _ => false} {-2}

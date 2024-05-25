@@ -1,6 +1,6 @@
 use dice::DiceExt;
 
-use super::{habitat::Habitat, locomotion::Locomotion};
+use super::{habitat::Habitat, locomotion::{FlightMode, Locomotion, LocomotionMode}};
 
 pub enum Symmetry {
     Bilateral,
@@ -23,9 +23,9 @@ impl std::fmt::Display for Symmetry {
 }
 
 impl Symmetry {
-    pub fn random(habitat: &Habitat, locomotion: &Vec<Locomotion>) -> Symmetry {
-        let modifier = if locomotion.contains(&Locomotion::Flight(super::locomotion::FlightMode::Buoyant))
-            || locomotion.is_empty()
+    pub fn random(habitat: &Habitat, locomotion: &Locomotion) -> Symmetry {
+        let modifier = if locomotion.is(LocomotionMode::Flight(FlightMode::Buoyant))
+            || locomotion.is_immobile()
             || match habitat {
                 Habitat::Space => true,
                 _ => false

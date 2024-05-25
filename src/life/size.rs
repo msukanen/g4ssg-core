@@ -68,7 +68,7 @@ impl Mul<f64> for Size {
 }
 
 impl Size {
-    pub fn random(sc: &SizeCategory, base: &LifeBase, habitat: &Habitat, locomotion: &Locomotion, local_gravity: f64) -> Size {
+    pub fn random(size_category: &SizeCategory, base: &LifeBase, habitat: &Habitat, locomotion: &Locomotion, local_gravity: f64) -> Size {
         let no_mod = locomotion.is(LocomotionMode::Flight(FlightMode::Buoyant)) || match habitat {
             Habitat::Water(_) => true,
             _ => false
@@ -105,7 +105,7 @@ impl Size {
             _ => 1.0
         };
 
-        let (mut yards, mut size_modifier) = match sc {
+        let (mut yards, mut size_modifier) = match size_category {
             SizeCategory::Small => match 1.d6() {
                 ..=1 => (0.05, -10),
                 2 => (0.07, -9),

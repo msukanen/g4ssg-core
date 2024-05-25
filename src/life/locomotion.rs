@@ -37,7 +37,7 @@ impl Locomotion {
      Unless result is **None**, the first item in the returned vector is the *primary* locomotion method.
      Secondary/tertiary modes of locomotion may or may not be present.
      */
-    pub fn random(habitat: &Habitat, trophiclevel: &TrophicLevel, gasgiant: bool) -> Locomotion {
+    pub fn random(habitat: &Habitat, trophiclevel: &TrophicLevel, gasgiant_dweller: bool) -> Locomotion {
         let mut locomotions = vec![];
         let modifier =
             if trophiclevel.is(TrophicLevelType::Carnivore(Carnivore::Chasing)) ||
@@ -49,7 +49,7 @@ impl Locomotion {
                  {1}
             else {0};
         
-        if gasgiant {
+        if gasgiant_dweller {
             //
             // Return early for gas giants; habitat doesn't matter there.
             //
@@ -429,5 +429,9 @@ impl Locomotion {
 
     pub fn is(&self, locomotion: LocomotionMode) -> bool {
         self.modes.contains(&locomotion)
+    }
+
+    pub fn is_immobile(&self) -> bool {
+        self.modes.is_empty()
     }
 }
