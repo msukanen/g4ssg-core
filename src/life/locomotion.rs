@@ -431,6 +431,22 @@ impl Locomotion {
         self.modes.contains(&locomotion)
     }
 
+    pub fn primary_match(&self, locomotion: LocomotionMode) -> bool {
+        if self.modes.is_empty() {
+            false
+        } else {
+            self.modes[0] == locomotion
+        }
+    }
+
+    pub fn secondary_match(&self, locomotion: LocomotionMode) -> bool {
+        if self.modes.len() < 2 {
+            false
+        } else {
+            self.modes[1] == locomotion
+        }
+    }
+
     pub fn is_immobile(&self) -> bool {
         self.modes.is_empty()
     }

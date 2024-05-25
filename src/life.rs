@@ -1,6 +1,6 @@
 use crate::orbital::OrbitElement;
 
-use self::{base::LifeBase, habitat::Habitat, locomotion::Locomotion, manipulators::Manipulator, numlimbs::NumberOfLimbs, size::{Size, SizeCategory}, skeleton::Skeleton, symmetry::Symmetry, tail::Tail, trophiclevel::TrophicLevel};
+use self::{appendages::{manipulators::Manipulator, numlimbs::NumberOfLimbs}, base::LifeBase, breathing::Breathing, habitat::Habitat, locomotion::Locomotion, size::{Size, SizeCategory}, skeleton::Skeleton, symmetry::Symmetry, tail::Tail, trophiclevel::TrophicLevel};
 
 pub mod base;
 pub mod habitat;
@@ -8,11 +8,11 @@ pub mod trophiclevel;
 pub mod locomotion;
 pub mod size;
 pub mod symmetry;
-pub mod numlimbs;
 pub mod tail;
-pub mod manipulators;
 pub mod skeleton;
 pub mod skin;
+pub mod breathing;
+pub mod appendages;
 
 pub struct Life {
     base: LifeBase,
@@ -26,6 +26,7 @@ pub struct Life {
     tails: Vec<Tail>,
     manipulators: Vec<Manipulator>,
     skeleton: Skeleton,
+    breathing: Option<Breathing>
 }
 
 impl Life {
@@ -46,12 +47,14 @@ impl Life {
         let tails = Tail::random(&habitat, &symmetry);
         let manipulators = Manipulator::random(gasgiant_dweller, sapient, &num_of_limbs, &habitat, &trophiclevel, &locomotion);
         let skeleton = Skeleton::random(&size_category, &habitat, &locomotion, &symmetry, local_gravity);
+        let breathing = Breathing::random(&habitat, &locomotion);
 
         Life {
             base, habitat, trophiclevel,
             locomotion, size_category,
             size, symmetry, limbs: num_of_limbs,
             tails, manipulators, skeleton,
+            breathing,
         }
     }
 }
