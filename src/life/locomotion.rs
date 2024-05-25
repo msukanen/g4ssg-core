@@ -423,14 +423,23 @@ impl Locomotion {
         locomotions
     }
 
+    /**
+     See if locomotion modes include brachiator.
+     */
     pub fn is_brachiator(&self) -> bool {
         self.is(LocomotionMode::Climbing(true))
     }
 
+    /**
+     See if any locomotion mode matches with...
+     */
     pub fn is(&self, locomotion: LocomotionMode) -> bool {
         self.modes.contains(&locomotion)
     }
 
+    /**
+     See if primary locomotion mode matches.
+     */
     pub fn primary_match(&self, locomotion: LocomotionMode) -> bool {
         if self.modes.is_empty() {
             false
@@ -439,6 +448,9 @@ impl Locomotion {
         }
     }
 
+    /**
+     See if secondary locomotion mode matches, if any.
+     */
     pub fn secondary_match(&self, locomotion: LocomotionMode) -> bool {
         if self.modes.len() < 2 {
             false
@@ -447,17 +459,36 @@ impl Locomotion {
         }
     }
 
+    /**
+     See whether utterly immobile.
+     */
     pub fn is_immobile(&self) -> bool {
         self.modes.is_empty()
     }
 
+    /**
+     See if we can fly.
+     */
     pub fn is_flyer(&self) -> bool {
         for mode in &self.modes {
             match mode {
                 LocomotionMode::Flight(_) => return true,
                 _ => ()
             }
-        };
+        }
+        false
+    }
+
+    /**
+     See if we're a climber of any sort.
+     */
+    pub fn is_climber(&self) -> bool {
+        for mode in &self.modes {
+            match mode {
+                LocomotionMode::Climbing(_) => return true,
+                _ => ()
+            }
+        }
         false
     }
 }

@@ -127,7 +127,17 @@ impl TrophicLevel {
                 TrophicLevelType::Herbivore(_) => return true,
                 _ => ()
             }
-        };
+        }
+        false
+    }
+
+    pub fn is_carnivore(&self) -> bool {
+        for level in &self.levels {
+            match level {
+                TrophicLevelType::Carnivore(_) => return true,
+                _ => ()
+            }
+        }
         false
     }
 
