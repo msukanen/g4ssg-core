@@ -1,6 +1,6 @@
 use dice::DiceExt;
 
-use super::symmetry::Symmetry;
+use crate::life::symmetry::Symmetry;
 
 pub enum NumberOfLimbs {
     Spherical(i32),

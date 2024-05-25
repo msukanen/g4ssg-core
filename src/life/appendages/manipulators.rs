@@ -1,6 +1,8 @@
 use dice::DiceExt;
 
-use super::{habitat::{Habitat, WaterHabitat}, locomotion::{FlightMode, Locomotion, LocomotionMode}, numlimbs::NumberOfLimbs, trophiclevel::{Herbivore, TrophicLevel, TrophicLevelType}};
+use crate::life::{habitat::{Habitat, WaterHabitat}, locomotion::{FlightMode, Locomotion, LocomotionMode}, trophiclevel::{Herbivore, TrophicLevel, TrophicLevelType}};
+
+use super::numlimbs::NumberOfLimbs;
 
 pub enum ManipulatorFeature {
     BadGrip,
