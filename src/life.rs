@@ -16,6 +16,7 @@ pub mod appendages;
 pub mod bodytemp;
 pub mod growthpattern;
 pub mod sex;
+pub mod senses;
 
 pub struct Life {
     base: LifeBase,
