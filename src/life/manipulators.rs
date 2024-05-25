@@ -1,6 +1,6 @@
 use dice::DiceExt;
 
-use super::{habitat::{Habitat, WaterHabitat}, locomotion::{FlightMode, Locomotion}, numlimbs::NumberOfLimbs, trophiclevel::{Herbivore, TrophicLevel}};
+use super::{habitat::{Habitat, WaterHabitat}, locomotion::{FlightMode, Locomotion}, numlimbs::NumberOfLimbs, trophiclevel::{Herbivore, TrophicLevel, TrophicLevelType}};
 
 pub enum ManipulatorFeature {
     BadGrip,
@@ -28,10 +28,7 @@ impl Manipulator {
             else if num_of_limbs.count() > 4 {1}
             else if num_of_limbs.count() <= 2 {-1}
             else {0}
-        +   match trophiclevel {
-                TrophicLevel::Herbivore(Herbivore::Gathering) => 1,
-                _ => 0
-            }
+        +   if trophiclevel.is(TrophicLevelType::Herbivore(Herbivore::Gathering)) {1} else {0}
         +   if locomotion.contains(&Locomotion::Climbing(true)) {2}
             else {0}
         +   if locomotion.contains(&Locomotion::Flight(FlightMode::Winged)) {-1}

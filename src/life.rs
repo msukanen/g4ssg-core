@@ -1,5 +1,3 @@
-use std::collections::HashSet;
-
 use crate::orbital::OrbitElement;
 
 use self::{base::LifeBase, habitat::Habitat, locomotion::Locomotion, manipulators::Manipulator, numlimbs::NumberOfLimbs, size::{Size, SizeCategory}, symmetry::Symmetry, tail::Tail, trophiclevel::TrophicLevel};
@@ -18,8 +16,8 @@ pub mod skeleton;
 pub struct Life {
     base: LifeBase,
     habitat: Habitat,
-    trophiclevel: HashSet<TrophicLevel>,
-    locomotion: Option<Vec<Locomotion>>,
+    trophiclevel: TrophicLevel,
+    locomotion: Locomotion,
     size_category: SizeCategory,
     size: Size,
     symmetry: Symmetry,

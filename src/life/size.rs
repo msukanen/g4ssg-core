@@ -2,7 +2,7 @@ use std::ops::Mul;
 
 use dice::DiceExt;
 
-use super::{base::{LifeBase, ExoticaBase}, habitat::{Habitat, LandHabitat, WaterHabitat}, locomotion::{FlightMode, Locomotion}, trophiclevel::{Herbivore, TrophicLevel}};
+use super::{base::{ExoticaBase, LifeBase}, habitat::{Habitat, LandHabitat, WaterHabitat}, locomotion::{FlightMode, Locomotion, LocomotionMode}, trophiclevel::{Herbivore, TrophicLevel, TrophicLevelType}};
 
 pub enum SizeCategory {
     Small,
@@ -11,7 +11,7 @@ pub enum SizeCategory {
 }
 
 impl SizeCategory {
-    pub fn random(base: &LifeBase, habitat: &Habitat, trophiclevel: &TrophicLevel, locomotion: &Vec<Locomotion>, local_gravity: f64) -> SizeCategory {
+    pub fn random(base: &LifeBase, habitat: &Habitat, trophiclevel: &TrophicLevel, locomotion: &Locomotion, local_gravity: f64) -> SizeCategory {
         match 1.d6() + match base {
             LifeBase::Exotica(ExoticaBase::Magnetic) => -4,
             _ => 0
@@ -32,13 +32,11 @@ impl SizeCategory {
                 _ => 0
             },
             Habitat::Exotica => 0
-        } + match trophiclevel {
-            TrophicLevel::Herbivore(Herbivore::Grazing) => 1,
-            TrophicLevel::Parasite => -4,
-            _ => 0
-        }
-        + if locomotion.contains(&Locomotion::Slithering) {-1} else {0}
-        + if locomotion.contains(&Locomotion::Flight(FlightMode::Winged)) {-3} else {0}
+        } + if trophiclevel.is(TrophicLevelType::Herbivore(Herbivore::Grazing)) {1}
+            else if trophiclevel.is(TrophicLevelType::Parasite) {-4}
+            else {0}
+        + if locomotion.is(LocomotionMode::Slithering) {-1} else {0}
+        + if locomotion.is(LocomotionMode::Flight(FlightMode::Winged)) {-3} else {0}
         + if      local_gravity <= 0.4  {2}
           else if local_gravity <= 0.75 {1}
           else if local_gravity <= 1.5  {0}
@@ -70,8 +68,8 @@ impl Mul<f64> for Size {
 }
 
 impl Size {
-    pub fn random(sc: &SizeCategory, base: &LifeBase, habitat: &Habitat, locomotion: &Vec<Locomotion>, local_gravity: f64) -> Size {
-        let no_mod = locomotion.contains(&Locomotion::Flight(FlightMode::Buoyant)) || match habitat {
+    pub fn random(sc: &SizeCategory, base: &LifeBase, habitat: &Habitat, locomotion: &Locomotion, local_gravity: f64) -> Size {
+        let no_mod = locomotion.is(LocomotionMode::Flight(FlightMode::Buoyant)) || match habitat {
             Habitat::Water(_) => true,
             _ => false
         };

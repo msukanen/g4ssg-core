@@ -44,7 +44,7 @@ pub enum Carnivore {
 
 #[derive(Derivative)]
 #[derivative(PartialEq, Eq, Hash)]
-pub enum TrophicLevel {
+pub enum TrophicLevelType {
     Autotroph(Autotroph),
     Decomposer,
     Scavenger,
@@ -56,9 +56,13 @@ pub enum TrophicLevel {
     Symbiont
 }
 
+pub struct TrophicLevel {
+    levels: HashSet<TrophicLevelType>,
+}
+
 impl TrophicLevel {
-    pub fn random(sapient: bool, habitat: &Habitat) -> HashSet<TrophicLevel> {
-        fn select(sapient: bool, habitat: &Habitat) -> Vec<TrophicLevel> {
+    pub fn random(sapient: bool, habitat: &Habitat) -> TrophicLevel {
+        fn select(sapient: bool, habitat: &Habitat) -> Vec<TrophicLevelType> {
             let mut tlevels = vec![];
             
             let r = 3.d6();
@@ -68,41 +72,41 @@ impl TrophicLevel {
             } else {
                 tlevels.push(if sapient {
                     match r {
-                        ..=4 => if low!() {TrophicLevel::Parasite} else {TrophicLevel::Symbiont},
+                        ..=4 => if low!() {TrophicLevelType::Parasite} else {TrophicLevelType::Symbiont},
                         5 => if habitat.is_arctic() || habitat.is_desert() {
-                            TrophicLevel::Carnivore(Carnivore::Trapping)
+                            TrophicLevelType::Carnivore(Carnivore::Trapping)
                         } else {
-                            TrophicLevel::FilterFeeder
+                            TrophicLevelType::FilterFeeder
                         },
-                        6 => TrophicLevel::Carnivore(Carnivore::Pouncing),
-                        7 => TrophicLevel::Scavenger,
-                        8|9 => TrophicLevel::Herbivore(Herbivore::Gathering),
-                        10 => TrophicLevel::Omnivore,
-                        11|12 => TrophicLevel::Carnivore(Carnivore::Chasing),
-                        13 => TrophicLevel::Herbivore(Herbivore::Grazing),
-                        14 => TrophicLevel::Carnivore(Carnivore::Hijacking),
-                        15|16 => TrophicLevel::Carnivore(Carnivore::Trapping),
-                        17 => TrophicLevel::Decomposer,
-                        _ => TrophicLevel::Autotroph(Autotroph::random())
+                        6 => TrophicLevelType::Carnivore(Carnivore::Pouncing),
+                        7 => TrophicLevelType::Scavenger,
+                        8|9 => TrophicLevelType::Herbivore(Herbivore::Gathering),
+                        10 => TrophicLevelType::Omnivore,
+                        11|12 => TrophicLevelType::Carnivore(Carnivore::Chasing),
+                        13 => TrophicLevelType::Herbivore(Herbivore::Grazing),
+                        14 => TrophicLevelType::Carnivore(Carnivore::Hijacking),
+                        15|16 => TrophicLevelType::Carnivore(Carnivore::Trapping),
+                        17 => TrophicLevelType::Decomposer,
+                        _ => TrophicLevelType::Autotroph(Autotroph::random())
                     }
                 } else {
                     match r {
-                        ..=4 => TrophicLevel::Autotroph(Autotroph::random()),
-                        5 => TrophicLevel::Decomposer,
-                        6 => TrophicLevel::Scavenger,
-                        7 => TrophicLevel::Omnivore,
-                        8|9 => TrophicLevel::Herbivore(Herbivore::Gathering),
-                        10|11 => TrophicLevel::Herbivore(if low!() {Herbivore::Grazing} else {Herbivore::Browsing}),
-                        12 => TrophicLevel::Carnivore(Carnivore::Pouncing),
-                        13 => TrophicLevel::Carnivore(Carnivore::Chasing),
-                        14 => TrophicLevel::Carnivore(Carnivore::Trapping),
-                        15 => TrophicLevel::Carnivore(Carnivore::Hijacking),
+                        ..=4 => TrophicLevelType::Autotroph(Autotroph::random()),
+                        5 => TrophicLevelType::Decomposer,
+                        6 => TrophicLevelType::Scavenger,
+                        7 => TrophicLevelType::Omnivore,
+                        8|9 => TrophicLevelType::Herbivore(Herbivore::Gathering),
+                        10|11 => TrophicLevelType::Herbivore(if low!() {Herbivore::Grazing} else {Herbivore::Browsing}),
+                        12 => TrophicLevelType::Carnivore(Carnivore::Pouncing),
+                        13 => TrophicLevelType::Carnivore(Carnivore::Chasing),
+                        14 => TrophicLevelType::Carnivore(Carnivore::Trapping),
+                        15 => TrophicLevelType::Carnivore(Carnivore::Hijacking),
                         16 => if habitat.is_arctic() || habitat.is_desert() {
-                            TrophicLevel::Carnivore(Carnivore::Trapping)
+                            TrophicLevelType::Carnivore(Carnivore::Trapping)
                         } else {
-                            TrophicLevel::FilterFeeder
+                            TrophicLevelType::FilterFeeder
                         },
-                        _ => if low!() {TrophicLevel::Parasite} else {TrophicLevel::Symbiont}
+                        _ => if low!() {TrophicLevelType::Parasite} else {TrophicLevelType::Symbiont}
                     }
                 })
             }
@@ -110,6 +114,10 @@ impl TrophicLevel {
             tlevels
         }
 
-        HashSet::from_iter(select(sapient, habitat))
+        TrophicLevel { levels: HashSet::from_iter(select(sapient, habitat)) }
+    }
+
+    pub fn is(&self, tt: TrophicLevelType) -> bool {
+        self.levels.contains(&tt)
     }
 }
