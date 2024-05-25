@@ -15,7 +15,14 @@ pub enum Manipulator {
 }
 
 impl Manipulator {
-    pub fn random(gas_giant: bool, sapient: bool, num_of_limbs: &NumberOfLimbs, habitat: &Habitat, trophiclevel: &TrophicLevel, locomotion: &Vec<Locomotion>) -> Vec<Manipulator> {
+    pub fn random(
+        gas_giant: bool,
+        sapient: bool,
+        num_of_limbs: &NumberOfLimbs,
+        habitat: &Habitat,
+        trophiclevel: &TrophicLevel,
+        locomotion: &Vec<Locomotion>
+    ) -> Vec<Manipulator> {
         let modifier =
             if num_of_limbs.count() > 6 {2}
             else if num_of_limbs.count() > 4 {1}

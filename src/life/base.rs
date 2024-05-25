@@ -22,7 +22,7 @@ impl ExoticaBase {
     }
 }
 
-pub enum ChemicalBase {
+pub enum LifeBase {
     Hydrogen,
     Ammonia,
     Hydrocarbon,
@@ -33,8 +33,8 @@ pub enum ChemicalBase {
     Exotica(ExoticaBase)
 }
 
-impl ChemicalBase {
-    pub fn random() -> ChemicalBase {
+impl LifeBase {
+    pub fn random() -> LifeBase {
         match 3.d6() {
             ..=5 => Self::Hydrogen,
             6|7 => Self::Ammonia,

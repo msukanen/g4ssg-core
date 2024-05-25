@@ -2,7 +2,7 @@ use std::ops::Mul;
 
 use dice::DiceExt;
 
-use super::{base::{ChemicalBase, ExoticaBase}, habitat::{Habitat, LandHabitat, WaterHabitat}, locomotion::{FlightMode, Locomotion}, trophiclevel::{Herbivore, TrophicLevel}};
+use super::{base::{LifeBase, ExoticaBase}, habitat::{Habitat, LandHabitat, WaterHabitat}, locomotion::{FlightMode, Locomotion}, trophiclevel::{Herbivore, TrophicLevel}};
 
 pub enum SizeCategory {
     Small,
@@ -11,9 +11,9 @@ pub enum SizeCategory {
 }
 
 impl SizeCategory {
-    pub fn random(base: &ChemicalBase, habitat: &Habitat, trophiclevel: &TrophicLevel, locomotion: &Vec<Locomotion>, local_gravity: f64) -> SizeCategory {
+    pub fn random(base: &LifeBase, habitat: &Habitat, trophiclevel: &TrophicLevel, locomotion: &Vec<Locomotion>, local_gravity: f64) -> SizeCategory {
         match 1.d6() + match base {
-            ChemicalBase::Exotica(ExoticaBase::Magnetic) => -4,
+            LifeBase::Exotica(ExoticaBase::Magnetic) => -4,
             _ => 0
         } + match habitat {
             Habitat::Space => 3,
@@ -70,7 +70,7 @@ impl Mul<f64> for Size {
 }
 
 impl Size {
-    pub fn random(sc: &SizeCategory, base: &ChemicalBase, habitat: &Habitat, locomotion: &Vec<Locomotion>, local_gravity: f64) -> Size {
+    pub fn random(sc: &SizeCategory, base: &LifeBase, habitat: &Habitat, locomotion: &Vec<Locomotion>, local_gravity: f64) -> Size {
         let no_mod = locomotion.contains(&Locomotion::Flight(FlightMode::Buoyant)) || match habitat {
             Habitat::Water(_) => true,
             _ => false
@@ -94,16 +94,16 @@ impl Size {
             else {4.6}};
 
         let wt_mul = gravity_mod * match base {
-            ChemicalBase::Silicon(_) => 2.0,
-            ChemicalBase::Hydrogen |
-            ChemicalBase::Plasma   => 0.1,
+            LifeBase::Silicon(_) => 2.0,
+            LifeBase::Hydrogen |
+            LifeBase::Plasma   => 0.1,
             _ => 1.0
         } * match habitat {
             Habitat::Space => 0.2,
             _ => 1.0
         };
         let sz_mul = gravity_mod * match base {
-            ChemicalBase::Exotica(ExoticaBase::Magnetic) => 0.001,
+            LifeBase::Exotica(ExoticaBase::Magnetic) => 0.001,
             _ => 1.0
         };
 

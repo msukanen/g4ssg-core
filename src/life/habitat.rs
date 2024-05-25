@@ -175,7 +175,7 @@ impl From<Option<&OrbitElement>> for GenericHabitat {
     }
 }
 
-impl GenericHabitat {
+impl Habitat {
     pub fn random(location: Option<&OrbitElement>) -> Habitat {
         let generic = GenericHabitat::from(location);
         Habitat::from(generic)

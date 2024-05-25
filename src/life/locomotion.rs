@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 use dice::{low, DiceExt, HiLo};
 
 use super::{habitat::{Habitat, LandHabitat, WaterHabitat}, trophiclevel::{Carnivore, Herbivore, TrophicLevel}};
@@ -33,16 +35,17 @@ impl Locomotion {
      Unless result is **None**, the first item in the returned vector is the *primary* locomotion method.
      Secondary/tertiary modes of locomotion may or may not be present.
      */
-    pub fn random(habitat: &Habitat, trophiclevel: &TrophicLevel, gasgiant: bool) -> Option<Vec<Locomotion>> {
+    pub fn random(habitat: &Habitat, trophiclevel: &HashSet<TrophicLevel>, gasgiant: bool) -> Option<Vec<Locomotion>> {
         let mut locomotions = vec![];
-        let modifier = match trophiclevel {
-            TrophicLevel::Carnivore(Carnivore::Chasing) |
-            TrophicLevel::Carnivore(Carnivore::Pouncing) |
-            TrophicLevel::Omnivore |
-            TrophicLevel::Scavenger |
-            TrophicLevel::Herbivore(Herbivore::Gathering) => 1,
-            _ => 0
-        };
+        let modifier =
+            if trophiclevel.contains(&TrophicLevel::Carnivore(Carnivore::Chasing)) ||
+               trophiclevel.contains(&TrophicLevel::Carnivore(Carnivore::Chasing)) ||
+               trophiclevel.contains(&TrophicLevel::Carnivore(Carnivore::Pouncing))||
+               trophiclevel.contains(&TrophicLevel::Omnivore)                      ||
+               trophiclevel.contains(&TrophicLevel::Scavenger)                     ||
+               trophiclevel.contains(&TrophicLevel::Herbivore(Herbivore::Gathering))
+                 {1}
+            else {0};
         
         if gasgiant {
             //
