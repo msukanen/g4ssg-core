@@ -1,6 +1,6 @@
 use dice::DiceExt;
 
-use super::{habitat::{Habitat, LandHabitat, WaterHabitat}, locomotion::{Locomotion, LocomotionMode}};
+use super::{habitat::{land::LandHabitat, water::WaterHabitat, Habitat}, locomotion::{Locomotion, LocomotionMode}};
 
 pub enum Breathing {
     Lungs,

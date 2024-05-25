@@ -2,7 +2,7 @@ use std::ops::Mul;
 
 use dice::DiceExt;
 
-use super::{base::{ExoticaBase, LifeBase}, habitat::{Habitat, LandHabitat, WaterHabitat}, locomotion::{FlightMode, Locomotion, LocomotionMode}, trophiclevel::{Herbivore, TrophicLevel, TrophicLevelType}};
+use super::{base::{ExoticaBase, LifeBase}, habitat::{land::LandHabitat, water::WaterHabitat, Habitat}, locomotion::{FlightMode, Locomotion, LocomotionMode}, trophiclevel::{Herbivore, TrophicLevel, TrophicLevelType}};
 
 pub enum SizeCategory {
     Small,

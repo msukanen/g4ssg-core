@@ -1,6 +1,6 @@
 use dice::DiceExt;
 
-use crate::life::{habitat::{Habitat, WaterHabitat}, locomotion::{FlightMode, Locomotion, LocomotionMode}, trophiclevel::{Herbivore, TrophicLevel, TrophicLevelType}};
+use crate::life::{habitat::{water::WaterHabitat, Habitat}, locomotion::{FlightMode, Locomotion, LocomotionMode}, trophiclevel::{Herbivore, TrophicLevel, TrophicLevelType}};
 
 use super::numlimbs::NumberOfLimbs;
 

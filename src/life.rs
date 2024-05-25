@@ -13,6 +13,7 @@ pub mod skeleton;
 pub mod skin;
 pub mod breathing;
 pub mod appendages;
+pub mod bodytemp;
 
 pub struct Life {
     base: LifeBase,

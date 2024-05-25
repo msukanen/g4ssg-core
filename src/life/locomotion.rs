@@ -1,6 +1,6 @@
 use dice::{low, DiceExt, HiLo};
 
-use super::{habitat::{Habitat, LandHabitat, WaterHabitat}, trophiclevel::{Carnivore, Herbivore, TrophicLevel, TrophicLevelType}};
+use super::{habitat::{land::LandHabitat, water::WaterHabitat, Habitat}, trophiclevel::{Carnivore, Herbivore, TrophicLevel, TrophicLevelType}};
 
 #[derive(Clone, Copy, PartialEq)]
 pub enum FlightMode {
