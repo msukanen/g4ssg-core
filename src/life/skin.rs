@@ -1,6 +1,6 @@
 use dice::DiceExt;
 
-use super::{habitat::Habitat, locomotion::Locomotion, skeleton::Skeleton, trophiclevel::TrophicLevel};
+use super::{habitat::{ArcticOrDesert, Habitat}, locomotion::Locomotion, skeleton::Skeleton, trophiclevel::TrophicLevel};
 
 pub enum SkinCovering {
     Exoskeleton,
@@ -42,6 +42,14 @@ impl SkinToughness {
                 Habitat::Water(_) => 1,
                 _ => 0
             } + if locomotion.is_flyer() {-5} else {0}
-            + 
+            + if trophiclevel.is_herbivore() {1} else {0};
+        match 2.d6() + modifier {
+            ..=4 => SkinToughness::Soft,
+            5 => SkinToughness::Normal,
+            6|7 => SkinToughness::Hide,
+            8 => SkinToughness::Thick,
+            9 => SkinToughness::ArmorShell,
+            10.. => SkinToughness::Blubber
+        }
     }
 }

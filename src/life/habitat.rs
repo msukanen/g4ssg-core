@@ -21,16 +21,6 @@ pub enum LandHabitat {
     Jungle
 }
 
-impl ArcticOrDesert for LandHabitat {
-    fn is_arctic(&self) -> bool {
-        self == &Self::Arctic
-    }
-
-    fn is_desert(&self) -> bool {
-        self == &Self::Desert
-    }
-}
-
 impl LandHabitat {
     pub fn random() -> LandHabitat {
         match 3.d6() {
@@ -43,6 +33,16 @@ impl LandHabitat {
             13 => Self::Arctic,
             14.. => Self::Jungle
         }
+    }
+}
+
+impl ArcticOrDesert for LandHabitat {
+    fn is_arctic(&self) -> bool {
+        self == &Self::Arctic
+    }
+
+    fn is_desert(&self) -> bool {
+        self == &Self::Desert
     }
 }
 
