@@ -35,4 +35,13 @@ impl SexualArrangement {
         }
         arrangements
     }
+
+    pub fn is_sexual_reproduction(&self) -> bool {
+        match self {
+            Self::TwoSexes            |
+            Self::SwitchingMaleFemale |
+            Self::MultipleSexes(_)    => true,
+            _ => false
+        }
+    }
 }

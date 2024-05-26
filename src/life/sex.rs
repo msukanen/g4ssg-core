@@ -32,4 +32,25 @@ impl Reproduction {
             reproduction_strategy,
         }
     }
+
+    pub fn arrangement(&self) -> &Vec<SexualArrangement> {
+        &self.arrangement
+    }
+
+    pub fn gestation(&self) -> &Gestation {
+        &self.gestation
+    }
+
+    pub fn strategy(&self) -> &ReproductionStrategy {
+        &self.reproduction_strategy
+    }
+
+    pub fn is_sexual_reproduction(&self) -> bool {
+        for arrangement in self.arrangement() {
+            if arrangement.is_sexual_reproduction() {
+                return true;
+            }
+        }
+        false
+    }
 }

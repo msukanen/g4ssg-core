@@ -121,10 +121,12 @@ impl TrophicLevel {
         self.levels.contains(&tt)
     }
 
-    pub fn is_herbivore(&self) -> bool {
+    pub fn is_herbivore(&self, specific_herbivore: Option<Herbivore>) -> bool {
         for level in &self.levels {
             match level {
-                TrophicLevelType::Herbivore(_) => return true,
+                TrophicLevelType::Herbivore(kind) => if let Some(ref specific) = specific_herbivore {
+                    if kind == specific {return true;}
+                } else {return true;},
                 _ => ()
             }
         }

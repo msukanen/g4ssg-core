@@ -17,7 +17,7 @@ impl Fur {
          = if habitat.is_desert() {-1}
            else if habitat.is_arctic() {1}
            else {0}
-         + if trophiclevel.is_herbivore() {1} else {0}
+         + if trophiclevel.is_herbivore(None) {1} else {0}
          + if locomotion.is_flyer() {-1} else {0};
         match 2.d6() + modifier {
             ..=5 => Fur::BareSkin,

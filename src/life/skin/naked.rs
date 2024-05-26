@@ -20,7 +20,7 @@ impl Naked {
                 Habitat::Water(_) => 1,
                 _ => 0
             } + if locomotion.is_flyer() {-5} else {0}
-            + if trophiclevel.is_herbivore() {1} else {0};
+            + if trophiclevel.is_herbivore(None) {1} else {0};
         match 2.d6() + modifier {
             ..=4 => Naked::Soft,
             5 => Naked::Normal,

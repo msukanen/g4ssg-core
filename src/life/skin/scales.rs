@@ -14,7 +14,7 @@ pub enum Scales {
 impl Scales {
     pub fn random(habitat: &Habitat, trophiclevel: &TrophicLevel, locomotion: &Locomotion) -> Scales {
         let modifier = if habitat.is_desert() {1} else {0}
-            + if trophiclevel.is_herbivore() {1} else {0}
+            + if trophiclevel.is_herbivore(None) {1} else {0}
             + if locomotion.is_flyer() {-2}
               else if locomotion.is(LocomotionMode::Digging) {-1}
               else {0};
