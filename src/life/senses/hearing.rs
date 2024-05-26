@@ -1,6 +1,6 @@
 use dice::{DiceExt, HiLo};
 
-use crate::life::{habitat::Habitat, locomotion::Locomotion, size::{self, SizeCategory}};
+use crate::life::{habitat::Habitat, locomotion::Locomotion, size::SizeCategory};
 
 use super::vision::Vision;
 

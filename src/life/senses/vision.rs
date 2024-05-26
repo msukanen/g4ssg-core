@@ -18,7 +18,7 @@ impl Vision {
           else if locomotion.is_climber() {2}
           else {0}
         + match habitat {Habitat::Water(WaterHabitat::DeepOceanVents) => -4, _=> 0}
-        + if trophiclevel.is_carnivore()
+        + if trophiclevel.is_carnivore(None)
             || trophiclevel.is(TrophicLevelType::Herbivore(Herbivore::Gathering)) {2}
           else if trophiclevel.is(TrophicLevelType::FilterFeeder) {-2}
           else {0}
@@ -40,6 +40,14 @@ impl Vision {
                 12..=14 => Self::Normal,
                 15.. => Self::Telescopic
             }
+        }
+    }
+
+    pub fn is_blind(&self, completely_blind: bool) -> bool {
+        match self {
+            Self::Blindness(true) => if completely_blind {false} else {true},
+            Self::Blindness(_) => true,
+            _ => false
         }
     }
 }

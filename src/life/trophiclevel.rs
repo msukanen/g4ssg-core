@@ -131,10 +131,12 @@ impl TrophicLevel {
         false
     }
 
-    pub fn is_carnivore(&self) -> bool {
+    pub fn is_carnivore(&self, specific_carnivore: Option<Carnivore>) -> bool {
         for level in &self.levels {
             match level {
-                TrophicLevelType::Carnivore(_) => return true,
+                TrophicLevelType::Carnivore(kind) => if let Some(ref specific) = specific_carnivore {
+                    if kind == specific {return true;}
+                } else {return true},
                 _ => ()
             }
         }

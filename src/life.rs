@@ -1,6 +1,6 @@
 use crate::orbital::OrbitElement;
 
-use self::{appendages::{manipulators::Manipulator, numlimbs::NumberOfLimbs}, base::LifeBase, bodytemp::TemperatureRegulation, breathing::Breathing, growthpattern::GrowthPattern, habitat::Habitat, locomotion::Locomotion, sex::Reproduction, size::{Size, SizeCategory}, skeleton::Skeleton, symmetry::Symmetry, tail::Tail, trophiclevel::TrophicLevel};
+use self::{appendages::{manipulators::Manipulator, numlimbs::NumberOfLimbs}, base::LifeBase, bodytemp::TemperatureRegulation, breathing::Breathing, growthpattern::GrowthPattern, habitat::Habitat, locomotion::Locomotion, senses::Senses, sex::Reproduction, size::{Size, SizeCategory}, skeleton::Skeleton, symmetry::Symmetry, tail::Tail, trophiclevel::TrophicLevel};
 
 pub mod base;
 pub mod habitat;
@@ -34,6 +34,7 @@ pub struct Life {
     temperature_regulation: TemperatureRegulation,
     growth_pattern: GrowthPattern,
     reproduction: Reproduction,
+    senses: Senses,
 }
 
 impl Life {
@@ -58,6 +59,7 @@ impl Life {
         let temperature_regulation = TemperatureRegulation::random(&habitat, &size_category, breathing.as_ref());
         let growth_pattern = GrowthPattern::random(&skeleton, &size_category, &locomotion);
         let reproduction = Reproduction::random(&habitat, &symmetry, &trophiclevel, &locomotion, &size_category, breathing.as_ref(), &temperature_regulation);
+        let senses = Senses::random(&size_category, &habitat, &trophiclevel, &locomotion, &skeleton);
 
         Life {
             base, habitat, trophiclevel,
@@ -66,6 +68,7 @@ impl Life {
             tails, manipulators, skeleton,
             breathing, temperature_regulation,
             growth_pattern, reproduction,
+            senses,
         }
     }
 }
