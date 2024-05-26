@@ -48,4 +48,11 @@ impl LifeBase {
             _ => Self::Exotica(ExoticaBase::random())
         }
     }
+
+    pub fn is_ammonia(&self) -> bool {
+        match self {
+            Self::Ammonia => true,
+            _ => false
+        }
+    }
 }

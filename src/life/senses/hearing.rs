@@ -40,4 +40,11 @@ impl Hearing {
             14.. => Self::Acute(Some(ExtraHearingRange::Ultrasonic), Some(ExtraHearingRange::Sonar))
         }
     }
+
+    pub fn has_sonar(&self) -> bool {
+        match self {
+            Self::Acute(_, Some(ExtraHearingRange::Sonar)) => true,
+            _ => false
+        }
+    }
 }

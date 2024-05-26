@@ -59,7 +59,7 @@ impl Life {
         let temperature_regulation = TemperatureRegulation::random(&habitat, &size_category, breathing.as_ref());
         let growth_pattern = GrowthPattern::random(&skeleton, &size_category, &locomotion);
         let reproduction = Reproduction::random(&habitat, &symmetry, &trophiclevel, &locomotion, &size_category, breathing.as_ref(), &temperature_regulation);
-        let senses = Senses::random(&size_category, &habitat, &trophiclevel, &locomotion, &skeleton, &reproduction);
+        let senses = Senses::random(local_gravity, &base, &size_category, &symmetry, &habitat, &trophiclevel, &locomotion, &skeleton, &reproduction);
 
         Life {
             base, habitat, trophiclevel,

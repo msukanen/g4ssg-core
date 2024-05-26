@@ -96,4 +96,8 @@ impl Habitat {
             _ => false
         }
     }
+
+    pub fn is(&self, specific: Habitat) -> bool {
+        self == &specific
+    }
 }
