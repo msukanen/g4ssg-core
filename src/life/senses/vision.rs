@@ -11,19 +11,18 @@ pub enum Vision {
 }
 
 impl Vision {
-    pub fn random(habitat: &Habitat, trophiclevel: &TrophicLevel, locomotion: &Locomotion) -> Vision {
+    pub fn random(primary_sense: bool, habitat: &Habitat, trophiclevel: &TrophicLevel, locomotion: &Locomotion) -> Vision {
         let modifier
-        = if locomotion.primary_match(LocomotionMode::Digging) {-4}
+        = if locomotion.primary_match(LocomotionMode::Digging)
+             || locomotion.is_immobile() {-4}
           else if locomotion.is_climber() {2}
-          else if locomotion.is_immobile() {-4}
           else {0}
-        + match habitat {
-            Habitat::Water(WaterHabitat::DeepOceanVents) => -4,
-            _ => 0
-        } + if trophiclevel.is_carnivore()
+        + match habitat {Habitat::Water(WaterHabitat::DeepOceanVents) => -4, _=> 0}
+        + if trophiclevel.is_carnivore()
             || trophiclevel.is(TrophicLevelType::Herbivore(Herbivore::Gathering)) {2}
-            else if trophiclevel.is(TrophicLevelType::FilterFeeder) {-2}
-            else {0};
+          else if trophiclevel.is(TrophicLevelType::FilterFeeder) {-2}
+          else {0}
+        + if primary_sense {4} else {0};
         
         if habitat.is_space() {
             match 3.d6() + modifier {
