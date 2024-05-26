@@ -4,6 +4,7 @@ use dice::DiceExt;
 
 use super::{base::{ExoticaBase, LifeBase}, habitat::{land::LandHabitat, water::WaterHabitat, Habitat}, locomotion::{FlightMode, Locomotion, LocomotionMode}, trophiclevel::{Herbivore, TrophicLevel, TrophicLevelType}};
 
+#[derive(PartialEq)]
 pub enum SizeCategory {
     Small,
     HumanScale,

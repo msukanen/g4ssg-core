@@ -2,6 +2,7 @@ use dice::DiceExt;
 
 use crate::life::{habitat::Habitat, trophiclevel::TrophicLevel};
 
+#[derive(PartialEq)]
 pub enum PrimarySense {
     Hearing,
     Vision,
