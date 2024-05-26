@@ -4,7 +4,7 @@ use dice::DiceExt;
 
 use super::{base::{ExoticaBase, LifeBase}, habitat::{land::LandHabitat, water::WaterHabitat, Habitat}, locomotion::{FlightMode, Locomotion, LocomotionMode}, trophiclevel::{Herbivore, TrophicLevel, TrophicLevelType}};
 
-#[derive(PartialEq)]
+#[derive(PartialEq, Clone)]
 pub enum SizeCategory {
     Small,
     HumanScale,
@@ -52,6 +52,7 @@ impl SizeCategory {
 }
 
 pub struct Size {
+    category: SizeCategory,
     yards: f64,
     lbs: f64,
     size_modifier: i32,
@@ -61,6 +62,7 @@ impl Mul<f64> for Size {
     type Output = Self;
     fn mul(self, rhs: f64) -> Self::Output {
         Size {
+            category: self.category,
             yards: self.yards * rhs,
             lbs: self.lbs * rhs,
             size_modifier: self.size_modifier
@@ -146,6 +148,22 @@ impl Size {
             }
         };
         let lbs = (yards / 2.0) * (yards / 2.0) * (yards / 2.0) * 200.0 * wt_mul;
-        Size { yards, lbs, size_modifier }
+        Size { category: size_category.clone(), yards, lbs, size_modifier }
+    }
+
+    pub fn yards(&self) -> f64 {
+        self.yards
+    }
+
+    pub fn lbs(&self) -> f64 {
+        self.lbs
+    }
+
+    pub fn modifier(&self) -> i32 {
+        self.size_modifier
+    }
+
+    pub fn category(&self) -> SizeCategory {
+        self.category.clone()
     }
 }

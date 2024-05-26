@@ -17,6 +17,8 @@ pub mod bodytemp;
 pub mod growthpattern;
 pub mod sex;
 pub mod senses;
+pub mod intelligence;
+pub mod lifespan;
 
 pub struct Life {
     base: LifeBase,
