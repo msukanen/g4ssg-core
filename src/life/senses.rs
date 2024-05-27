@@ -39,4 +39,8 @@ impl Senses {
 
         Senses { primary_sense, vision, hearing, touch, taste_smell, special }
     }
+
+    pub fn vision(&self) -> &Vision {
+        &self.vision
+    }
 }
