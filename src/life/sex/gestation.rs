@@ -51,4 +51,11 @@ impl Gestation {
             11.. => Self::LiveBearing(special_method, false)
         }
     }
+
+    pub fn is_spawning(&self) -> bool {
+        match self {
+            Self::Spawning(_) => true,
+            _ => false
+        }
+    }
 }

@@ -1,12 +1,42 @@
+use dice::DiceExt;
+
+use crate::life::{sex::{arrangement::SexualArrangement, ArrangementCheck, Reproduction}, trophiclevel::{TrophicLevel, TrophicLevelType}};
+
+use super::organization::SocialOrganization;
+
 pub enum Chauvinism {
-    RacialIntolerance,
-    Chauvinistic,
+    Chauvinistic(i32),
     Normal,
-    BroadMinded,
+    BroadMinded(i32),
     Undiscriminating,
-    Xenophilia
 }
 
 impl Chauvinism {
-    
+    pub fn random(trophiclevel: &TrophicLevel, social_organization: &SocialOrganization, reproduction: &Reproduction) -> Chauvinism {
+        let modifier
+         = if trophiclevel.is_autotroph()
+           || trophiclevel.is(TrophicLevelType::FilterFeeder)
+           { -1 }
+           else if trophiclevel.is(TrophicLevelType::Parasite)
+           || trophiclevel.is(TrophicLevelType::Scavenger)
+           { -2 } else { 0 }
+         + match social_organization {
+             SocialOrganization::SmallGroup(_,_) |
+             SocialOrganization::MediumGroup(_,_)|
+             SocialOrganization::Hive            => 2,
+             SocialOrganization::Solitary |
+             SocialOrganization::PairBond => -1,
+             _ => 0}
+         + if reproduction.is(&SexualArrangement::Asexual) { -1 } else { 0 }
+         + if reproduction.gestation().is_spawning() { -1 } else { 0 };
+        match 1.d6() - 1.d6() + modifier {
+            ..=-3 => Self::Undiscriminating,
+            -2 => Self::BroadMinded(2),
+            -1 => Self::BroadMinded(1),
+            0 => Self::Normal,
+            1 => Self::Chauvinistic(1),
+            2 => Self::Chauvinistic(2),
+            3.. => Self::Chauvinistic(3),
+        }
+    }
 }
