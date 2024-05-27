@@ -1,6 +1,6 @@
 use crate::orbital::OrbitElement;
 
-use self::{appendages::{manipulators::Manipulator, numlimbs::NumberOfLimbs}, base::LifeBase, bodytemp::TemperatureRegulation, breathing::Breathing, growthpattern::GrowthPattern, habitat::Habitat, intelligence::Intelligence, lifespan::Lifespan, locomotion::Locomotion, personality::organization::SocialOrganization, senses::Senses, sex::{mating::MatingBehavior, Reproduction}, size::{Size, SizeCategory}, skeleton::Skeleton, symmetry::Symmetry, tail::Tail, trophiclevel::TrophicLevel};
+use self::{appendages::{manipulators::Manipulator, numlimbs::NumberOfLimbs}, base::LifeBase, bodytemp::TemperatureRegulation, breathing::Breathing, growthpattern::GrowthPattern, habitat::Habitat, intelligence::Intelligence, lifespan::Lifespan, locomotion::Locomotion, personality::{organization::SocialOrganization, Personality}, senses::Senses, sex::{mating::MatingBehavior, Reproduction}, size::{Size, SizeCategory}, skeleton::Skeleton, symmetry::Symmetry, tail::Tail, trophiclevel::TrophicLevel};
 
 pub mod base;
 pub mod habitat;
@@ -42,6 +42,7 @@ pub struct Life {
     intelligence: Intelligence,
     mating_behavior: MatingBehavior,
     social_organization: SocialOrganization,
+    personality: Personality,
 }
 
 impl Life {
@@ -70,7 +71,8 @@ impl Life {
         let lifespan = Lifespan::random(&base, &size, sapient);
         let intelligence = Intelligence::random(sapient, &size_category, &trophiclevel, &reproduction, &lifespan);
         let mating_behavior = MatingBehavior::random(&reproduction);
-        let social_organization = SocialOrganization::random(&size_category, &trophiclevel, &mating_behavior);
+        let social_organization = SocialOrganization::random(&trophiclevel, &mating_behavior);
+        let personality = Personality::random(&trophiclevel, &reproduction, &senses, &mating_behavior, &social_organization);
 
         Life {
             base, habitat, trophiclevel,
@@ -81,6 +83,7 @@ impl Life {
             growth_pattern, reproduction,
             senses, lifespan, intelligence,
             mating_behavior, social_organization,
+            personality,
         }
     }
 }

@@ -2,12 +2,14 @@ use dice::DiceExt;
 
 use crate::life::{sex::mating::MatingBehavior, size::SizeCategory, trophiclevel::{Herbivore, TrophicLevel}};
 
+#[derive(PartialEq)]
 pub enum GroupSize {
     Troop,
     Pack,
     Herd,
 }
 
+#[derive(PartialEq)]
 pub enum SocialOrganization {
     Solitary,
     PairBond,
@@ -18,7 +20,7 @@ pub enum SocialOrganization {
 }
 
 impl SocialOrganization {
-    pub fn random(size_category: &SizeCategory, trophiclevel: &TrophicLevel, mating_behavior: &MatingBehavior) -> SocialOrganization {
+    pub fn random(trophiclevel: &TrophicLevel, mating_behavior: &MatingBehavior) -> SocialOrganization {
         if mating_behavior == &MatingBehavior::Hive {
             return Self::Hive;
         }
