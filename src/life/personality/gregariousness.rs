@@ -60,7 +60,7 @@ impl PersonalityEffectLevel for Gregariousness {
             Self::Normal => 0,
             Self::Uncongenial => -1,
             Self::Loner(12) => -2,
-            Self::Loner(9) => -3,
+            Self::Loner(_) => -3,
             _ => panic!("Coder error detected! No matching branch for Gregariousness level() function!")
         }
     }

@@ -10,8 +10,10 @@ pub mod organization;
 pub mod chauvinism;
 pub mod gregariousness;
 pub mod imagination;
+pub mod concentration;
 
 pub struct Personality {
+    chauvinism: Chauvinism,
     gregariousness: Gregariousness,
     imagination: Imagination,
 }
@@ -22,10 +24,12 @@ impl Personality {
         reproduction: &Reproduction,
         social_organization: &SocialOrganization,
     ) -> Personality {
+        let chauvinism = Chauvinism::random(trophiclevel, social_organization, reproduction);
         let gregariousness = Gregariousness::random(trophiclevel, reproduction, social_organization);
         let imagination = Imagination::random(trophiclevel, reproduction);
 
         Personality {
+            chauvinism,
             gregariousness,
             imagination,
         }

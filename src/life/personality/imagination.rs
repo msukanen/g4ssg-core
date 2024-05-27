@@ -2,6 +2,8 @@ use dice::DiceExt;
 
 use crate::life::{sex::{reprstrategy::ReproductionStrategy, Reproduction}, trophiclevel::{Carnivore, Herbivore, TrophicLevel, TrophicLevelType}};
 
+use super::PersonalityEffectLevel;
+
 pub enum Imagination {
     Imaginative(i32),
     Normal,
@@ -33,6 +35,18 @@ impl Imagination {
             1 => Self::Imaginative(1),
             2 => Self::Imaginative(2),
             3.. => Self::Imaginative(3),
+        }
+    }
+}
+
+impl PersonalityEffectLevel for Imagination {
+    fn level(&self) -> i32 {
+        match self {
+            Self::Hidebound(true) => -3,
+            Self::Hidebound(_) => -2,
+            Self::Dull => -1,
+            Self::Normal => 0,
+            Self::Imaginative(x) => *x,
         }
     }
 }

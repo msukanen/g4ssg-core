@@ -2,7 +2,7 @@ use dice::DiceExt;
 
 use crate::life::{sex::{arrangement::SexualArrangement, ArrangementCheck, Reproduction}, trophiclevel::{TrophicLevel, TrophicLevelType}};
 
-use super::organization::SocialOrganization;
+use super::{organization::SocialOrganization, PersonalityEffectLevel};
 
 pub enum Chauvinism {
     Chauvinistic(i32),
@@ -37,6 +37,18 @@ impl Chauvinism {
             1 => Self::Chauvinistic(1),
             2 => Self::Chauvinistic(2),
             3.. => Self::Chauvinistic(3),
+        }
+    }
+}
+
+impl PersonalityEffectLevel for Chauvinism {
+    fn level(&self) -> i32 {
+        match self {
+            Self::Undiscriminating => -3,
+            Self::BroadMinded(1) => -1,
+            Self::BroadMinded(_) => -2,
+            Self::Normal => 0,
+            Self::Chauvinistic(x) => *x,
         }
     }
 }
