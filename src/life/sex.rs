@@ -56,11 +56,11 @@ impl Reproduction {
     }
 }
 
-trait ArrangementCheck {
+pub trait ArrangementCheck {
     fn is(&self, arrangement: &SexualArrangement) -> bool;
 }
 
-trait StrategyCheck {
+pub trait StrategyCheck {
     fn is(&self, strategy: &ReproductionStrategy) -> bool;
 }
 

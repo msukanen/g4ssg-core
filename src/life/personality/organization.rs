@@ -1,6 +1,6 @@
 use dice::DiceExt;
 
-use super::{sex::mating::MatingBehavior, size::SizeCategory, trophiclevel::{Herbivore, TrophicLevel}};
+use crate::life::{sex::mating::MatingBehavior, size::SizeCategory, trophiclevel::{Herbivore, TrophicLevel}};
 
 pub enum GroupSize {
     Troop,
