@@ -5,6 +5,7 @@ use super::{bodytemp::TemperatureRegulation, breathing::Breathing, habitat::Habi
 pub mod arrangement;
 pub mod gestation;
 pub mod reprstrategy;
+pub mod mating;
 
 pub struct Reproduction {
     arrangement: Vec<SexualArrangement>,
@@ -52,5 +53,30 @@ impl Reproduction {
             }
         }
         false
+    }
+}
+
+trait ArrangementCheck {
+    fn is(&self, arrangement: &SexualArrangement) -> bool;
+}
+
+trait StrategyCheck {
+    fn is(&self, strategy: &ReproductionStrategy) -> bool;
+}
+
+impl ArrangementCheck for Reproduction {
+    fn is(&self, arrangement: &SexualArrangement) -> bool {
+        for a in self.arrangement.iter() {
+            if a == arrangement {
+                return true;
+            }
+        }
+        false
+    }
+}
+
+impl StrategyCheck for Reproduction {
+    fn is(&self, strategy: &ReproductionStrategy) -> bool {
+        self.reproduction_strategy == *strategy
     }
 }

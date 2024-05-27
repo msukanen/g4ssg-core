@@ -4,6 +4,7 @@ use crate::life::size::SizeCategory;
 
 use super::gestation::Gestation;
 
+#[derive(PartialEq)]
 pub enum ReproductionStrategy {
     StrongK(i32),
     ModerateK(i32),

@@ -2,6 +2,7 @@ use dice::{DiceExt, HiLo};
 
 use crate::life::{locomotion::Locomotion, symmetry::Symmetry, trophiclevel::TrophicLevel};
 
+#[derive(PartialEq, Clone, Copy)]
 pub enum SexualArrangement {
     Asexual,
     Parthenogenesis,
