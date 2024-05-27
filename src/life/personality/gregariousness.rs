@@ -2,7 +2,7 @@ use dice::DiceExt;
 
 use crate::life::{sex::{arrangement::SexualArrangement, gestation::Gestation, ArrangementCheck, Reproduction}, trophiclevel::{Carnivore, TrophicLevel, TrophicLevelType}};
 
-use super::organization::SocialOrganization;
+use super::{organization::SocialOrganization, PersonalityEffectLevel};
 
 pub enum Gregariousness {
     Gregarious,
@@ -47,6 +47,21 @@ impl Gregariousness {
             1 => Self::Congenial,
             2 => Self::Chummy,
             3.. => Self::Gregarious
+        }
+    }
+}
+
+impl PersonalityEffectLevel for Gregariousness {
+    fn level(&self) -> i32 {
+        match self {
+            Self::Gregarious => 3,
+            Self::Chummy => 2,
+            Self::Congenial => 1,
+            Self::Normal => 0,
+            Self::Uncongenial => -1,
+            Self::Loner(12) => -2,
+            Self::Loner(9) => -3,
+            _ => panic!("Coder error detected! No matching branch for Gregariousness level() function!")
         }
     }
 }
