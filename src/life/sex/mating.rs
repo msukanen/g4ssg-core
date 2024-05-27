@@ -2,6 +2,7 @@ use dice::DiceExt;
 
 use super::{arrangement::SexualArrangement, gestation::Gestation, reprstrategy::ReproductionStrategy, ArrangementCheck, Reproduction};
 
+#[derive(PartialEq)]
 pub enum MatingBehavior {
     MatingOnly,
     TemporaryPair,
@@ -24,7 +25,7 @@ impl MatingBehavior {
             _ => 0
         };
         match 2.d6() + modifier {
-            ..=5 => Self::MatingOnly
+            ..=5 => Self::MatingOnly,
             6|7 => Self::TemporaryPair,
             8 => Self::PermanentPair,
             9|10 => Self::Harem,

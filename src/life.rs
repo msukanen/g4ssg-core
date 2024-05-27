@@ -1,6 +1,6 @@
 use crate::orbital::OrbitElement;
 
-use self::{appendages::{manipulators::Manipulator, numlimbs::NumberOfLimbs}, base::LifeBase, bodytemp::TemperatureRegulation, breathing::Breathing, growthpattern::GrowthPattern, habitat::Habitat, intelligence::Intelligence, lifespan::Lifespan, locomotion::Locomotion, senses::Senses, sex::Reproduction, size::{Size, SizeCategory}, skeleton::Skeleton, symmetry::Symmetry, tail::Tail, trophiclevel::TrophicLevel};
+use self::{appendages::{manipulators::Manipulator, numlimbs::NumberOfLimbs}, base::LifeBase, bodytemp::TemperatureRegulation, breathing::Breathing, growthpattern::GrowthPattern, habitat::Habitat, intelligence::Intelligence, lifespan::Lifespan, locomotion::Locomotion, organization::SocialOrganization, senses::Senses, sex::{mating::MatingBehavior, Reproduction}, size::{Size, SizeCategory}, skeleton::Skeleton, symmetry::Symmetry, tail::Tail, trophiclevel::TrophicLevel};
 
 pub mod base;
 pub mod habitat;
@@ -19,6 +19,7 @@ pub mod sex;
 pub mod senses;
 pub mod intelligence;
 pub mod lifespan;
+pub mod organization;
 
 pub struct Life {
     base: LifeBase,
@@ -39,6 +40,8 @@ pub struct Life {
     senses: Senses,
     lifespan: Lifespan,
     intelligence: Intelligence,
+    mating_behavior: MatingBehavior,
+    social_organization: SocialOrganization,
 }
 
 impl Life {
@@ -66,6 +69,8 @@ impl Life {
         let senses = Senses::random(local_gravity, &base, &size_category, &symmetry, &habitat, &trophiclevel, &locomotion, &skeleton, &reproduction);
         let lifespan = Lifespan::random(&base, &size, sapient);
         let intelligence = Intelligence::random(sapient, &size_category, &trophiclevel, &reproduction, &lifespan);
+        let mating_behavior = MatingBehavior::random(&reproduction);
+        let social_organization = SocialOrganization::random(&size_category, &trophiclevel, &mating_behavior);
 
         Life {
             base, habitat, trophiclevel,
@@ -75,6 +80,7 @@ impl Life {
             breathing, temperature_regulation,
             growth_pattern, reproduction,
             senses, lifespan, intelligence,
+            mating_behavior, social_organization,
         }
     }
 }
