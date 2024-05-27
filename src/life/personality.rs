@@ -1,6 +1,6 @@
-use self::{chauvinism::Chauvinism, concentration::Concentration, curiosity::Curiosity, egoism::Egoism, empathy::Empathy, gregariousness::Gregariousness, imagination::Imagination, organization::SocialOrganization, suspicion::Suspicion};
+use self::{chauvinism::Chauvinism, concentration::Concentration, curiosity::Curiosity, egoism::Egoism, empathy::Empathy, gregariousness::Gregariousness, imagination::Imagination, organization::SocialOrganization, playfulness::Playfulness, suspicion::Suspicion};
 
-use super::{senses::Senses, sex::{mating::MatingBehavior, Reproduction}, size::SizeCategory, trophiclevel::TrophicLevel};
+use super::{intelligence::Intelligence, senses::Senses, sex::{mating::MatingBehavior, Reproduction}, size::SizeCategory, trophiclevel::TrophicLevel};
 
 pub trait PersonalityEffectLevel {
     fn level(&self) -> i32;
@@ -15,6 +15,7 @@ pub mod curiosity;
 pub mod egoism;
 pub mod empathy;
 pub mod suspicion;
+pub mod playfulness;
 
 pub struct Personality {
     chauvinism: Chauvinism,
@@ -24,6 +25,7 @@ pub struct Personality {
     empathy: Empathy,
     gregariousness: Gregariousness,
     imagination: Imagination,
+    playfulness: Playfulness,
     suspicion: Suspicion,
 }
 
@@ -34,6 +36,7 @@ impl Personality {
         reproduction: &Reproduction,
         senses: &Senses,
         mating_behavior: &MatingBehavior,
+        intelligence: &Intelligence,
         social_organization: &SocialOrganization,
     ) -> Personality {
         let chauvinism = Chauvinism::random(trophiclevel, social_organization, reproduction);
@@ -44,6 +47,7 @@ impl Personality {
         let egoism = Egoism::random(&chauvinism, &empathy, &suspicion, mating_behavior, social_organization);
         let gregariousness = Gregariousness::random(trophiclevel, reproduction, social_organization);
         let imagination = Imagination::random(trophiclevel, reproduction);
+        let playfulness = Playfulness::random(reproduction, social_organization, intelligence);
 
         Personality {
             chauvinism,
@@ -53,6 +57,7 @@ impl Personality {
             egoism,
             gregariousness,
             imagination,
+            playfulness,
             suspicion,
         }
     }
