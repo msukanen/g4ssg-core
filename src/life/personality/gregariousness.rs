@@ -1,8 +1,8 @@
 use dice::DiceExt;
 
-use crate::life::{sex::{arrangement::SexualArrangement, gestation::Gestation, ArrangementCheck, Reproduction}, trophiclevel::{Carnivore, TrophicLevel, TrophicLevelType}};
+use crate::{advantages::{chummy::Chummy, gregarious::Gregarious, Advantage}, disadvantages::{loner::Loner, Disadvantage}, life::{sex::{arrangement::SexualArrangement, gestation::Gestation, ArrangementCheck, Reproduction}, trophiclevel::{Carnivore, TrophicLevel, TrophicLevelType}}, quirks::congenial::{Congenial, Uncongenial}};
 
-use super::{organization::SocialOrganization, PersonalityEffectLevel};
+use super::{organization::SocialOrganization, PersonalityEffect, PersonalityEffectLevel};
 
 pub enum Gregariousness {
     Gregarious,
@@ -61,7 +61,26 @@ impl PersonalityEffectLevel for Gregariousness {
             Self::Uncongenial => -1,
             Self::Loner(12) => -2,
             Self::Loner(_) => -3,
-            _ => panic!("Coder error detected! No matching branch for Gregariousness level() function!")
         }
+    }
+}
+
+impl PersonalityEffect for Gregariousness {
+    fn gain(&self, personality: &super::Personality, trophiclevel: &TrophicLevel) -> (Vec<Box<dyn Disadvantage>>, Vec<Box<dyn Advantage>>) {
+        let _ = trophiclevel;
+        let _ = personality;
+        let mut advs: Vec<Box<dyn Advantage>> = vec![];
+        let mut disadvs: Vec<Box<dyn Disadvantage>> = vec![];
+        
+        match self {
+            Self::Gregarious => advs.push(Box::new(Gregarious)),
+            Self::Chummy => advs.push(Box::new(Chummy)),
+            Self::Congenial => disadvs.push(Box::new(Congenial)),
+            Self::Uncongenial => disadvs.push(Box::new(Uncongenial)),
+            Self::Loner(control) => disadvs.push(Box::new(Loner::new(*control))),
+            _ => ()
+        }
+
+        (disadvs, advs)
     }
 }

@@ -1,9 +1,10 @@
 use dice::DiceExt;
 
-use crate::life::{sex::{reprstrategy::ReproductionStrategy, Reproduction}, trophiclevel::{Carnivore, Herbivore, TrophicLevel, TrophicLevelType}};
+use crate::{advantages::{charitable::Charitable, empathy::Sensitive, Advantage}, disadvantages::{bloodlust::Bloodlust, callous::Callous, oblivious::Oblivious, Disadvantage}, life::{sex::{reprstrategy::ReproductionStrategy, Reproduction}, trophiclevel::{self, Carnivore, Herbivore, TrophicLevel, TrophicLevelType}}, quirks::responsive::Responsive};
 
-use super::{organization::SocialOrganization, PersonalityEffectLevel};
+use super::{gregariousness::Gregariousness, organization::SocialOrganization, suspicion::Suspicion, Personality, PersonalityEffect, PersonalityEffectLevel};
 
+#[derive(PartialEq, Clone, Copy)]
 pub enum Empathy {
     Empathy(bool),
     Sensitive,
@@ -42,6 +43,13 @@ impl Empathy {
             3.. => Self::Empathy(false)
         }
     }
+
+    pub fn shift_based_on(&self, gregariousness: &Gregariousness, suspicion: &Suspicion) -> Empathy {
+        match self {
+            Self::Responsive => if gregariousness.level() > 0 && suspicion.level() < 0 {Self::Sensitive} else {*self},
+            _ => *self
+        }
+    }
 }
 
 impl PersonalityEffectLevel for Empathy {
@@ -55,5 +63,33 @@ impl PersonalityEffectLevel for Empathy {
             Self::Callous    => -2,
             Self::Sensitive  =>  2
         }
+    }
+}
+
+impl PersonalityEffect for Empathy {
+    fn gain(&self, personality: &Personality, trophiclevel: &TrophicLevel) -> (Vec<Box<dyn Disadvantage>>, Vec<Box<dyn Advantage>>) {
+        let mut disadvs: Vec<Box<dyn Disadvantage>> = vec![];
+        let mut advs: Vec<Box<dyn Advantage>> = vec![];
+
+        match self {
+            Self::Empathy(false) => {
+                advs.push(Box::new(crate::advantages::empathy::Empathy));
+                if personality.gregariousness.level() > 0 {
+                    advs.push(Box::new(Charitable));
+                }
+            },
+            Self::Empathy(true) => {
+                advs.push(Box::new(Sensitive));
+                if trophiclevel.is_carnivore(None) {
+                    disadvs.push(Box::new(Bloodlust));
+                }
+            },
+            Self::Responsive => disadvs.push(Box::new(Responsive)),
+            Self::Oblivious => disadvs.push(Box::new(Oblivious)),
+            Self::Callous => disadvs.push(Box::new(Callous)),
+            _ => ()
+        }
+
+        (disadvs, advs)
     }
 }

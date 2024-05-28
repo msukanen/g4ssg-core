@@ -1,9 +1,10 @@
 use dice::DiceExt;
 
-use crate::life::sex::mating::MatingBehavior;
+use crate::{advantages::{selfless::Selfless, Advantage}, disadvantages::{self, selfish::Selfish, Disadvantage}, life::sex::mating::MatingBehavior, quirks::{humble::Humble, proud::Proud}};
 
-use super::{chauvinism::Chauvinism, organization::SocialOrganization, PersonalityEffectLevel, suspicion::Suspicion, empathy::Empathy};
+use super::{chauvinism::Chauvinism, empathy::Empathy, organization::SocialOrganization, suspicion::Suspicion, PersonalityEffect, PersonalityEffectLevel};
 
+#[derive(PartialEq, Clone, Copy)]
 pub enum Egoism {
     Selfish(i32),
     Proud,
@@ -29,6 +30,17 @@ impl Egoism {
             3.. => Self::Selfish(9)
         }
     }
+
+    pub fn shift_based_on(&self, suspicion: &Suspicion, chauvinism: &Chauvinism, empathy: &Empathy) -> Egoism {
+        match self {
+            Self::Selfish(12) => if suspicion.level() > 0 || empathy.level() < 0 {Self::Selfish(9)} else {*self},
+            Self::Proud => if suspicion.level() >= 2 || empathy.level() <= -2 {Self::Selfish(9)}
+                           else if suspicion.level() > 0 {Self::Selfish(12)}
+                           else {*self}
+            Self::Selfless(12) => if chauvinism.level() >= 2 {Self::Selfless(9)} else {*self},
+            _ => *self
+        }
+    }
 }
 
 impl PersonalityEffectLevel for Egoism {
@@ -42,5 +54,24 @@ impl PersonalityEffectLevel for Egoism {
             Self::Selfless(6) => -3,
             Self::Selfless(_) => -2
         }
+    }
+}
+
+impl PersonalityEffect for Egoism {
+    fn gain(&self, personality: &super::Personality, trophiclevel: &crate::life::trophiclevel::TrophicLevel) -> (Vec<Box<dyn crate::disadvantages::Disadvantage>>, Vec<Box<dyn crate::advantages::Advantage>>) {
+        let _ = trophiclevel;
+        let _ = personality;
+        let mut disadvs: Vec<Box<dyn Disadvantage>> = vec![];
+        let mut advs: Vec<Box<dyn Advantage>> = vec![];
+
+        match self {
+            Self::Selfish(control) => disadvs.push(Box::new(Selfish::new(*control))),
+            Self::Proud => disadvs.push(Box::new(Proud)),
+            Self::Humble => disadvs.push(Box::new(Humble)),
+            Self::Selfless(control) => advs.push(Box::new(Selfless::new(*control))),
+            _ => ()
+        }
+
+        (disadvs, advs)
     }
 }

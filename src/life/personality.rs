@@ -1,9 +1,19 @@
+use crate::{advantages::{Advantage, AdvantageContainer}, disadvantages::{Disadvantage, DisadvantageContainer}};
+
 use self::{chauvinism::Chauvinism, concentration::Concentration, curiosity::Curiosity, egoism::Egoism, empathy::Empathy, gregariousness::Gregariousness, imagination::Imagination, organization::SocialOrganization, playfulness::Playfulness, suspicion::Suspicion};
 
 use super::{intelligence::Intelligence, senses::Senses, sex::{mating::MatingBehavior, Reproduction}, size::SizeCategory, trophiclevel::TrophicLevel};
 
 pub trait PersonalityEffectLevel {
     fn level(&self) -> i32;
+}
+
+pub trait PersonalityEffect {
+    fn gain(&self, personality: &Personality, trophiclevel: &TrophicLevel) -> (Vec<Box<dyn Disadvantage>>, Vec<Box<dyn Advantage>>) {
+        let _ = personality;
+        let _ = trophiclevel;
+        (vec![], vec![])
+    }
 }
 
 pub mod organization;
@@ -27,6 +37,9 @@ pub struct Personality {
     imagination: Imagination,
     playfulness: Playfulness,
     suspicion: Suspicion,
+
+    disadvantages: Vec<Box<dyn Disadvantage>>,
+    advantages: Vec<Box<dyn Advantage>>,
 }
 
 impl Personality {
@@ -41,13 +54,18 @@ impl Personality {
     ) -> Personality {
         let chauvinism = Chauvinism::random(trophiclevel, social_organization, reproduction);
         let concentration = Concentration::random(trophiclevel, reproduction);
-        let curiosity = Curiosity::random(trophiclevel, senses, reproduction);
-        let empathy = Empathy::random(trophiclevel, social_organization, reproduction);
-        let suspicion = Suspicion::random(&curiosity, size_category, trophiclevel, senses.vision(), social_organization);
-        let egoism = Egoism::random(&chauvinism, &empathy, &suspicion, mating_behavior, social_organization);
+        let mut curiosity = Curiosity::random(trophiclevel, senses, reproduction);
+        let mut empathy = Empathy::random(trophiclevel, social_organization, reproduction);
+        let mut suspicion = Suspicion::random(&curiosity, size_category, trophiclevel, senses.vision(), social_organization);
+        let mut egoism = Egoism::random(&chauvinism, &empathy, &suspicion, mating_behavior, social_organization);
         let gregariousness = Gregariousness::random(trophiclevel, reproduction, social_organization);
         let imagination = Imagination::random(trophiclevel, reproduction);
         let playfulness = Playfulness::random(reproduction, social_organization, intelligence);
+        // Shift the values if needed...
+        curiosity = curiosity.shift_based_on(&suspicion, &concentration);
+        empathy = empathy.shift_based_on(&gregariousness, &suspicion);
+        egoism = egoism.shift_based_on(&suspicion, &chauvinism, &empathy);
+        suspicion = suspicion.shift_based_on(&curiosity);
 
         Personality {
             chauvinism,
@@ -59,6 +77,20 @@ impl Personality {
             imagination,
             playfulness,
             suspicion,
+            disadvantages: vec![],
+            advantages: vec![],
         }
+    }
+}
+
+impl DisadvantageContainer for Personality {
+    fn disadvantages(&self) -> &Vec<Box<dyn Disadvantage>> {
+        &self.disadvantages
+    }
+}
+
+impl AdvantageContainer for Personality {
+    fn advantages(&self) -> &Vec<Box<dyn Advantage>> {
+        &self.advantages
     }
 }

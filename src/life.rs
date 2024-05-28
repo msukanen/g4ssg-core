@@ -72,7 +72,7 @@ impl Life {
         let intelligence = Intelligence::random(sapient, &size_category, &trophiclevel, &reproduction, &lifespan);
         let mating_behavior = MatingBehavior::random(&reproduction);
         let social_organization = SocialOrganization::random(&trophiclevel, &mating_behavior);
-        let personality = Personality::random(&trophiclevel, &reproduction, &senses, &mating_behavior, &social_organization);
+        let personality = Personality::random(&size_category, &trophiclevel, &reproduction, &senses, &mating_behavior, &intelligence, &social_organization);
 
         Life {
             base, habitat, trophiclevel,

@@ -1,8 +1,8 @@
 use dice::DiceExt;
 
-use crate::life::{sex::{arrangement::SexualArrangement, ArrangementCheck, Reproduction}, trophiclevel::{TrophicLevel, TrophicLevelType}};
+use crate::{advantages::Advantage, disadvantages::{racialintolerance::RacialIntolerance, xenophilia::Xenophilia, xenophobia::Xenophobia, Disadvantage}, life::{sex::{arrangement::SexualArrangement, ArrangementCheck, Reproduction}, trophiclevel::{TrophicLevel, TrophicLevelType}}, quirks::{broadminded::BroadMinded, chauvinistic::Chauvinistic, undiscriminating::Undiscriminating}};
 
-use super::{organization::SocialOrganization, PersonalityEffectLevel};
+use super::{empathy, organization::SocialOrganization, suspicion, Personality, PersonalityEffect, PersonalityEffectLevel};
 
 pub enum Chauvinism {
     Chauvinistic(i32),
@@ -50,5 +50,60 @@ impl PersonalityEffectLevel for Chauvinism {
             Self::Normal => 0,
             Self::Chauvinistic(x) => *x,
         }
+    }
+}
+
+impl PersonalityEffect for Chauvinism {
+    fn gain(&self, personality: &Personality, trophiclevel: &TrophicLevel) -> (Vec<Box<dyn Disadvantage>>, Vec<Box<dyn Advantage>>) {
+        let _ = trophiclevel;
+        let mut disadvs: Vec<Box<dyn Disadvantage>> = vec![];
+
+        match self {
+            Self::Chauvinistic(3) => {
+                let mut ri = false;
+                if personality.empathy.level() < 1 || personality.suspicion.level() > -1 {
+                    disadvs.push(Box::new(RacialIntolerance));
+                    ri = true
+                }
+                if personality.suspicion.level() > 1 {
+                    disadvs.push(Box::new(Xenophobia))
+                }
+                if !ri {
+                    disadvs.push(Box::new(Chauvinistic))
+                }
+            },
+            
+            Self::Chauvinistic(2) => if personality.empathy.level() < 1 || personality.suspicion.level() > -1 {
+                disadvs.push(Box::new(RacialIntolerance))
+            } else {
+                disadvs.push(Box::new(Chauvinistic))
+            },
+            
+            Self::Chauvinistic(_) => if personality.empathy.level() < 0 || personality.suspicion.level() > 0 {
+                disadvs.push(Box::new(RacialIntolerance))
+            } else {
+                disadvs.push(Box::new(Chauvinistic))
+            },
+            
+            Self::Undiscriminating => if personality.suspicion.level() < 0 && personality.empathy.level() > 0 {
+                disadvs.push(Box::new(Xenophilia::new(9)));
+            } else if personality.suspicion.level() < 0 || personality.empathy.level() > 0 {
+                disadvs.push(Box::new(Xenophilia::new(12)));
+            } else {
+                disadvs.push(Box::new(Undiscriminating))
+            },
+
+            Self::BroadMinded(2) => if personality.suspicion.level() < 0 && personality.empathy.level() > 0 {
+                disadvs.push(Box::new(Xenophilia::new(15)));
+            } else {
+                disadvs.push(Box::new(BroadMinded))
+            },
+
+            Self::BroadMinded(_) => disadvs.push(Box::new(BroadMinded)),
+
+            _ => ()
+        }
+
+        (disadvs, vec![])
     }
 }

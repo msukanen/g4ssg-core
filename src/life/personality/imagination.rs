@@ -1,8 +1,8 @@
 use dice::DiceExt;
 
-use crate::life::{sex::{reprstrategy::ReproductionStrategy, Reproduction}, trophiclevel::{Carnivore, Herbivore, TrophicLevel, TrophicLevelType}};
+use crate::{disadvantages::{hidebound::Hidebound, orh::nonstopideafactory::NonstopIdeaFactory, Disadvantage}, life::{sex::{reprstrategy::ReproductionStrategy, Reproduction}, trophiclevel::{Carnivore, Herbivore, TrophicLevel, TrophicLevelType}}, quirks::{dreamer::Dreamer, dull::Dull, imaginative::Imaginative, versatile::Versatile}};
 
-use super::PersonalityEffectLevel;
+use super::{PersonalityEffect, PersonalityEffectLevel};
 
 pub enum Imagination {
     Imaginative(i32),
@@ -48,5 +48,40 @@ impl PersonalityEffectLevel for Imagination {
             Self::Normal => 0,
             Self::Imaginative(x) => *x,
         }
+    }
+}
+
+impl PersonalityEffect for Imagination {
+    fn gain(&self, personality: &super::Personality, trophiclevel: &TrophicLevel) -> (Vec<Box<dyn crate::disadvantages::Disadvantage>>, Vec<Box<dyn crate::advantages::Advantage>>) {
+        let _ = trophiclevel;
+        let mut disadvs: Vec<Box<dyn Disadvantage>> = vec![];
+
+        match self {
+            Self::Imaginative(3) => {
+                disadvs.push(Box::new(Imaginative));
+                if personality.empathy.level() < 1 {
+                    disadvs.push(Box::new(NonstopIdeaFactory))
+                } else if personality.egoism.level() > 0 || personality.concentration.level() < 1 {
+                    disadvs.push(Box::new(Dreamer))
+                }
+            },
+            Self::Imaginative(2) => {
+                disadvs.push(Box::new(Imaginative));
+                if personality.egoism.level() > 0 || personality.concentration.level() < 1 {
+                    disadvs.push(Box::new(Dreamer))
+                }
+            },
+            Self::Imaginative(1) => {
+                disadvs.push(Box::new(Imaginative));
+                if personality.concentration.level() >= 0 && personality.egoism.level() < 2 {
+                    disadvs.push(Box::new(Versatile))
+                }
+            },
+            Self::Dull => disadvs.push(Box::new(Dull)),
+            Self::Hidebound(with_iq_penalty) => disadvs.push(Box::new(Hidebound::new(*with_iq_penalty))),
+            _ => ()
+        }
+
+        (disadvs, vec![])
     }
 }

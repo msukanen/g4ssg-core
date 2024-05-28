@@ -1,8 +1,8 @@
 use dice::DiceExt;
 
-use crate::life::{sex::{reprstrategy::ReproductionStrategy, Reproduction}, trophiclevel::{Carnivore, TrophicLevel}};
+use crate::{advantages::{highpainthreshold::HighPainThreshold, singleminded::SingleMinded, Advantage}, disadvantages::{shortattspan::ShortAttentionSpan, Disadvantage}, life::{sex::{reprstrategy::ReproductionStrategy, Reproduction}, trophiclevel::{Carnivore, TrophicLevel}}, quirks::{attentive::Attentive, distractible::Distractible}};
 
-use super::PersonalityEffectLevel;
+use super::{PersonalityEffect, PersonalityEffectLevel};
 
 pub enum Concentration {
     ShortAttentionSpan(i32),
@@ -45,5 +45,26 @@ impl PersonalityEffectLevel for Concentration {
             Self::Attentive => 1,
             Self::SingleMinded(a) => *a + 1,
         }
+    }
+}
+
+impl PersonalityEffect for Concentration {
+    fn gain(&self, personality: &super::Personality, trophiclevel: &TrophicLevel) -> (Vec<Box<dyn crate::disadvantages::Disadvantage>>, Vec<Box<dyn crate::advantages::Advantage>>) {
+        let _ = trophiclevel;
+        let _ = personality;
+        let mut advs: Vec<Box<dyn Advantage>> = vec![];
+        let mut disadvs: Vec<Box<dyn Disadvantage>> = vec![];
+        match self {
+            Self::SingleMinded(1) => advs.push(Box::new(SingleMinded)),
+            Self::SingleMinded(_) => {
+                advs.push(Box::new(SingleMinded));
+                advs.push(Box::new(HighPainThreshold))
+            },
+            Self::Attentive => disadvs.push(Box::new(Attentive)),
+            Self::Distractible => disadvs.push(Box::new(Distractible)),
+            Self::ShortAttentionSpan(control) => disadvs.push(Box::new(ShortAttentionSpan::new(*control))),
+            _ => ()
+        }
+        (disadvs, advs)
     }
 }

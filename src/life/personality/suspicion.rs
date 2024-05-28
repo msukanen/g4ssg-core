@@ -2,8 +2,9 @@ use dice::DiceExt;
 
 use crate::life::{senses::vision::Vision, size::SizeCategory, trophiclevel::{Herbivore, TrophicLevel}};
 
-use super::{curiosity::Curiosity, organization::SocialOrganization, PersonalityEffectLevel};
+use super::{curiosity::Curiosity, egoism::Egoism, organization::SocialOrganization, PersonalityEffectLevel};
 
+#[derive(PartialEq, Clone, Copy)]
 pub enum Suspicion {
     Fearfulness(i32),
     Careful,
@@ -37,6 +38,14 @@ impl Suspicion {
             1 => Self::Careful,
             2 => if curiosity.level() < -2 {Self::Careful} else {Self::Fearfulness(1)},
             3.. => Self::Fearfulness(2)
+        }
+    }
+
+    pub fn shift_based_on(&self, curiosity: &Curiosity) -> Suspicion {
+        match self {
+            Self::Fearfulness(1) => if curiosity.level() <= -3 {Self::Careful} else {*self},
+            Self::Careful => if curiosity.level() <= -2 {Self::Normal} else {*self},
+            _ => *self
         }
     }
 }
