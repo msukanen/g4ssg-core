@@ -16,6 +16,7 @@ pub mod hidebound;
 pub mod cowardice;
 pub mod paranoia;
 pub mod overconfidence;
+pub mod fearfulness;
 
 pub trait Disadvantage: ADQ + ControlRated {}
 

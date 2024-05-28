@@ -1,8 +1,8 @@
 use dice::DiceExt;
 
-use crate::{advantages::Advantage, disadvantages::Disadvantage, life::{senses::vision::Vision, size::SizeCategory, trophiclevel::{Herbivore, TrophicLevel}}};
+use crate::{advantages::{fearlessness::{Fearlessness, Unfazeable}, Advantage}, disadvantages::{cowardice::Cowardice, fearfulness::Fearfulness, overconfidence::Overconfidence, paranoia::Paranoia, Disadvantage}, life::{senses::vision::Vision, size::SizeCategory, trophiclevel::{Herbivore, TrophicLevel}}, quirks::careful::Careful};
 
-use super::{curiosity::Curiosity, egoism::Egoism, organization::SocialOrganization, PersonalityEffect, PersonalityEffectLevel};
+use super::{curiosity::Curiosity, organization::SocialOrganization, PersonalityEffect, PersonalityEffectLevel};
 
 #[derive(PartialEq, Clone, Copy)]
 pub enum Suspicion {
@@ -64,6 +64,40 @@ impl PersonalityEffectLevel for Suspicion {
 
 impl PersonalityEffect for Suspicion {
     fn gain(&self, personality: &super::Personality, trophiclevel: &TrophicLevel) -> (Vec<Box<dyn Disadvantage>>, Vec<Box<dyn Advantage>>) {
-        
+        let mut advs: Vec<Box<dyn Advantage>> = vec![];
+        let mut disadvs: Vec<Box<dyn Disadvantage>> = vec![];
+
+        match self {
+            Self::Fearfulness(2) => {
+                disadvs.push(Box::new(Fearfulness::new(2)));
+                if trophiclevel.is_herbivore(None) {
+                    disadvs.push(Box::new(Cowardice))
+                } else {
+                    disadvs.push(Box::new(Paranoia))
+                }
+            },
+            Self::Fearfulness(_) => disadvs.push(Box::new(Fearfulness::new(1))),
+            Self::Careful => disadvs.push(Box::new(Careful)),
+            Self::Fearlessness(1) => advs.push(Box::new(Fearlessness::new(1))),
+            Self::Fearlessness(2) => {
+                advs.push(Box::new(Fearlessness::new(2)));
+                if personality.egoism.level() >= 2 {
+                    disadvs.push(Box::new(Overconfidence))
+                }
+            },
+            Self::Fearlessness(3) => {
+                if personality.chauvinism.level() <= -3 {
+                    advs.push(Box::new(Unfazeable))
+                } else {
+                    advs.push(Box::new(Fearlessness::new(3)))
+                }
+                if personality.egoism.level() >= 1 {
+                    disadvs.push(Box::new(Overconfidence))
+                }
+            },
+            _ => ()
+        }
+
+        (disadvs, advs)
     }
 }
