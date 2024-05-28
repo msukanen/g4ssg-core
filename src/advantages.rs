@@ -7,6 +7,7 @@ pub mod selfless;
 pub mod empathy;
 pub mod gregarious;
 pub mod chummy;
+pub mod fearlessness;
 
 pub trait Advantage: ADQ + ControlRated {}
 

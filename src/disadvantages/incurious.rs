@@ -1,6 +1,6 @@
-use crate::adq::ADQ;
+use crate::adq::{cost_from_control, normalize_control, ADQ};
 
-use super::{cost_from_control, normalize_control, ControlRated, Disadvantage};
+use super::{ControlRated, Disadvantage};
 
 pub struct Incurious {
     control: i32,

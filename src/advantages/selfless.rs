@@ -1,4 +1,4 @@
-use crate::{adq::{ControlRated, ADQ}, disadvantages::cost_from_control};
+use crate::adq::{cost_from_control, ControlRated, ADQ};
 
 use super::Advantage;
 

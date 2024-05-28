@@ -1,6 +1,6 @@
-use crate::adq::ADQ;
+use crate::adq::{cost_from_level, normalize_control, ControlAsModifier, ADQ};
 
-use super::{cost_from_level, normalize_control, ControlAsModifier, ControlRated, Disadvantage};
+use super::{ControlRated, Disadvantage};
 
 pub struct Curious {
     level: i32,

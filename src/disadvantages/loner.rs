@@ -1,6 +1,6 @@
-use crate::adq::{ControlRated, ADQ};
+use crate::adq::{cost_from_control, normalize_control, ControlRated, ADQ};
 
-use super::{cost_from_control, normalize_control, Disadvantage};
+use super::Disadvantage;
 
 pub struct Loner {
     control: i32,

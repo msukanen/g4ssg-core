@@ -1,11 +1,10 @@
-use crate::adq::ADQ;
+use crate::adq::{cost_from_control, ADQ};
 
-use super::{cost_from_control, ControlRated, Disadvantage};
+use super::{ControlRated, Disadvantage};
 
 pub struct Xenophobia;
 
 impl Disadvantage for Xenophobia {}
-
 impl ADQ for Xenophobia {
     fn cost(&self) -> f64 {
         -cost_from_control(self)
@@ -15,7 +14,6 @@ impl ADQ for Xenophobia {
         "Xenophobia"
     }
 }
-
 impl ControlRated for Xenophobia {
     fn control(&self) -> i32 {
         9

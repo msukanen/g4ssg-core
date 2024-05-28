@@ -1,8 +1,8 @@
 use dice::DiceExt;
 
-use crate::life::{senses::vision::Vision, size::SizeCategory, trophiclevel::{Herbivore, TrophicLevel}};
+use crate::{advantages::Advantage, disadvantages::Disadvantage, life::{senses::vision::Vision, size::SizeCategory, trophiclevel::{Herbivore, TrophicLevel}}};
 
-use super::{curiosity::Curiosity, egoism::Egoism, organization::SocialOrganization, PersonalityEffectLevel};
+use super::{curiosity::Curiosity, egoism::Egoism, organization::SocialOrganization, PersonalityEffect, PersonalityEffectLevel};
 
 #[derive(PartialEq, Clone, Copy)]
 pub enum Suspicion {
@@ -59,5 +59,11 @@ impl PersonalityEffectLevel for Suspicion {
             Self::Normal => 0,
             Self::Fearlessness(x) => *x,
         }
+    }
+}
+
+impl PersonalityEffect for Suspicion {
+    fn gain(&self, personality: &super::Personality, trophiclevel: &TrophicLevel) -> (Vec<Box<dyn Disadvantage>>, Vec<Box<dyn Advantage>>) {
+        
     }
 }
