@@ -14,6 +14,8 @@ pub mod congenial;
 pub mod imaginative;
 pub mod dull;
 pub mod careful;
+pub mod playful;
+pub mod serious;
 
 use crate::disadvantages::Disadvantage;
 

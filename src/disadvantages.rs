@@ -17,8 +17,15 @@ pub mod cowardice;
 pub mod paranoia;
 pub mod overconfidence;
 pub mod fearfulness;
+pub mod playfulness;
+pub mod trickster;
+pub mod nosenseofhumor;
 
-pub trait Disadvantage: ADQ + ControlRated {}
+pub trait Disadvantage: ADQ + ControlRated {
+    fn is_overconfidence(&self) -> bool {
+        false
+    }
+}
 
 pub trait DisadvantageContainer: Sized {
     fn disadvantages(&self) -> &Vec<Box<dyn Disadvantage>>;

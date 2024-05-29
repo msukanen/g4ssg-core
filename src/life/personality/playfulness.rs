@@ -1,8 +1,8 @@
 use dice::DiceExt;
 
-use crate::life::{intelligence::Intelligence, sex::{reprstrategy::ReproductionStrategy, Reproduction}};
+use crate::{advantages::Advantage, disadvantages::{nosenseofhumor::NoSenseOfHumor, orh::wetblanket::WetBlanket, playfulness::CompulsivePlayfulness, trickster::Trickster, Disadvantage}, life::{intelligence::Intelligence, sex::{reprstrategy::ReproductionStrategy, Reproduction}, trophiclevel::TrophicLevel}, quirks::{playful::Playful, serious::Serious}};
 
-use super::{organization::SocialOrganization, PersonalityEffectLevel};
+use super::{organization::SocialOrganization, Personality, PersonalityEffect, PersonalityEffectLevel};
 
 pub enum Playfulness {
     Compulsive(i32),
@@ -51,5 +51,28 @@ impl PersonalityEffectLevel for Playfulness {
             Self::Compulsive(12) => 2,
             Self::Compulsive(_) => 3
         }
+    }
+}
+
+impl PersonalityEffect for Playfulness {
+    fn gain(&self, personality: &Personality, trophiclevel: &TrophicLevel) -> (Vec<Box<dyn Disadvantage>>, Vec<Box<dyn Advantage>>) {
+        let _ = trophiclevel;
+        let mut disadvs: Vec<Box<dyn Disadvantage>> = vec![];
+
+        match self {
+            Self::Compulsive(9) => if personality.overconfident {
+                disadvs.push(Box::new(Trickster))
+            } else {
+                disadvs.push(Box::new(CompulsivePlayfulness::new(9)))
+            },
+            Self::Compulsive(12) => disadvs.push(Box::new(CompulsivePlayfulness::new(12))),
+            Self::Playful => disadvs.push(Box::new(Playful)),
+            Self::Serious => disadvs.push(Box::new(Serious)),
+            Self::ORHWetBlanket => disadvs.push(Box::new(WetBlanket)),
+            Self::NoSenseOfHumor => disadvs.push(Box::new(NoSenseOfHumor)),
+            _ => ()
+        }
+
+        (disadvs, vec![])
     }
 }

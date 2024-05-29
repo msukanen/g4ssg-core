@@ -1,4 +1,4 @@
-use crate::{advantages::{Advantage, AdvantageContainer}, disadvantages::{Disadvantage, DisadvantageContainer}};
+use crate::{advantages::{self, Advantage, AdvantageContainer}, disadvantages::{self, overconfidence::Overconfidence, Disadvantage, DisadvantageContainer}};
 
 use self::{chauvinism::Chauvinism, concentration::Concentration, curiosity::Curiosity, egoism::Egoism, empathy::Empathy, gregariousness::Gregariousness, imagination::Imagination, organization::SocialOrganization, playfulness::Playfulness, suspicion::Suspicion};
 
@@ -37,6 +37,7 @@ pub struct Personality {
     imagination: Imagination,
     playfulness: Playfulness,
     suspicion: Suspicion,
+    overconfident: bool,
 
     disadvantages: Vec<Box<dyn Disadvantage>>,
     advantages: Vec<Box<dyn Advantage>>,
@@ -67,7 +68,7 @@ impl Personality {
         egoism = egoism.shift_based_on(&suspicion, &chauvinism, &empathy);
         suspicion = suspicion.shift_based_on(&curiosity);
 
-        Personality {
+        let mut personality = Personality {
             chauvinism,
             concentration,
             curiosity,
@@ -77,9 +78,45 @@ impl Personality {
             imagination,
             playfulness,
             suspicion,
+            overconfident: false,
             disadvantages: vec![],
             advantages: vec![],
+        };
+
+        let (d,a) = personality.chauvinism.gain(&personality, trophiclevel);
+        personality.disadvantages.extend(d);
+        personality.advantages.extend(a);
+        let (d,a) = personality.concentration.gain(&personality, trophiclevel);
+        personality.disadvantages.extend(d);
+        personality.advantages.extend(a);
+        let (d,a) = personality.curiosity.gain(&personality, trophiclevel);
+        personality.disadvantages.extend(d);
+        personality.advantages.extend(a);
+        let (d,a) = personality.empathy.gain(&personality, trophiclevel);
+        personality.disadvantages.extend(d);
+        personality.advantages.extend(a);
+        let (d,a) = personality.gregariousness.gain(&personality, trophiclevel);
+        personality.disadvantages.extend(d);
+        personality.advantages.extend(a);
+        let (d,a) = personality.imagination.gain(&personality, trophiclevel);
+        personality.disadvantages.extend(d);
+        personality.advantages.extend(a);
+        let (d,a) = personality.suspicion.gain(&personality, trophiclevel);
+        personality.disadvantages.extend(d);
+        personality.advantages.extend(a);
+
+        for d in personality.disadvantages.iter() {
+            if d.is_overconfidence() {
+                personality.overconfident = true;
+                break;
+            }
         }
+
+        let (d,a) = personality.playfulness.gain(&personality, trophiclevel);
+        personality.disadvantages.extend(d);
+        personality.advantages.extend(a);
+
+        personality
     }
 }
 
