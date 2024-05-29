@@ -1,6 +1,6 @@
 use dice::DiceExt;
 
-use crate::{advantages::{charitable::Charitable, empathy::Sensitive, Advantage}, disadvantages::{bloodlust::Bloodlust, callous::Callous, oblivious::Oblivious, Disadvantage}, life::{sex::{reprstrategy::ReproductionStrategy, Reproduction}, trophiclevel::{self, Carnivore, Herbivore, TrophicLevel, TrophicLevelType}}, quirks::responsive::Responsive};
+use crate::life::{advantages::{charitable::Charitable, empathy::Sensitive, Advantage}, disadvantages::{bloodlust::Bloodlust, callous::Callous, oblivious::Oblivious, Disadvantage}, sex::{reprstrategy::ReproductionStrategy, Reproduction}, trophiclevel::{Carnivore, Herbivore, TrophicLevel, TrophicLevelType}, quirks::Quirks};
 
 use super::{gregariousness::Gregariousness, organization::SocialOrganization, suspicion::Suspicion, Personality, PersonalityEffect, PersonalityEffectLevel};
 
@@ -73,7 +73,7 @@ impl PersonalityEffect for Empathy {
 
         match self {
             Self::Empathy(false) => {
-                advs.push(Box::new(crate::advantages::empathy::Empathy));
+                advs.push(Box::new(crate::life::advantages::empathy::Empathy));
                 if personality.gregariousness.level() > 0 {
                     advs.push(Box::new(Charitable));
                 }
@@ -84,7 +84,7 @@ impl PersonalityEffect for Empathy {
                     disadvs.push(Box::new(Bloodlust));
                 }
             },
-            Self::Responsive => disadvs.push(Box::new(Responsive)),
+            Self::Responsive => disadvs.push(Box::new(Quirks::Responsive)),
             Self::Oblivious => disadvs.push(Box::new(Oblivious)),
             Self::Callous => disadvs.push(Box::new(Callous)),
             _ => ()

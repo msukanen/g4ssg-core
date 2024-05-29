@@ -1,6 +1,6 @@
 use dice::DiceExt;
 
-use crate::{advantages::Advantage, disadvantages::{nosenseofhumor::NoSenseOfHumor, orh::wetblanket::WetBlanket, playfulness::CompulsivePlayfulness, trickster::Trickster, Disadvantage}, life::{intelligence::Intelligence, sex::{reprstrategy::ReproductionStrategy, Reproduction}, trophiclevel::TrophicLevel}, quirks::{playful::Playful, serious::Serious}};
+use crate::life::{advantages::Advantage, disadvantages::{nosenseofhumor::NoSenseOfHumor, orh::wetblanket::WetBlanket, playfulness::CompulsivePlayfulness, trickster::Trickster, Disadvantage}, intelligence::Intelligence, sex::{reprstrategy::ReproductionStrategy, Reproduction}, trophiclevel::TrophicLevel, quirks::Quirks};
 
 use super::{organization::SocialOrganization, Personality, PersonalityEffect, PersonalityEffectLevel};
 
@@ -66,8 +66,8 @@ impl PersonalityEffect for Playfulness {
                 disadvs.push(Box::new(CompulsivePlayfulness::new(9)))
             },
             Self::Compulsive(12) => disadvs.push(Box::new(CompulsivePlayfulness::new(12))),
-            Self::Playful => disadvs.push(Box::new(Playful)),
-            Self::Serious => disadvs.push(Box::new(Serious)),
+            Self::Playful => disadvs.push(Box::new(Quirks::Playful)),
+            Self::Serious => disadvs.push(Box::new(Quirks::Serious)),
             Self::ORHWetBlanket => disadvs.push(Box::new(WetBlanket)),
             Self::NoSenseOfHumor => disadvs.push(Box::new(NoSenseOfHumor)),
             _ => ()

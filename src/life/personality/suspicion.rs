@@ -1,6 +1,6 @@
 use dice::DiceExt;
 
-use crate::{advantages::{fearlessness::{Fearlessness, Unfazeable}, Advantage}, disadvantages::{cowardice::Cowardice, fearfulness::Fearfulness, overconfidence::Overconfidence, paranoia::Paranoia, Disadvantage}, life::{senses::vision::Vision, size::SizeCategory, trophiclevel::{Herbivore, TrophicLevel}}, quirks::careful::Careful};
+use crate::life::{advantages::{fearlessness::{Fearlessness, Unfazeable}, Advantage}, disadvantages::{cowardice::Cowardice, fearfulness::Fearfulness, overconfidence::Overconfidence, paranoia::Paranoia, Disadvantage}, quirks::Quirks, senses::vision::Vision, size::SizeCategory, trophiclevel::{Herbivore, TrophicLevel}};
 
 use super::{curiosity::Curiosity, organization::SocialOrganization, PersonalityEffect, PersonalityEffectLevel};
 
@@ -77,7 +77,7 @@ impl PersonalityEffect for Suspicion {
                 }
             },
             Self::Fearfulness(_) => disadvs.push(Box::new(Fearfulness::new(1))),
-            Self::Careful => disadvs.push(Box::new(Careful)),
+            Self::Careful => disadvs.push(Box::new(Quirks::Careful)),
             Self::Fearlessness(1) => advs.push(Box::new(Fearlessness::new(1))),
             Self::Fearlessness(2) => {
                 advs.push(Box::new(Fearlessness::new(2)));

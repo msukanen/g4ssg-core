@@ -1,6 +1,6 @@
 use dice::DiceExt;
 
-use crate::{disadvantages::{hidebound::Hidebound, orh::nonstopideafactory::NonstopIdeaFactory, Disadvantage}, life::{sex::{reprstrategy::ReproductionStrategy, Reproduction}, trophiclevel::{Carnivore, Herbivore, TrophicLevel, TrophicLevelType}}, quirks::{dreamer::Dreamer, dull::Dull, imaginative::Imaginative, versatile::Versatile}};
+use crate::life::{advantages::Advantage, disadvantages::{hidebound::Hidebound, orh::nonstopideafactory::NonstopIdeaFactory, Disadvantage}, quirks::Quirks, sex::{reprstrategy::ReproductionStrategy, Reproduction}, trophiclevel::{Carnivore, Herbivore, TrophicLevel, TrophicLevelType}};
 
 use super::{PersonalityEffect, PersonalityEffectLevel};
 
@@ -52,32 +52,32 @@ impl PersonalityEffectLevel for Imagination {
 }
 
 impl PersonalityEffect for Imagination {
-    fn gain(&self, personality: &super::Personality, trophiclevel: &TrophicLevel) -> (Vec<Box<dyn crate::disadvantages::Disadvantage>>, Vec<Box<dyn crate::advantages::Advantage>>) {
+    fn gain(&self, personality: &super::Personality, trophiclevel: &TrophicLevel) -> (Vec<Box<dyn Disadvantage>>, Vec<Box<dyn Advantage>>) {
         let _ = trophiclevel;
         let mut disadvs: Vec<Box<dyn Disadvantage>> = vec![];
 
         match self {
             Self::Imaginative(3) => {
-                disadvs.push(Box::new(Imaginative));
+                disadvs.push(Box::new(Quirks::Imaginative));
                 if personality.empathy.level() < 1 {
                     disadvs.push(Box::new(NonstopIdeaFactory))
                 } else if personality.egoism.level() > 0 || personality.concentration.level() < 1 {
-                    disadvs.push(Box::new(Dreamer))
+                    disadvs.push(Box::new(Quirks::Dreamer))
                 }
             },
             Self::Imaginative(2) => {
-                disadvs.push(Box::new(Imaginative));
+                disadvs.push(Box::new(Quirks::Imaginative));
                 if personality.egoism.level() > 0 || personality.concentration.level() < 1 {
-                    disadvs.push(Box::new(Dreamer))
+                    disadvs.push(Box::new(Quirks::Dreamer))
                 }
             },
             Self::Imaginative(1) => {
-                disadvs.push(Box::new(Imaginative));
+                disadvs.push(Box::new(Quirks::Imaginative));
                 if personality.concentration.level() >= 0 && personality.egoism.level() < 2 {
-                    disadvs.push(Box::new(Versatile))
+                    disadvs.push(Box::new(Quirks::Versatile))
                 }
             },
-            Self::Dull => disadvs.push(Box::new(Dull)),
+            Self::Dull => disadvs.push(Box::new(Quirks::Dull)),
             Self::Hidebound(with_iq_penalty) => disadvs.push(Box::new(Hidebound::new(*with_iq_penalty))),
             _ => ()
         }

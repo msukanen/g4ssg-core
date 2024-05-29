@@ -1,6 +1,6 @@
 use dice::DiceExt;
 
-use crate::life::{sex::mating::MatingBehavior, size::SizeCategory, trophiclevel::{Herbivore, TrophicLevel}};
+use crate::life::{sex::mating::MatingBehavior, trophiclevel::{Herbivore, TrophicLevel}};
 
 #[derive(PartialEq)]
 pub enum GroupSize {

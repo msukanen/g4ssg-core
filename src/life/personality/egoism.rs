@@ -1,6 +1,6 @@
 use dice::DiceExt;
 
-use crate::{advantages::{selfless::Selfless, Advantage}, disadvantages::{self, selfish::Selfish, Disadvantage}, life::sex::mating::MatingBehavior, quirks::{humble::Humble, proud::Proud}};
+use crate::life::{advantages::{selfless::Selfless, Advantage}, disadvantages::{selfish::Selfish, Disadvantage}, quirks::Quirks, sex::mating::MatingBehavior};
 
 use super::{chauvinism::Chauvinism, empathy::Empathy, organization::SocialOrganization, suspicion::Suspicion, PersonalityEffect, PersonalityEffectLevel};
 
@@ -58,7 +58,7 @@ impl PersonalityEffectLevel for Egoism {
 }
 
 impl PersonalityEffect for Egoism {
-    fn gain(&self, personality: &super::Personality, trophiclevel: &crate::life::trophiclevel::TrophicLevel) -> (Vec<Box<dyn crate::disadvantages::Disadvantage>>, Vec<Box<dyn crate::advantages::Advantage>>) {
+    fn gain(&self, personality: &super::Personality, trophiclevel: &crate::life::trophiclevel::TrophicLevel) -> (Vec<Box<dyn Disadvantage>>, Vec<Box<dyn Advantage>>) {
         let _ = trophiclevel;
         let _ = personality;
         let mut disadvs: Vec<Box<dyn Disadvantage>> = vec![];
@@ -66,8 +66,8 @@ impl PersonalityEffect for Egoism {
 
         match self {
             Self::Selfish(control) => disadvs.push(Box::new(Selfish::new(*control))),
-            Self::Proud => disadvs.push(Box::new(Proud)),
-            Self::Humble => disadvs.push(Box::new(Humble)),
+            Self::Proud => disadvs.push(Box::new(Quirks::Proud)),
+            Self::Humble => disadvs.push(Box::new(Quirks::Humble)),
             Self::Selfless(control) => advs.push(Box::new(Selfless::new(*control))),
             _ => ()
         }

@@ -1,8 +1,8 @@
 use dice::DiceExt;
 
-use crate::{advantages::Advantage, disadvantages::{racialintolerance::RacialIntolerance, xenophilia::Xenophilia, xenophobia::Xenophobia, Disadvantage}, life::{sex::{arrangement::SexualArrangement, ArrangementCheck, Reproduction}, trophiclevel::{TrophicLevel, TrophicLevelType}}, quirks::{broadminded::BroadMinded, chauvinistic::Chauvinistic, undiscriminating::Undiscriminating}};
+use crate::life::{advantages::Advantage, disadvantages::{racialintolerance::RacialIntolerance, xenophilia::Xenophilia, xenophobia::Xenophobia, Disadvantage}, quirks::Quirks, sex::{arrangement::SexualArrangement, ArrangementCheck, Reproduction}, trophiclevel::{TrophicLevel, TrophicLevelType}};
 
-use super::{empathy, organization::SocialOrganization, suspicion, Personality, PersonalityEffect, PersonalityEffectLevel};
+use super::{organization::SocialOrganization, Personality, PersonalityEffect, PersonalityEffectLevel};
 
 pub enum Chauvinism {
     Chauvinistic(i32),
@@ -69,20 +69,20 @@ impl PersonalityEffect for Chauvinism {
                     disadvs.push(Box::new(Xenophobia))
                 }
                 if !ri {
-                    disadvs.push(Box::new(Chauvinistic))
+                    disadvs.push(Box::new(Quirks::Chauvinistic))
                 }
             },
             
             Self::Chauvinistic(2) => if personality.empathy.level() < 1 || personality.suspicion.level() > -1 {
                 disadvs.push(Box::new(RacialIntolerance))
             } else {
-                disadvs.push(Box::new(Chauvinistic))
+                disadvs.push(Box::new(Quirks::Chauvinistic))
             },
             
             Self::Chauvinistic(_) => if personality.empathy.level() < 0 || personality.suspicion.level() > 0 {
                 disadvs.push(Box::new(RacialIntolerance))
             } else {
-                disadvs.push(Box::new(Chauvinistic))
+                disadvs.push(Box::new(Quirks::Chauvinistic))
             },
             
             Self::Undiscriminating => if personality.suspicion.level() < 0 && personality.empathy.level() > 0 {
@@ -90,16 +90,16 @@ impl PersonalityEffect for Chauvinism {
             } else if personality.suspicion.level() < 0 || personality.empathy.level() > 0 {
                 disadvs.push(Box::new(Xenophilia::new(12)));
             } else {
-                disadvs.push(Box::new(Undiscriminating))
+                disadvs.push(Box::new(Quirks::Undiscriminating))
             },
 
             Self::BroadMinded(2) => if personality.suspicion.level() < 0 && personality.empathy.level() > 0 {
                 disadvs.push(Box::new(Xenophilia::new(15)));
             } else {
-                disadvs.push(Box::new(BroadMinded))
+                disadvs.push(Box::new(Quirks::BroadMinded))
             },
 
-            Self::BroadMinded(_) => disadvs.push(Box::new(BroadMinded)),
+            Self::BroadMinded(_) => disadvs.push(Box::new(Quirks::BroadMinded)),
 
             _ => ()
         }

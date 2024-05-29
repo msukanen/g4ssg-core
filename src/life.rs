@@ -20,6 +20,10 @@ pub mod senses;
 pub mod intelligence;
 pub mod lifespan;
 pub mod personality;
+pub mod disadvantages;
+pub mod advantages;
+pub mod adq;
+pub mod quirks;
 
 pub struct Life {
     base: LifeBase,

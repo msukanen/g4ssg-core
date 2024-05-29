@@ -1,6 +1,6 @@
 use dice::DiceExt;
 
-use crate::{advantages::Advantage, disadvantages::{curious::Curious, incurious::Incurious, Disadvantage}, life::{senses::{vision::Vision, Senses}, sex::{reprstrategy::ReproductionStrategy, Reproduction}, trophiclevel::{Herbivore, TrophicLevel, TrophicLevelType}}, quirks::{nosy::Nosy, staid::Staid}};
+use crate::life::{advantages::Advantage, disadvantages::{curious::Curious, incurious::Incurious, Disadvantage}, quirks::Quirks, senses::{vision::Vision, Senses}, sex::{reprstrategy::ReproductionStrategy, Reproduction}, trophiclevel::{Herbivore, TrophicLevel, TrophicLevelType}};
 
 use super::{concentration::Concentration, suspicion::Suspicion, Personality, PersonalityEffect, PersonalityEffectLevel};
 
@@ -20,7 +20,7 @@ impl Curiosity {
            else if trophiclevel.is_herbivore(Some(Herbivore::Grazing))
                 || trophiclevel.is(TrophicLevelType::FilterFeeder) { -1 } else { 0 }
          + match senses.vision() {
-             Vision::Blindness(_) => -1,
+             &Vision::Blindness(_) => -1,
              _ => 0}
          + match reproduction.strategy() {
              ReproductionStrategy::StrongR(_) => -1,
@@ -79,8 +79,8 @@ impl PersonalityEffect for Curiosity {
         let mut disadvs: Vec<Box<dyn Disadvantage>> = vec![];
         match self {
             Self::Curious(control) => disadvs.push(Box::new(Curious::new(*control, 1))),
-            Self::Nosy => disadvs.push(Box::new(Nosy)),
-            Self::Staid => disadvs.push(Box::new(Staid)),
+            Self::Nosy => disadvs.push(Box::new(Quirks::Nosy)),
+            Self::Staid => disadvs.push(Box::new(Quirks::Staid)),
             Self::Incurious(control) => disadvs.push(Box::new(Incurious::new(*control))),
             _ => ()
         }

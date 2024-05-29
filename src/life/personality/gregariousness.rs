@@ -1,6 +1,6 @@
 use dice::DiceExt;
 
-use crate::{advantages::{chummy::Chummy, gregarious::Gregarious, Advantage}, disadvantages::{loner::Loner, Disadvantage}, life::{sex::{arrangement::SexualArrangement, gestation::Gestation, ArrangementCheck, Reproduction}, trophiclevel::{Carnivore, TrophicLevel, TrophicLevelType}}, quirks::congenial::{Congenial, Uncongenial}};
+use crate::life::{advantages::{chummy::Chummy, gregarious::Gregarious, Advantage}, disadvantages::{loner::Loner, Disadvantage}, quirks::Quirks, sex::{arrangement::SexualArrangement, gestation::Gestation, ArrangementCheck, Reproduction}, trophiclevel::{Carnivore, TrophicLevel, TrophicLevelType}};
 
 use super::{organization::SocialOrganization, PersonalityEffect, PersonalityEffectLevel};
 
@@ -75,8 +75,8 @@ impl PersonalityEffect for Gregariousness {
         match self {
             Self::Gregarious => advs.push(Box::new(Gregarious)),
             Self::Chummy => advs.push(Box::new(Chummy)),
-            Self::Congenial => disadvs.push(Box::new(Congenial)),
-            Self::Uncongenial => disadvs.push(Box::new(Uncongenial)),
+            Self::Congenial => disadvs.push(Box::new(Quirks::Congenial)),
+            Self::Uncongenial => disadvs.push(Box::new(Quirks::Uncongenial)),
             Self::Loner(control) => disadvs.push(Box::new(Loner::new(*control))),
             _ => ()
         }

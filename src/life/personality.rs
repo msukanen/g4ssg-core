@@ -1,8 +1,6 @@
-use crate::{advantages::{self, Advantage, AdvantageContainer}, disadvantages::{self, overconfidence::Overconfidence, Disadvantage, DisadvantageContainer}};
-
 use self::{chauvinism::Chauvinism, concentration::Concentration, curiosity::Curiosity, egoism::Egoism, empathy::Empathy, gregariousness::Gregariousness, imagination::Imagination, organization::SocialOrganization, playfulness::Playfulness, suspicion::Suspicion};
 
-use super::{intelligence::Intelligence, senses::Senses, sex::{mating::MatingBehavior, Reproduction}, size::SizeCategory, trophiclevel::TrophicLevel};
+use super::{advantages::{Advantage, AdvantageContainer}, disadvantages::{Disadvantage, DisadvantageContainer}, intelligence::Intelligence, senses::Senses, sex::{mating::MatingBehavior, Reproduction}, size::SizeCategory, trophiclevel::TrophicLevel};
 
 pub trait PersonalityEffectLevel {
     fn level(&self) -> i32;
