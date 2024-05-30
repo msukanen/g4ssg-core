@@ -22,12 +22,30 @@ impl From<(f64, f64, f64, Option<ForbiddenZone>)> for OrbitLimits {
 }
 
 impl OrbitLimits {
+    /**
+     Get inner limit.
+     */
     pub fn inner(&self) -> f64 {
         self.inner
     }
 
-    pub fn outer(&self) -> f64 {
-        self.outer
+    /**
+     Get outer limit, optionally clamped by forbidden zone if applicable.
+     */
+    pub fn outer(&self, forbidden_zone_clamp: bool) -> f64 {
+        if let Some(fz) = self.forbidden_zone {
+            if forbidden_zone_clamp {
+                if self.outer > fz.inner {
+                    fz.inner
+                } else {
+                    self.outer
+                }
+            } else {
+                self.outer
+            }
+        } else {
+            self.outer
+        }
     }
 
     pub fn snowline(&self) -> f64 {

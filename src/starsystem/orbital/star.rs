@@ -6,11 +6,11 @@ pub mod limits;
 use dice::DiceExt;
 use rand::Rng;
 
-use crate::{life::sex::arrangement, maxof, measurement::massindex::MassIndex};
+use crate::{maxof, measurement::massindex::MassIndex, starsystem::orbital::planet::gasgiant::arrangement::GasGiantArrangement};
 
 use self::{evolutionstage::EvolutionStage, limits::{ForbiddenZone, OrbitLimits}, population::Population};
 
-use super::{distance::OrbitalDistance, planet::{gasgiant::{GasGiant, GasGiantArrangement}, Planet}, separation::OrbitalSeparation, OrbitElement};
+use super::{distance::OrbitalDistance, planet::gasgiant::GasGiant, separation::OrbitalSeparation, OrbitElement};
 
 pub struct Star {
     population: Population,
@@ -86,9 +86,91 @@ impl Star {
         ));
 
         let mut orbits: Vec<(f64, Option<OrbitElement>)> = vec![];
+        let mut inward_orbits: Vec<(f64, Option<OrbitElement>)> = vec![];
+        let mut outward_orbits: Vec<(f64, Option<OrbitElement>)> = vec![];
+        let middle_distance: f64;
+        let gga = GasGiantArrangement::random(&orbit_limits);
 
-        if let Some(gga) = GasGiantArrangement::random(&orbit_limits) {
+        if let Some(gga) = gga {
+            middle_distance = gga.distance();
             orbits.push((gga.distance(), Some(GasGiant::random(gga))));
+        } else {
+            middle_distance = orbit_limits.outer(true) / (1.0 + 1.d6() as f64 * 0.05);
+        }
+
+        /**
+         Generate a random orbital spacing multiplier.
+         */
+        fn rng_spacing_multiplier() -> f64 {
+            match 3.d6() {
+                ..=4 => 1.4,
+                5|6 => 1.5,
+                7|8 => 1.6,
+                9..=12 => 1.7,
+                13|14 => 1.8,
+                15|16 => 1.9,
+                17.. => 2.0
+            }
+        }
+
+        let mut d: f64 = middle_distance;
+
+        //
+        // Inwards orbits.
+        //
+        loop {
+            d /= rng_spacing_multiplier();
+            if d < orbit_limits.inner(){
+                break;
+            }
+            if !orbit_limits.is_forbidden_distance(d) {
+                inward_orbits.push((d, None));//NOTE: 'None' for now, altered later.
+            }
+        }
+
+        //
+        // Outwards orbits.
+        //
+        d  = middle_distance;
+        loop {
+            d *= rng_spacing_multiplier();
+            if d > orbit_limits.outer(false) {
+                break;
+            }
+            if !orbit_limits.is_forbidden_distance(d) {
+                outward_orbits.push((d, None));
+            }
+        }
+        inward_orbits.reverse();
+        inward_orbits.extend(orbits);
+        inward_orbits.reverse();
+        inward_orbits.extend(outward_orbits);
+        orbits = inward_orbits;
+
+        //
+        // Place gas giants ...
+        //
+        fn can_place_gg(gga: &GasGiantArrangement, orbit_limits: &OrbitLimits, distance: f64) -> bool {
+            match gga {
+                GasGiantArrangement::Conventional(_) => distance > orbit_limits.snowline() && 3.d6() < 16,
+                GasGiantArrangement::Eccentric(_) => distance <= orbit_limits.snowline() && 3.d6() < 8
+                                                  || distance > orbit_limits.snowline() && 3.d6() < 15,
+                GasGiantArrangement::Epistellar(_) => distance <= orbit_limits.snowline() && 3.d6() < 7
+                                                   || distance > orbit_limits.snowline() && 3.d6() < 15
+            }
+        }
+
+        let mut gg_orbits = vec![];
+        for mut o in orbits {
+            match gga {
+                None => (),
+                Some(gga) => {
+                    if can_place_gg(&gga, &orbit_limits, o.0) {
+                        o.1 = Some(GasGiant::random(GasGiantArrangement::from((&gga, o.0)), &orbit_limits))
+                    }
+                }
+            }
+            gg_orbits.push(o)
         }
 
         Star {
@@ -101,7 +183,7 @@ impl Star {
             luminosity,
             radius,
             orbit_limits,
-            orbits,
+            orbits: gg_orbits,
         }
     }
 
