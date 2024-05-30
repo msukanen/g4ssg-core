@@ -3,7 +3,7 @@ pub mod water;
 
 use dice::{DiceExt, HiLo};
 
-use crate::orbital::OrbitElement;
+use crate::starsystem::orbital::OrbitElement;
 
 use self::{land::LandHabitat, water::WaterHabitat};
 

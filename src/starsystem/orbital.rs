@@ -2,6 +2,9 @@ use self::{asteroidbelt::AsteroidBelt, planet::{gasgiant::GasGiant, terrestrial:
 
 pub mod planet;
 pub mod asteroidbelt;
+pub mod star;
+pub mod separation;
+pub mod distance;
 
 pub enum OrbitElement {
     AsteroidBelt(AsteroidBelt),
@@ -9,4 +12,6 @@ pub enum OrbitElement {
     GasGiant(GasGiant),
 }
 
-pub trait OrbitalInfo {}
+pub trait OrbitalInfo {
+    fn distance(&self) -> f64;
+}

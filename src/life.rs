@@ -1,4 +1,4 @@
-use crate::orbital::OrbitElement;
+use crate::starsystem::orbital::OrbitElement;
 
 use self::{appendages::{manipulators::Manipulator, numlimbs::NumberOfLimbs}, base::LifeBase, bodytemp::TemperatureRegulation, breathing::Breathing, growthpattern::GrowthPattern, habitat::Habitat, intelligence::Intelligence, lifespan::Lifespan, locomotion::Locomotion, personality::{organization::SocialOrganization, Personality}, senses::Senses, sex::{mating::MatingBehavior, Reproduction}, size::{Size, SizeCategory}, skeleton::Skeleton, symmetry::Symmetry, tail::Tail, trophiclevel::TrophicLevel};
 
