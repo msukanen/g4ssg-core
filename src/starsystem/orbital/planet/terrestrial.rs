@@ -2,6 +2,7 @@ use crate::starsystem::orbital::{OrbitElement, OrbitalInfo};
 
 use super::Planet;
 
+#[derive(Clone, Copy)]
 pub struct Terrestrial {
     distance: f64,
 }

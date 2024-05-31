@@ -1,6 +1,6 @@
 use dice::DiceExt;
 
-use crate::starsystem::orbital::star::limits::OrbitLimits;
+use crate::starsystem::orbital::star::limits::orbitlimit::OrbitLimits;
 
 /**
  Gas giant arrangement for a star system.

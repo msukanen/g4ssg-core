@@ -1,5 +1,6 @@
 use super::{OrbitElement, OrbitalInfo};
 
+#[derive(Clone, Copy)]
 pub struct AsteroidBelt {
     distance: f64,
 }

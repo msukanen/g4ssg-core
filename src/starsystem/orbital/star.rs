@@ -6,9 +6,9 @@ pub mod limits;
 use dice::DiceExt;
 use rand::Rng;
 
-use crate::{maxof, measurement::massindex::MassIndex, starsystem::orbital::planet::gasgiant::arrangement::GasGiantArrangement};
+use crate::{maxof, measurement::massindex::MassIndex, starsystem::orbital::{asteroidbelt::AsteroidBelt, planet::{gasgiant::arrangement::GasGiantArrangement, terrestrial::Terrestrial}}};
 
-use self::{evolutionstage::EvolutionStage, limits::{ForbiddenZone, OrbitLimits}, population::Population};
+use self::{evolutionstage::EvolutionStage, limits::{forbiddenzone::ForbiddenZone, orbitlimit::OrbitLimits}, population::Population};
 
 use super::{distance::OrbitalDistance, planet::gasgiant::GasGiant, separation::OrbitalSeparation, OrbitElement};
 
@@ -93,7 +93,7 @@ impl Star {
 
         if let Some(gga) = gga {
             middle_distance = gga.distance();
-            orbits.push((gga.distance(), Some(GasGiant::random(gga))));
+            orbits.push((gga.distance(), Some(GasGiant::random(gga.distance() <= orbit_limits.snowline(), gga, &orbit_limits))));
         } else {
             middle_distance = orbit_limits.outer(true) / (1.0 + 1.d6() as f64 * 0.05);
         }
@@ -116,7 +116,7 @@ impl Star {
         let mut d: f64 = middle_distance;
 
         //
-        // Inwards orbits.
+        // Inwards orbits. Note that they're in "reversed order" (furthest -> nearest) from the get go.
         //
         loop {
             d /= rng_spacing_multiplier();
@@ -127,6 +127,7 @@ impl Star {
                 inward_orbits.push((d, None));//NOTE: 'None' for now, altered later.
             }
         }
+        inward_orbits.reverse();// make the order (nearest -> furthest)
 
         //
         // Outwards orbits.
@@ -141,9 +142,9 @@ impl Star {
                 outward_orbits.push((d, None));
             }
         }
-        inward_orbits.reverse();
+
+        // Clump all orbits together...
         inward_orbits.extend(orbits);
-        inward_orbits.reverse();
         inward_orbits.extend(outward_orbits);
         orbits = inward_orbits;
 
@@ -160,18 +161,74 @@ impl Star {
             }
         }
 
-        let mut gg_orbits = vec![];
-        for mut o in orbits {
+        // Populate orbits with GGs first.
+        let mut gg_orbits: Vec<(f64, Option<OrbitElement>)> = vec![];
+        for (index, mut o) in orbits.clone().into_iter().enumerate() {
             match gga {
                 None => (),
                 Some(gga) => {
                     if can_place_gg(&gga, &orbit_limits, o.0) {
-                        o.1 = Some(GasGiant::random(GasGiantArrangement::from((&gga, o.0)), &orbit_limits))
+                        let inside_snowline_or_first_outside
+                            =   o.0 <= orbit_limits.snowline()
+                            || (o.0 > orbit_limits.snowline()
+                                && index > 0
+                                && orbits[index-1].0 < orbit_limits.snowline());
+                        o.1 = Some(GasGiant::random(
+                            inside_snowline_or_first_outside,
+                            GasGiantArrangement::from((&gga, o.0)),
+                            &orbit_limits))
                     }
                 }
             }
-            gg_orbits.push(o)
+            gg_orbits.push((o.0, match &o.1 {
+                None => None,
+                Some(x) => Some(x.clone())
+            }))
         }
+        orbits = gg_orbits;
+
+        let mut other_orbits = vec![];
+        for (count, o) in orbits.clone().into_iter().enumerate() {
+            if orbit_limits.is_forbidden_distance(o.0)
+                || o.0 < orbit_limits.inner()
+                || o.0 > orbit_limits.outer(false) {
+                continue;
+            }
+
+            let mut modifier = 0;
+            if count < orbits.len()-1 {
+                // adjacent to forbidden zone?
+                if orbit_limits.is_forbidden_distance(orbits[count+1].0) {
+                    modifier -= 6;
+                }
+                // next orbit outward is a gas giant?
+                modifier -= match orbits[count+1].1 {
+                    Some(OrbitElement::GasGiant(_)) => 6,
+                    _ => 0
+                };
+            }
+            // next orbit inward is a gas giant?
+            if count > 0 {
+                modifier -= match orbits[count-1].1 {
+                    Some(OrbitElement::GasGiant(_)) => 3,
+                    _ => 0
+                };
+            }
+            // adjacent to either inner or outer limit?
+            if count == 0 || count == orbits.len()-1 {
+                modifier -= 3
+            }
+
+            other_orbits.push((o.0, match 3.d6() + modifier {
+                ..=3 => None,
+                4..=6 => Some(AsteroidBelt::random(o.0)),
+                7|8 => Some(Terrestrial::random(o.0)),
+                9..=11 => Some(Terrestrial::random(o.0)),
+                12..=15 => Some(Terrestrial::random(o.0)),
+                16.. => Some(Terrestrial::random(o.0))
+            }))
+        }
+        orbits = other_orbits;
 
         Star {
             population: *population,
@@ -183,7 +240,7 @@ impl Star {
             luminosity,
             radius,
             orbit_limits,
-            orbits: gg_orbits,
+            orbits,
         }
     }
 
