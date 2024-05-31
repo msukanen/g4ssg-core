@@ -21,11 +21,25 @@ impl OrbitalInfo for Terrestrial {
 }
 
 impl Planet for Terrestrial {
-    
+    fn size(&self) -> Size {
+        self.size
+    }
+
+    fn major_moons(&self) -> &Vec<Size> {
+        &self.major_moons
+    }
+
+    fn moonlets(&self) -> i32 {
+        self.moonlets
+    }
 }
 
 impl Terrestrial {
+    /**
+     Generate a random "terrestrial" planet.
+     */
     pub fn random(distance: f64, size: Size) -> OrbitElement {
+        // sort out the moons...
         let mut major_moons = vec![];
         let mut moonlets = 0;
         if distance > 0.5 {
@@ -49,17 +63,5 @@ impl Terrestrial {
             distance, size,
             major_moons, moonlets,
         })
-    }
-
-    pub fn size(&self) -> Size {
-        self.size
-    }
-
-    pub fn major_moons(&self) -> &Vec<Size> {
-        &self.major_moons
-    }
-
-    pub fn moonlets(&self) -> i32 {
-        self.moonlets
     }
 }
