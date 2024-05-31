@@ -4,7 +4,7 @@ use crate::starsystem::orbital::{star::limits::orbitlimit::OrbitLimits, OrbitEle
 
 use self::arrangement::GasGiantArrangement;
 
-use super::{Planet, Size};
+use super::{Planet, size::Size};
 
 /**
  Gas Giant, obviously.

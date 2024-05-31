@@ -6,7 +6,7 @@ pub mod limits;
 use dice::DiceExt;
 use rand::Rng;
 
-use crate::{maxof, measurement::massindex::MassIndex, starsystem::orbital::{asteroidbelt::AsteroidBelt, planet::{gasgiant::arrangement::GasGiantArrangement, terrestrial::Terrestrial}}};
+use crate::{maxof, measurement::massindex::MassIndex, starsystem::orbital::{asteroidbelt::AsteroidBelt, planet::{gasgiant::arrangement::GasGiantArrangement, size::Size, terrestrial::Terrestrial}}};
 
 use self::{evolutionstage::EvolutionStage, limits::{forbiddenzone::ForbiddenZone, orbitlimit::OrbitLimits}, population::Population};
 
@@ -219,13 +219,14 @@ impl Star {
                 modifier -= 3
             }
 
+            // Assign orbit elements, if any.
             other_orbits.push((o.0, match 3.d6() + modifier {
                 ..=3 => None,
                 4..=6 => Some(AsteroidBelt::random(o.0)),
-                7|8 => Some(Terrestrial::random(o.0)),
-                9..=11 => Some(Terrestrial::random(o.0)),
-                12..=15 => Some(Terrestrial::random(o.0)),
-                16.. => Some(Terrestrial::random(o.0))
+                7|8 => Some(Terrestrial::random(o.0, Size::Tiny)),
+                9..=11 => Some(Terrestrial::random(o.0, Size::Small)),
+                12..=15 => Some(Terrestrial::random(o.0, Size::Medium)),
+                16.. => Some(Terrestrial::random(o.0, Size::Large))
             }))
         }
         orbits = other_orbits;

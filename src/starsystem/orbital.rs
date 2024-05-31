@@ -6,7 +6,7 @@ pub mod star;
 pub mod separation;
 pub mod distance;
 
-#[derive(Clone, Copy)]
+#[derive(Clone)]
 pub enum OrbitElement {
     AsteroidBelt(AsteroidBelt),
     Terrestrial(Terrestrial),
