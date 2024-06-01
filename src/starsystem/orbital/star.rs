@@ -223,10 +223,10 @@ impl Star {
             other_orbits.push((o.0, match 3.d6() + modifier {
                 ..=3 => None,
                 4..=6 => Some(AsteroidBelt::random(o.0)),
-                7|8 => Some(Terrestrial::random(o.0, Size::Tiny)),
-                9..=11 => Some(Terrestrial::random(o.0, Size::Small)),
-                12..=15 => Some(Terrestrial::random(o.0, Size::Medium)),
-                16.. => Some(Terrestrial::random(o.0, Size::Large))
+                7|8 => Some(Terrestrial::random(population, mass, luminosity, o.0, Size::Tiny)),
+                9..=11 => Some(Terrestrial::random(population, mass, luminosity, o.0, Size::Small)),
+                12..=15 => Some(Terrestrial::random(population, mass, luminosity, o.0, Size::Medium)),
+                16.. => Some(Terrestrial::random(population, mass, luminosity, o.0, Size::Large))
             }))
         }
         orbits = other_orbits;

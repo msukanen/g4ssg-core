@@ -1,3 +1,4 @@
+use atmosphere::Atmosphere;
 use size::Size;
 
 use super::OrbitalInfo;
@@ -8,6 +9,8 @@ pub mod gasgiant;
 pub mod gravity;
 pub mod moons;
 pub mod size;
+pub mod atmosphere;
+pub mod hydrographic;
 
 pub trait Planet: OrbitalInfo {
     /**
@@ -22,9 +25,8 @@ pub trait Planet: OrbitalInfo {
      Count the planet's moonlets.
      */
     fn moonlets(&self) -> i32;
-}
-
-pub enum PlanetType {
-    Terrestrial,
-    GasGiant,
+    /**
+     Get the planet's atmosphere, if any.
+     */
+    fn atmosphere(&self) -> Option<Atmosphere>;
 }

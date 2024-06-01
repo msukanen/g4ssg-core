@@ -4,23 +4,25 @@ pub mod ringsystem;
 use std::cmp::max;
 
 use dice::DiceExt;
+use ringsystem::RingSystem;
 
 use crate::starsystem::orbital::{star::limits::orbitlimit::OrbitLimits, OrbitElement, OrbitalInfo};
 
 use self::arrangement::GasGiantArrangement;
 
-use super::{Planet, size::Size};
+use super::{atmosphere::Atmosphere, size::Size, Planet};
 
 /**
  Gas Giant, obviously.
  */
-#[derive(Clone, Copy)]
+#[derive(Clone)]
 pub struct GasGiant {
     arrangement: GasGiantArrangement,
     size: Size,
     major_moons: Vec<Size>,
     moonlets: i32,
     moonlets_outer: i32,
+    atmosphere: Atmosphere,
 }
 
 impl OrbitalInfo for GasGiant {
@@ -42,6 +44,9 @@ impl Planet for GasGiant {
         self.inner_moonlets() + self.outer_moonlets()
     }
 
+    fn atmosphere(&self) -> Option<Atmosphere> {
+        Some(self.atmosphere.clone())
+    }
 }
 
 impl GasGiant {
@@ -78,6 +83,7 @@ impl GasGiant {
         OrbitElement::GasGiant(GasGiant {
             arrangement, size,
             moonlets, moonlets_outer, major_moons,
+            atmosphere: Atmosphere::random_gg(size),
         })
     }
 
@@ -89,5 +95,9 @@ impl GasGiant {
         self.moonlets_outer
     }
 
-    pub fn ring_system(&self) -> 
+    pub fn ring_system(&self) -> Option<RingSystem> {
+        if      self.moonlets() >= 10 {Some(RingSystem::Spectacular)}
+        else if self.moonlets() >=  6 {Some(RingSystem::Faint)}
+        else    {None}
+    }
 }

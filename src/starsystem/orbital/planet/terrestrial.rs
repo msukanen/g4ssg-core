@@ -1,17 +1,23 @@
+pub mod worldtype;
+pub mod terratype;
+
 use std::cmp::max;
 
 use dice::DiceExt;
+use terratype::TerraType;
+use worldtype::WorldType;
 
-use crate::starsystem::orbital::{OrbitElement, OrbitalInfo};
+use crate::starsystem::orbital::{star::population::Population, OrbitElement, OrbitalInfo};
 
-use super::{size::Size, Planet};
+use super::{atmosphere::Atmosphere, size::Size, Planet};
 
 #[derive(Clone)]
 pub struct Terrestrial {
     distance: f64,
-    size: Size,
+    terratype: TerraType,
     major_moons: Vec<Size>,
     moonlets: i32,
+    atmosphere: Option<Atmosphere>,
 }
 
 impl OrbitalInfo for Terrestrial {
@@ -22,7 +28,12 @@ impl OrbitalInfo for Terrestrial {
 
 impl Planet for Terrestrial {
     fn size(&self) -> Size {
-        self.size
+        match self.terratype {
+            TerraType::Small(_) => Size::Small,
+            TerraType::Medium(_) => Size::Medium,
+            TerraType::Large(_) => Size::Large,
+            TerraType::Tiny(_) => Size::Tiny
+        }
     }
 
     fn major_moons(&self) -> &Vec<Size> {
@@ -32,13 +43,17 @@ impl Planet for Terrestrial {
     fn moonlets(&self) -> i32 {
         self.moonlets
     }
+
+    fn atmosphere(&self) -> Option<Atmosphere> {
+        self.atmosphere.clone()
+    }
 }
 
 impl Terrestrial {
     /**
      Generate a random "terrestrial" planet.
      */
-    pub fn random(distance: f64, size: Size) -> OrbitElement {
+    pub fn random(population: &Population, solar_mass: f64,  luminosity: f64, distance: f64, size: Size) -> OrbitElement {
         // sort out the moons...
         let mut major_moons = vec![];
         let mut moonlets = 0;
@@ -59,9 +74,14 @@ impl Terrestrial {
             moonlets = max(1.d6() - 2 + modifier, 0)
         }
 
+        let b = 278.0 * f64::powf(luminosity, 1.0 / 4.0) / distance.sqrt();
+        let terratype = TerraType::from((size, WorldType::from_blackbody(population, solar_mass, size, b)));
+        let atmosphere = Atmosphere::random(&terratype);
+
         OrbitElement::Terrestrial(Terrestrial {
-            distance, size,
+            distance, terratype,
             major_moons, moonlets,
+            atmosphere,
         })
     }
 }
