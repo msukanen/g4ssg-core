@@ -11,6 +11,7 @@ pub mod moons;
 pub mod size;
 pub mod atmosphere;
 pub mod hydrographic;
+pub mod density;
 
 pub trait Planet: OrbitalInfo {
     /**

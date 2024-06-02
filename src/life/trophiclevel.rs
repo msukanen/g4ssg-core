@@ -1,7 +1,7 @@
 use std::collections::HashSet;
 
 use derivative::Derivative;
-use dice::{low, DiceExt, HiLo};
+use dice::{lo, DiceExt, HiLo};
 
 use crate::life::habitat::ArcticOrDesert;
 
@@ -72,7 +72,7 @@ impl TrophicLevel {
             } else {
                 tlevels.push(if sapient {
                     match r {
-                        ..=4 => if low!() {TrophicLevelType::Parasite} else {TrophicLevelType::Symbiont},
+                        ..=4 => if lo!() {TrophicLevelType::Parasite} else {TrophicLevelType::Symbiont},
                         5 => if habitat.is_arctic() || habitat.is_desert() {
                             TrophicLevelType::Carnivore(Carnivore::Trapping)
                         } else {
@@ -96,7 +96,7 @@ impl TrophicLevel {
                         6 => TrophicLevelType::Scavenger,
                         7 => TrophicLevelType::Omnivore,
                         8|9 => TrophicLevelType::Herbivore(Herbivore::Gathering),
-                        10|11 => TrophicLevelType::Herbivore(if low!() {Herbivore::Grazing} else {Herbivore::Browsing}),
+                        10|11 => TrophicLevelType::Herbivore(if lo!() {Herbivore::Grazing} else {Herbivore::Browsing}),
                         12 => TrophicLevelType::Carnivore(Carnivore::Pouncing),
                         13 => TrophicLevelType::Carnivore(Carnivore::Chasing),
                         14 => TrophicLevelType::Carnivore(Carnivore::Trapping),
@@ -106,7 +106,7 @@ impl TrophicLevel {
                         } else {
                             TrophicLevelType::FilterFeeder
                         },
-                        _ => if low!() {TrophicLevelType::Parasite} else {TrophicLevelType::Symbiont}
+                        _ => if lo!() {TrophicLevelType::Parasite} else {TrophicLevelType::Symbiont}
                     }
                 })
             }

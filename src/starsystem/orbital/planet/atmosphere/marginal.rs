@@ -1,6 +1,6 @@
 use dice::DiceExt;
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq)]
 pub enum MarginalComponent {
     Chlorine,
     Fluorine,

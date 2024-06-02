@@ -16,7 +16,6 @@ pub struct Atmosphere {
     suffocating: bool,
     corrosive: bool,
     marginal: Option<MarginalComponent>,
-    mass: f64,
     pressure: Pressure,
 }
 
@@ -46,16 +45,17 @@ impl Atmosphere {
         let pressure = Pressure::new(mass);
 
         Some(Atmosphere {
-            mass, pressure,
-            toxicity, suffocating, corrosive, marginal,
+            pressure, toxicity, suffocating, corrosive, marginal,
         })
     }
 
+    /**
+     Generate a random gas giant atmosphere.
+     */
     pub fn random_gg(size: Size) -> Atmosphere {
         let _ = size;//TODO: make use of the GG size?
         Atmosphere {
-            mass: rand::thread_rng().gen_range(10.0001..=1_000_000.0),
-            pressure: Pressure::Superdense,
+            pressure: Pressure::Superdense(rand::thread_rng().gen_range(10.0001..=1_000_000.0)),
             toxicity: Some(Toxicity::Lethal),
             suffocating: true,
             corrosive: true,
@@ -63,6 +63,9 @@ impl Atmosphere {
         }
     }
 
+    /**
+     Generate a random atmosphere composition.
+     */
     fn rng_composition(terratype: &TerraType) -> (Option<Toxicity>, bool, bool, Option<MarginalComponent>) {
         match terratype {
             TerraType::Small(WorldType::Ice) => (Some(if 3.d6() < 16 {Toxicity::Mild} else {Toxicity::High}), true, false, None),
@@ -80,6 +83,9 @@ impl Atmosphere {
         }
     }
 
+    /**
+     Check whether the atmosphere is toxic.
+     */
     pub fn is_toxic(&self) -> (bool, Option<Toxicity>) {
         if let Some(t) = &self.toxicity {
             (true, Some(t.clone()))
@@ -88,11 +94,39 @@ impl Atmosphere {
         }
     }
 
+    /**
+     Check whether the atmosphere is suffocating.
+     */
     pub fn is_suffocating(&self) -> bool {
         self.suffocating
     }
 
+    /**
+     Check whether the atmosphere is corrosive.
+     */
     pub fn is_corrosive(&self) -> bool {
         self.corrosive
+    }
+
+    /**
+     Check whether the atmosphere is marginal.
+     */
+    pub fn is_marginal(&self) -> bool {
+        self.marginal == None
+    }
+
+    /**
+     Get atmospheric mass, if any.
+     */
+    pub fn mass(&self) -> f64 {
+        match self.pressure {
+            Pressure::Trace(x)    |
+            Pressure::VeryThin(x) |
+            Pressure::Thin(x)     |
+            Pressure::Standard(x) |
+            Pressure::Dense(x)    |
+            Pressure::VeryDense(x)|
+            Pressure::Superdense(x)=> x
+        }
     }
 }

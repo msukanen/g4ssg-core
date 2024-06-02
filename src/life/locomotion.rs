@@ -1,4 +1,4 @@
-use dice::{low, DiceExt, HiLo};
+use dice::{lo, DiceExt, HiLo};
 
 use super::{habitat::{land::LandHabitat, water::WaterHabitat, Habitat}, trophiclevel::{Carnivore, Herbivore, TrophicLevel, TrophicLevelType}};
 
@@ -409,7 +409,7 @@ impl Locomotion {
                 },
                 8..=10 => locomotions.push(LocomotionMode::Walking),
                 11 => {
-                    let mode = if low!() { LocomotionMode::Slithering } else { LocomotionMode::Sliding };
+                    let mode = if lo!() { LocomotionMode::Slithering } else { LocomotionMode::Sliding };
                     locomotions.push(mode);
                     if !tertiary {
                         locomotions.extend(Locomotion::random_2or3(habitat, mode, true));
