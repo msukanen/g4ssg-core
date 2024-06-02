@@ -7,7 +7,7 @@ use dice::DiceExt;
 use rand::Rng;
 use ringsystem::RingSystem;
 
-use crate::{starsystem::orbital::{star::limits::orbitlimit::OrbitLimits, OrbitElement, OrbitalInfo}, util::distance::{km::Km, mi::Mi, Distance}};
+use crate::{starsystem::orbital::{star::limits::orbitlimit::OrbitLimits, OrbitElement, OrbitalInfo}, util::{distance::{km::Km, mi::Mi, Distance, Distanced}, mass::{earth::EarthMass, Mass}}};
 
 use self::arrangement::GasGiantArrangement;
 
@@ -57,6 +57,10 @@ impl Planet for GasGiant {
 
     fn gravity(&self) -> f64 {
         self.density.value() * self.relative_size
+    }
+
+    fn mass(&self) -> Mass {
+        Mass::from(EarthMass::from(self.density.value() * self.relative_size * self.relative_size * self.relative_size))
     }
 }
 

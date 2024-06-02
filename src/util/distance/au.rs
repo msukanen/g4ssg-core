@@ -13,30 +13,30 @@ impl Distanced for Au {
 
 impl From<f64> for Au {
     fn from(value: f64) -> Self {
-        Au { value }
+        Self { value }
     }
 }
 
 impl From<Km> for Au {
     fn from(value: Km) -> Self {
-        Au { value: value.raw_value() / 149_597_871.0 }
+        Self { value: value.raw_value() / 149_597_871.0 }
     }
 }
 
 impl From<Mi> for Au {
     fn from(value: Mi) -> Self {
-        Au::from(Km::from(value))
+        Self::from(Km::from(value))
     }
 }
 
 impl From<Ly> for Au {
     fn from(value: Ly) -> Self {
-        Au { value: value.raw_value() * 63241.0771 }
+        Self { value: value.raw_value() * 63241.0771 }
     }
 }
 
 impl From<Pc> for Au {
     fn from(value: Pc) -> Self {
-        Au::from(Ly::from(value))
+        Self::from(Ly::from(value))
     }
 }

@@ -8,7 +8,7 @@ use rand::Rng;
 use terratype::TerraType;
 use worldtype::WorldType;
 
-use crate::{starsystem::orbital::{star::population::Population, OrbitElement, OrbitalInfo}, util::distance::{km::Km, Distance}};
+use crate::{starsystem::orbital::{star::population::Population, OrbitElement, OrbitalInfo}, util::{distance::{km::Km, Distance, Distanced}, mass::{earth::EarthMass, Mass}}};
 
 use super::{atmosphere::Atmosphere, climate::Climate, density::Density, hydrographic::coverage::HydrographicCoverage, size::Size, Planet};
 
@@ -60,6 +60,10 @@ impl Planet for Terrestrial {
 
     fn diameter(&self) -> Distance {
         Distance::Km(Km::from(self.relative_size * 7_930.0))
+    }
+
+    fn mass(&self) -> Mass {
+        Mass::from(EarthMass::from(self.density.value() * self.relative_size * self.relative_size * self.relative_size))
     }
 }
 
