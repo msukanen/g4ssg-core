@@ -4,13 +4,14 @@ pub mod ringsystem;
 use std::cmp::max;
 
 use dice::DiceExt;
+use rand::Rng;
 use ringsystem::RingSystem;
 
-use crate::starsystem::orbital::{star::limits::orbitlimit::OrbitLimits, OrbitElement, OrbitalInfo};
+use crate::{starsystem::orbital::{star::limits::orbitlimit::OrbitLimits, OrbitElement, OrbitalInfo}, util::distance::mi::Mi};
 
 use self::arrangement::GasGiantArrangement;
 
-use super::{atmosphere::Atmosphere, size::Size, Planet};
+use super::{atmosphere::Atmosphere, density::Density, size::Size, Planet};
 
 /**
  Gas Giant, obviously.
@@ -23,6 +24,8 @@ pub struct GasGiant {
     moonlets: i32,
     moonlets_outer: i32,
     atmosphere: Atmosphere,
+    density: Density,
+    diameter: f64,
 }
 
 impl OrbitalInfo for GasGiant {
@@ -46,6 +49,10 @@ impl Planet for GasGiant {
 
     fn atmosphere(&self) -> Option<Atmosphere> {
         Some(self.atmosphere.clone())
+    }
+
+    fn gravity(&self) -> f64 {
+        
     }
 }
 
@@ -79,6 +86,14 @@ impl GasGiant {
                 major_moons.push(Size::random_moon(Size::Large))
             }
         }
+
+        let density = Density::random_gg();
+
+        let diameter = match size {
+            Size::Small => Mi::from(rand::thread_rng().gen_range(17_500.0..=25_000.0)),
+            Size::Medium => Mi::from(rand::thread_rng().gen_range(47_000.0..=55_000.0)),
+            Size::Large => Mi::from(rand::thread_rng().gen_range(79_000.0)),
+        };
 
         OrbitElement::GasGiant(GasGiant {
             arrangement, size,

@@ -1,10 +1,10 @@
 pub mod worldtype;
 pub mod terratype;
-pub mod core;
 
 use std::cmp::max;
 
-use dice::DiceExt;
+use dice::{DiceExt, PercentageVariance};
+use rand::Rng;
 use terratype::TerraType;
 use worldtype::WorldType;
 
@@ -23,6 +23,7 @@ pub struct Terrestrial {
     hydrographic: HydrographicCoverage,
     blackbody_k: f64,
     density: Density,
+    relative_size: f64,
 }
 
 impl OrbitalInfo for Terrestrial {
@@ -51,6 +52,10 @@ impl Planet for Terrestrial {
 
     fn atmosphere(&self) -> Option<Atmosphere> {
         self.atmosphere.clone()
+    }
+
+    fn gravity(&self) -> f64 {
+        self.density.value() * self.relative_size * 7_930.0
     }
 }
 
@@ -125,20 +130,29 @@ impl Terrestrial {
         let climate = Climate::from(&terratype);
         // density...
         let density = Density::from(&terratype);
+        // Earth-relative size...
+        let szc = match terratype {
+            TerraType::Tiny(_) => (0.004, 0.024),
+            TerraType::Small(_) => (0.024, 0.03),
+            TerraType::Medium(_) => (0.03, 0.065),
+            TerraType::Large(_) => (0.065, 0.091)
+        };
+        let modifier = blackbody_correction * climate.avg_temperature() / density.value();
+        let relative_size = rand::thread_rng().gen_range(modifier * szc.0..=modifier * szc.1).delta(5);
 
         OrbitElement::Terrestrial(Terrestrial {
             distance, terratype,
             major_moons, moonlets,
             atmosphere, climate, hydrographic,
             blackbody_k: blackbody_correction * climate.avg_temperature(),
-            density,
+            density, relative_size,
         })
     }
 
     /**
      Get the planet's climate.
      */
-    fn climate(&self) -> &Climate {
+    pub fn climate(&self) -> &Climate {
         &self.climate
     }
 }

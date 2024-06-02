@@ -1,0 +1,41 @@
+use super::{au::Au, km::Km, mi::Mi, pc::Pc, Distance};
+
+pub struct Ly {
+    value: f64,
+}
+
+impl Distance for Ly {
+    fn raw_value(&self) -> f64 {
+        self.value
+    }
+}
+
+impl From<f64> for Ly {
+    fn from(value: f64) -> Self {
+        Ly { value }
+    }
+}
+
+impl From<Au> for Ly {
+    fn from(value: Au) -> Self {
+        Ly { value: value.raw_value() / 63241.0771 }
+    }
+}
+
+impl From<Km> for Ly {
+    fn from(value: Km) -> Self {
+        Ly::from(Au::from(value))
+    }
+}
+
+impl From<Mi> for Ly {
+    fn from(value: Mi) -> Self {
+        Ly::from(Au::from(value))
+    }
+}
+
+impl From<Pc> for Ly {
+    fn from(value: Pc) -> Self {
+        Ly { value: value.raw_value() * 3.26156378 }
+    }
+}

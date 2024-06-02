@@ -1,17 +1,17 @@
-use dice::DiceExt;
 use rand::Rng;
 
-use super::{terratype::TerraType, worldtype::WorldType};
+use super::terrestrial::{terratype::TerraType, worldtype::WorldType};
 
 #[derive(Clone)]
 pub(crate) enum Core {
+    GasGiant(f64),
     Icy(f64),
     SmallIron(f64),
     LargeIron(f64)
 }
 
 impl Core {
-    pub fn random(terratype: &TerraType) -> Core {
+    pub(crate) fn random(terratype: &TerraType) -> Core {
         match terratype {
             TerraType::Tiny(WorldType::Ice)      |
             TerraType::Tiny(WorldType::Sulfur)   |
@@ -26,11 +26,16 @@ impl Core {
         }
     }
 
+    pub(crate) fn random_gg() -> Core {
+        Core::GasGiant(rand::thread_rng().gen_range(0.6..=2.5))
+    }
+
     pub fn density(&self) -> f64 {
         match self {
+            Core::GasGiant(d)  |
             Core::Icy(d)       |
             Core::SmallIron(d) |
-            Core::LargeIron(d) => *d
+            Core::LargeIron(d) => *d,
         }
     }
 }

@@ -1,4 +1,4 @@
-use super::terrestrial::{core::Core, terratype::TerraType};
+use super::{core::Core, terrestrial::terratype::TerraType};
 
 #[derive(Clone)]
 pub struct Density {
@@ -8,6 +8,10 @@ pub struct Density {
 impl Density {
     fn random(terratype: &TerraType) -> Density {
         Density { core: Core::random(terratype) }
+    }
+
+    pub fn random_gg() -> Density {
+        Density { core: Core::random_gg() }
     }
 
     pub fn value(&self) -> f64 {

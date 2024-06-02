@@ -12,6 +12,7 @@ pub mod size;
 pub mod atmosphere;
 pub mod hydrographic;
 pub mod density;
+pub mod core;
 
 pub trait Planet: OrbitalInfo {
     /**
@@ -30,4 +31,8 @@ pub trait Planet: OrbitalInfo {
      Get the planet's atmosphere, if any.
      */
     fn atmosphere(&self) -> Option<Atmosphere>;
+    /**
+     Get the planet's gravity, in G.
+     */
+    fn gravity(&self) -> f64;
 }
