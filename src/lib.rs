@@ -1,5 +1,4 @@
 pub mod life;
-pub mod distance;
 pub mod starsystem;
 pub mod measurement;
 mod util;

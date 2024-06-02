@@ -1,6 +1,8 @@
 use atmosphere::Atmosphere;
 use size::Size;
 
+use crate::util::distance::Distance;
+
 use super::OrbitalInfo;
 
 pub mod terrestrial;
@@ -35,4 +37,8 @@ pub trait Planet: OrbitalInfo {
      Get the planet's gravity, in G.
      */
     fn gravity(&self) -> f64;
+    /**
+     Get the planet's diameter in km.
+     */
+    fn diameter(&self) -> Distance;
 }

@@ -1,5 +1,6 @@
-use super::{au::Au, km::Km, ly::Ly, pc::Pc, Distance};
+use super::{au::Au, km::Km, ly::Ly, pc::Pc, Distanced};
 
+#[derive(Clone)]
 pub struct Mi {
     value: f64,
 }
@@ -8,7 +9,7 @@ impl Mi {
     pub const KM_IN_MI: f64 = 1.609344;
 }
 
-impl Distance for Mi {
+impl Distanced for Mi {
     fn raw_value(&self) -> f64 {
         self.value
     }

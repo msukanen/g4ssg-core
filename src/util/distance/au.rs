@@ -1,10 +1,11 @@
-use super::{km::Km, ly::Ly, mi::Mi, pc::Pc, Distance};
+use super::{km::Km, ly::Ly, mi::Mi, pc::Pc, Distanced};
 
+#[derive(Clone)]
 pub struct Au {
     value: f64,
 }
 
-impl Distance for Au {
+impl Distanced for Au {
     fn raw_value(&self) -> f64 {
         self.value
     }

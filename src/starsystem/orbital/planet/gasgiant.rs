@@ -7,7 +7,7 @@ use dice::DiceExt;
 use rand::Rng;
 use ringsystem::RingSystem;
 
-use crate::{starsystem::orbital::{star::limits::orbitlimit::OrbitLimits, OrbitElement, OrbitalInfo}, util::distance::mi::Mi};
+use crate::{starsystem::orbital::{star::limits::orbitlimit::OrbitLimits, OrbitElement, OrbitalInfo}, util::distance::{km::Km, mi::Mi, Distance}};
 
 use self::arrangement::GasGiantArrangement;
 
@@ -25,7 +25,7 @@ pub struct GasGiant {
     moonlets_outer: i32,
     atmosphere: Atmosphere,
     density: Density,
-    diameter: f64,
+    relative_size: f64,
 }
 
 impl OrbitalInfo for GasGiant {
@@ -51,8 +51,12 @@ impl Planet for GasGiant {
         Some(self.atmosphere.clone())
     }
 
+    fn diameter(&self) -> Distance {
+        Distance::from(Km::from(Mi::from(7_930.0 * self.relative_size)))
+    }
+
     fn gravity(&self) -> f64 {
-        
+        self.density.value() * self.relative_size
     }
 }
 
@@ -89,16 +93,18 @@ impl GasGiant {
 
         let density = Density::random_gg();
 
-        let diameter = match size {
-            Size::Small => Mi::from(rand::thread_rng().gen_range(17_500.0..=25_000.0)),
-            Size::Medium => Mi::from(rand::thread_rng().gen_range(47_000.0..=55_000.0)),
-            Size::Large => Mi::from(rand::thread_rng().gen_range(79_000.0)),
+        let relative_size = match size {// rel.values are multiplier to Earth-size
+            Size::Small => rand::thread_rng().gen_range(3.4047919294..=4.1614123581),
+            Size::Medium => rand::thread_rng().gen_range(5.6746532156..=6.9356872636),
+            Size::Large => rand::thread_rng().gen_range(9.079445145..=11.0970996217),
+            Size::Tiny => todo!("Tiny GG not implemented...")
         };
 
         OrbitElement::GasGiant(GasGiant {
             arrangement, size,
             moonlets, moonlets_outer, major_moons,
             atmosphere: Atmosphere::random_gg(size),
+            density, relative_size,
         })
     }
 
