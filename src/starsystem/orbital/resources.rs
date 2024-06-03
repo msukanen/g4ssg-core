@@ -49,3 +49,21 @@ impl From<&Terrestrial> for RVM {
         }
     }
 }
+
+impl RVM {
+    pub fn modifier(&self) -> i32 {
+        match self {
+            Self::Worthless  => -5,
+            Self::VeryScant  => -4,
+            Self::Scant      => -3,
+            Self::VeryPoor   => -2,
+            Self::Poor       => -1,
+            Self::Average    =>  0,
+            Self::Abundant   =>  1,
+            Self::VeryAbundant=> 2,
+            Self::Rich       =>  3,
+            Self::VeryRich   =>  4,
+            Self::Motherlode =>  5
+        }
+    }
+}
