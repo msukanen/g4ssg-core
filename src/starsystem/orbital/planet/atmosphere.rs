@@ -138,18 +138,37 @@ impl Atmosphere {
         self.marginal == None
     }
 
+    pub fn is_breathable(&self) -> bool {
+        let (t, _) = self.is_toxic();
+        !t && !self.is_corrosive() && !self.is_suffocating()
+    }
+
     /**
      Get atmospheric mass, if any.
      */
     pub fn mass(&self) -> f64 {
-        match self.mass {
+        match self.mass_classification() {
             AtmosphericMass::Trace(x)    |
             AtmosphericMass::VeryThin(x) |
             AtmosphericMass::Thin(x)     |
             AtmosphericMass::Standard(x) |
             AtmosphericMass::Dense(x)    |
             AtmosphericMass::VeryDense(x)|
-            AtmosphericMass::Superdense(x)=> x
+            AtmosphericMass::Superdense(x)=> *x
         }
+    }
+
+    /**
+     Get atmospheric mass "classification", if any.
+     */
+    pub fn mass_classification(&self) -> &AtmosphericMass {
+        &self.mass
+    }
+
+    /**
+     Get atmosphere's Earth-relative pressure.
+     */
+    pub fn pressure(&self) -> f64 {
+        self.pressure
     }
 }

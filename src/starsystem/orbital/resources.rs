@@ -2,6 +2,7 @@ use dice::DiceExt;
 
 use super::{asteroidbelt::AsteroidBelt, planet::terrestrial::Terrestrial};
 
+#[derive(Clone)]
 pub enum RVM {
     Worthless,
     VeryScant,
@@ -19,38 +20,46 @@ pub enum RVM {
 impl From<&AsteroidBelt> for RVM {
     fn from(value: &AsteroidBelt) -> Self {
         let _ = value;
-        match 3.d6() {
-            ..=3 => Self::Worthless,
-            4 => Self::VeryScant,
-            5 => Self::Scant,
-            6|7 => Self::VeryPoor,
-            8|9 => Self::Poor,
-            10|11 => Self::Average,
-            12|13 => Self::Abundant,
-            14|15 => Self::VeryAbundant,
-            16 => Self::Rich,
-            17 => Self::VeryRich,
-            18.. => Self::Motherlode,
-        }
+        RVM::random(false)
     }
 }
 
 impl From<&Terrestrial> for RVM {
     fn from(value: &Terrestrial) -> Self {
         let _ = value;
-        match 3.d6() {
-            ..=2 => Self::Scant,
-            3|4 => Self::VeryPoor,
-            5..=7 => Self::Poor,
-            8..=13 => Self::Average,
-            14..=16 => Self::Abundant,
-            17|18 => Self::VeryAbundant,
-            19.. => Self::Rich,
-        }
+        RVM::random(true)
     }
 }
 
 impl RVM {
+    pub fn random(terrestrial: bool) -> RVM {
+        if terrestrial {
+            match 3.d6() {
+                ..=2 => Self::Scant,
+                3|4 => Self::VeryPoor,
+                5..=7 => Self::Poor,
+                8..=13 => Self::Average,
+                14..=16 => Self::Abundant,
+                17|18 => Self::VeryAbundant,
+                19.. => Self::Rich,
+            }
+        } else {
+            match 3.d6() {
+                ..=3 => Self::Worthless,
+                4 => Self::VeryScant,
+                5 => Self::Scant,
+                6|7 => Self::VeryPoor,
+                8|9 => Self::Poor,
+                10|11 => Self::Average,
+                12|13 => Self::Abundant,
+                14|15 => Self::VeryAbundant,
+                16 => Self::Rich,
+                17 => Self::VeryRich,
+                18.. => Self::Motherlode,
+            }
+        }
+    }
+
     pub fn modifier(&self) -> i32 {
         match self {
             Self::Worthless  => -5,

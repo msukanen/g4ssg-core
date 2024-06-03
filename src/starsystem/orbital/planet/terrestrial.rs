@@ -1,5 +1,6 @@
 pub mod worldtype;
 pub mod terratype;
+pub mod habitability;
 
 use std::cmp::max;
 
@@ -8,7 +9,7 @@ use rand::Rng;
 use terratype::TerraType;
 use worldtype::WorldType;
 
-use crate::{starsystem::orbital::{star::population::Population, OrbitElement, OrbitalInfo}, util::{distance::{km::Km, Distance, Distanced}, mass::{earth::EarthMass, Mass}}};
+use crate::{starsystem::orbital::{resources::RVM, star::population::Population, OrbitElement, OrbitalInfo}, util::{distance::{km::Km, Distance, Distanced}, mass::{earth::EarthMass, Mass}}};
 
 use super::{atmosphere::Atmosphere, climate::Climate, density::Density, g, hydrographic::coverage::HydrographicCoverage, size::Size, Planet};
 
@@ -24,6 +25,7 @@ pub struct Terrestrial {
     blackbody_k: f64,
     density: Density,
     relative_size: f64,
+    rvm: RVM,
 }
 
 impl OrbitalInfo for Terrestrial {
@@ -148,6 +150,7 @@ impl Terrestrial {
         let modifier = blackbody_correction * climate.avg_temperature() / density.value();
         let relative_size = rand::thread_rng().gen_range(modifier * szc.0..=modifier * szc.1).delta(5);
         let atmosphere = Atmosphere::random(&terratype, g(&density, relative_size));
+        let rvm = RVM::random(true);
 
         OrbitElement::Terrestrial(Terrestrial {
             distance, terratype,
@@ -155,6 +158,7 @@ impl Terrestrial {
             atmosphere, climate, hydrographic,
             blackbody_k: blackbody_correction * climate.avg_temperature(),
             density, relative_size,
+            rvm,
         })
     }
 

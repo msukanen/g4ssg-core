@@ -7,7 +7,7 @@ use dice::DiceExt;
 use rand::Rng;
 use ringsystem::RingSystem;
 
-use crate::{starsystem::orbital::{star::limits::orbitlimit::OrbitLimits, OrbitElement, OrbitalInfo}, util::{distance::{km::Km, mi::Mi, Distance, Distanced}, mass::{earth::EarthMass, Mass}}};
+use crate::{starsystem::orbital::{star::limits::orbitlimit::OrbitLimits, OrbitElement, OrbitalInfo}, util::{distance::{km::Km, mi::Mi, Distance}, mass::{earth::EarthMass, Mass}}};
 
 use self::arrangement::GasGiantArrangement;
 
