@@ -1,4 +1,5 @@
 use atmosphere::Atmosphere;
+use density::Density;
 use size::Size;
 
 use crate::util::{distance::Distance, mass::Mass};
@@ -8,7 +9,6 @@ use super::OrbitalInfo;
 pub mod terrestrial;
 pub mod climate;
 pub mod gasgiant;
-pub mod gravity;
 pub mod moons;
 pub mod size;
 pub mod atmosphere;
@@ -45,4 +45,11 @@ pub trait Planet: OrbitalInfo {
      Get the planet's mass (in Earth masses).
      */
     fn mass(&self) -> Mass;
+}
+
+/**
+ Calculate gravity.
+ */
+pub(crate) fn g(density: &Density, relative_size: f64) -> f64 {
+    density.value() * relative_size
 }

@@ -5,6 +5,7 @@ pub mod asteroidbelt;
 pub mod star;
 pub mod separation;
 pub mod distance;
+pub mod resources;
 
 #[derive(Clone)]
 pub enum OrbitElement {

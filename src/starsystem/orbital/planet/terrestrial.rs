@@ -10,7 +10,7 @@ use worldtype::WorldType;
 
 use crate::{starsystem::orbital::{star::population::Population, OrbitElement, OrbitalInfo}, util::{distance::{km::Km, Distance, Distanced}, mass::{earth::EarthMass, Mass}}};
 
-use super::{atmosphere::Atmosphere, climate::Climate, density::Density, hydrographic::coverage::HydrographicCoverage, size::Size, Planet};
+use super::{atmosphere::Atmosphere, climate::Climate, density::Density, g, hydrographic::coverage::HydrographicCoverage, size::Size, Planet};
 
 #[derive(Clone)]
 pub struct Terrestrial {
@@ -55,7 +55,7 @@ impl Planet for Terrestrial {
     }
 
     fn gravity(&self) -> f64 {
-        self.density.value() * self.relative_size
+        g(&self.density, self.relative_size)
     }
 
     fn diameter(&self) -> Distance {
@@ -96,8 +96,6 @@ impl Terrestrial {
         let b = 278.0 * f64::powf(luminosity, 1.0 / 4.0) / distance.sqrt();
         // terratype, obviously...
         let terratype = TerraType::from((size, WorldType::from_blackbody(population, solar_mass, size, b)));
-        // atmosphere, if any?
-        let atmosphere = Atmosphere::random(&terratype);
         // hydrographics - may or may not be 'water'...
         let hydrographic = HydrographicCoverage::random(&terratype);
         // blackbody correction...
@@ -129,8 +127,10 @@ impl Terrestrial {
             TerraType::Large(WorldType::Greenhouse) => (0.77, 2.0),
             _ => panic!("Unspecified terratype selection: {:?}", terratype)
         };
+        // atmosphere, if any?
+        let atmosphere = Atmosphere::potential_mass(&terratype);
         let blackbody_correction = if let Some(a) = &atmosphere {
-            abf * (1.0 + a.mass() * ghf)
+            abf * (1.0 + a * ghf)
         } else {
             abf
         };
@@ -147,6 +147,7 @@ impl Terrestrial {
         };
         let modifier = blackbody_correction * climate.avg_temperature() / density.value();
         let relative_size = rand::thread_rng().gen_range(modifier * szc.0..=modifier * szc.1).delta(5);
+        let atmosphere = Atmosphere::random(&terratype, g(&density, relative_size));
 
         OrbitElement::Terrestrial(Terrestrial {
             distance, terratype,

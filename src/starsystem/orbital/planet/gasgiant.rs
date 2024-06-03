@@ -11,7 +11,7 @@ use crate::{starsystem::orbital::{star::limits::orbitlimit::OrbitLimits, OrbitEl
 
 use self::arrangement::GasGiantArrangement;
 
-use super::{atmosphere::Atmosphere, density::Density, size::Size, Planet};
+use super::{atmosphere::Atmosphere, density::Density, g, size::Size, Planet};
 
 /**
  Gas Giant, obviously.
@@ -56,7 +56,7 @@ impl Planet for GasGiant {
     }
 
     fn gravity(&self) -> f64 {
-        self.density.value() * self.relative_size
+        g(&self.density, self.relative_size)
     }
 
     fn mass(&self) -> Mass {
@@ -104,10 +104,12 @@ impl GasGiant {
             Size::Tiny => todo!("Tiny GG not implemented...")
         };
 
+        let atmosphere = Atmosphere::random_gg(size, g(&density, relative_size));
+
         OrbitElement::GasGiant(GasGiant {
             arrangement, size,
             moonlets, moonlets_outer, major_moons,
-            atmosphere: Atmosphere::random_gg(size),
+            atmosphere,
             density, relative_size,
         })
     }
