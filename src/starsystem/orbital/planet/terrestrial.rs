@@ -9,7 +9,7 @@ use rand::Rng;
 use terratype::TerraType;
 use worldtype::WorldType;
 
-use crate::{starsystem::orbital::{resources::RVM, star::population::Population, OrbitElement, OrbitalInfo}, util::{distance::{km::Km, Distance, Distanced}, mass::{earth::EarthMass, Mass}}};
+use crate::{starsystem::orbital::{resources::RVM, star::population::Population, OrbitElement, OrbitalInfo}, unit::{distance::{km::Km, Distance}, mass::{earth::EarthMass, Mass}}};
 
 use super::{atmosphere::Atmosphere, climate::Climate, density::Density, g, hydrographic::coverage::HydrographicCoverage, size::Size, Planet};
 

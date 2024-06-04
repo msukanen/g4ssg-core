@@ -6,7 +6,7 @@ pub mod limits;
 use dice::DiceExt;
 use rand::Rng;
 
-use crate::{maxof, measurement::massindex::MassIndex, starsystem::orbital::{asteroidbelt::AsteroidBelt, planet::{gasgiant::arrangement::GasGiantArrangement, size::Size, terrestrial::Terrestrial}}};
+use crate::{maxof, measurement::massindex::MassIndex, starsystem::orbital::{asteroidbelt::AsteroidBelt, planet::{gasgiant::arrangement::GasGiantArrangement, size::Size, terrestrial::Terrestrial}}, unit::temperature::k::K};
 
 use self::{evolutionstage::EvolutionStage, limits::{forbiddenzone::ForbiddenZone, orbitlimit::OrbitLimits}, population::Population};
 
@@ -18,7 +18,7 @@ pub struct Star {
     distance: Option<OrbitalDistance>,
     mass_index: i32,
     mass: f64,
-    temperature: f64,
+    temperature: K,
     evolution: EvolutionStage,
     luminosity: f64,
     radius: f64,
@@ -34,7 +34,7 @@ impl Star {
             Self::rng_mass_index()
         };
         let mut mass = mass_index.solar_mass();
-        let temperature: f64;
+        let temperature: K;
         let agespans = mass_index.solar_agespans();
         let evolution = EvolutionStage::from((population, agespans));
         let luminosity: f64;
@@ -54,7 +54,7 @@ impl Star {
                 luminosity = lmax.unwrap();
             },
             EvolutionStage::G => {
-                temperature = 3_000.0 + 200.0 * (2.d6() - 2) as f64;
+                temperature = K::from(3_000.0 + 200.0 * (2.d6() - 2) as f64);
                 luminosity = lmax.unwrap() * 25.0;
             },
             EvolutionStage::D => {
@@ -303,7 +303,32 @@ impl Star {
         }
     }
 
+    /**
+     Get the star's mass index.
+     */
     pub fn mass_index(&self) -> i32 {
         self.mass_index
+    }
+}
+
+impl std::fmt::Display for Star {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        //companion: Option<Box<Star>>,
+        //distance: Option<OrbitalDistance>,
+        //mass_index: i32,
+        //mass: f64,
+        //temperature: f64,
+        //evolution: EvolutionStage,
+        //luminosity: f64,
+        //radius: f64,
+        //orbit_limits: OrbitLimits,
+        //orbits: Vec<(f64, Option<OrbitElement>)>,
+        write!(f, "\
+            {}\n\
+            Mass: {}\n\
+            K (surface): {:.}\n\
+        ", self.population,
+        self.mass, self.temperature
+        )
     }
 }

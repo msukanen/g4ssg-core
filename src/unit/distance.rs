@@ -1,14 +1,9 @@
-use au::Au;
-use km::Km;
-use ly::Ly;
-use mi::Mi;
-use pc::Pc;
+use crate::unit::distance::{km::Km, au::Au, ly::Ly, mi::Mi, pc::Pc};
 
-
-pub mod km;
-pub mod mi;
 pub mod au;
+pub mod km;
 pub mod ly;
+pub mod mi;
 pub mod pc;
 
 pub trait Distanced {

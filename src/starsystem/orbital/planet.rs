@@ -2,7 +2,7 @@ use atmosphere::Atmosphere;
 use density::Density;
 use size::Size;
 
-use crate::util::{distance::Distance, mass::Mass};
+use crate::unit::{distance::Distance, mass::Mass};
 
 use super::OrbitalInfo;
 

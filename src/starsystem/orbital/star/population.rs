@@ -6,6 +6,15 @@ pub enum Generation {
     II,
 }
 
+impl std::fmt::Display for Generation {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", match self {
+            Self::I  => "population I",
+            Self::II => "population II"
+        })
+    }
+}
+
 #[derive(PartialEq, Clone, Copy)]
 pub enum Population {
     Extreme(Generation, f64),
@@ -50,5 +59,16 @@ impl AsPopulation for i32 {
             15..=17 => Population::Intermediate(Generation::II, age_from(8.0, 0.6, 0.1)),
             18.. => Population::Extreme(Generation::II, age_from(10.0, 0.6, 0.1))
         }
+    }
+}
+
+impl std::fmt::Display for Population {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", match self {
+            Self::Extreme(g, a) => format!("extreme {g} at {a:.1} byr"),
+            Self::Intermediate(g, a) => format!("intermediate {g} at {a:.1} byr"),
+            Self::Old(a) => format!("old population II at {a:.1} byr"),
+            Self::Young(a) => format!("young population I at {a:.1} byr"),
+        })
     }
 }

@@ -1,7 +1,9 @@
+use crate::unit::temperature::k::K;
+
 pub(crate) trait MassIndex {
     fn clamp_mass_index(&self) -> i32;
     fn solar_mass(&self) -> f64;
-    fn solar_temperature(&self) -> f64;
+    fn solar_temperature(&self) -> K;
     fn solar_lmin(&self) -> f64;
     fn solar_lmax(&self) -> Option<f64>;
     fn solar_agespans(&self) -> (Option<f64>, Option<f64>, Option<f64>);
@@ -59,8 +61,8 @@ impl MassIndex for i32 {
     /**
      Derive approximate temperature (in Kelvin) from mass index.
      */
-    fn solar_temperature(&self) -> f64 {
-        match self {
+    fn solar_temperature(&self) -> K {
+        K::from(match self {
             ..=0 => 8_200.0,
             1 => 8_000.0,
             2 => 7_800.0,
@@ -93,7 +95,7 @@ impl MassIndex for i32 {
             29|30 => 3_300.0,
             31|32 => 3_200.0,
             33.. => 3_100.0
-        }
+        })
     }
 
     /**

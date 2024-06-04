@@ -23,7 +23,7 @@ pub struct Atmosphere {
 impl Atmosphere {
     pub fn potential_mass(terratype: &TerraType) -> Option<f64> {
         match terratype {
-            TerraType::Tiny(_)                      => Some(rand::thread_rng().gen_range(0.001..=0.075)),
+            TerraType::Tiny(_)                      |
             TerraType::Small(WorldType::Hadean)     |
             TerraType::Small(WorldType::Rock)       |
             TerraType::Medium(WorldType::Chthonian) |

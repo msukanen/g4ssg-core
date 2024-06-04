@@ -5,6 +5,9 @@ pub mod life;
 pub mod starsystem;
 pub mod measurement;
 mod util;
+pub mod config;
+pub mod html;
+pub mod unit;
 
 pub fn add(left: usize, right: usize) -> usize {
     left + right

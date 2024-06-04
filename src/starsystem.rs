@@ -2,11 +2,15 @@ use std::collections::HashSet;
 
 use dice::DiceExt;
 
+use crate::config::OutputConfig;
+
 use self::orbital::{distance::OrbitalDistance, separation::OrbitalSeparation, star::{designation::Designation, population::Population, Star}};
 
 pub mod orbital;
 
 pub struct StarSystem {
+    html_mode: bool,
+    name: String,
     population: Population,
     stars: Vec<Star>,
     designation: HashSet<(Designation, Designation, OrbitalSeparation)>,
@@ -21,7 +25,7 @@ impl StarSystem {
         }
     }
 
-    pub fn random(within_open_cluster: bool) -> StarSystem {
+    pub fn random(config: &OutputConfig, name: &str, within_open_cluster: bool) -> StarSystem {
         let population = Population::random();
         let num_stars = Self::rng_num_stars(within_open_cluster);
         let primary_star = Star::random(&population, None, None);
@@ -58,6 +62,8 @@ impl StarSystem {
         stars.extend(companion_stars);
 
         StarSystem {
+            html_mode: config.html_mode,
+            name: name.to_string(),
             population,
             stars,
             designation,
@@ -67,6 +73,19 @@ impl StarSystem {
 
 impl std::fmt::Display for StarSystem {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "Star system: {}", "a")
+        let mut s = vec![];
+        for (count, star) in self.stars.iter().enumerate() {
+            s.push(format!("♯{} {}\n", count + 1, star))
+        }
+
+        write!(f,"\
+            Star system: {}\n\
+            Stars: {}\n\
+              -\n\
+            {}",
+        self.name,
+        self.stars.len(),
+        s.join("\n"),
+        )
     }
 }
