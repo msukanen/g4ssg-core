@@ -2,11 +2,15 @@ pub mod population;
 pub mod evolutionstage;
 pub mod designation;
 pub mod limits;
+pub mod measurement;
+pub mod r#type;
 
 use dice::DiceExt;
+use measurement::massindex::MassIndex;
 use rand::Rng;
+use r#type::Type;
 
-use crate::{maxof, measurement::massindex::MassIndex, starsystem::orbital::{asteroidbelt::AsteroidBelt, planet::{gasgiant::arrangement::GasGiantArrangement, size::Size, terrestrial::Terrestrial}}, unit::temperature::k::K};
+use crate::{maxof, starsystem::orbital::{asteroidbelt::AsteroidBelt, planet::{gasgiant::arrangement::GasGiantArrangement, size::Size, terrestrial::Terrestrial}}, unit::temperature::k::K};
 
 use self::{evolutionstage::EvolutionStage, limits::{forbiddenzone::ForbiddenZone, orbitlimit::OrbitLimits}, population::Population};
 
@@ -65,7 +69,7 @@ impl Star {
         }
         let radius = match evolution {
             EvolutionStage::D => 0.0,
-            _ => (155_000.0 * luminosity.sqrt()) / (temperature * temperature)
+            _ => (155_000.0 * luminosity.sqrt()) / (temperature.value() * temperature.value())
         };
 
         let mut companion: Option<Box<Star>> = None;
@@ -323,12 +327,12 @@ impl std::fmt::Display for Star {
         //radius: f64,
         //orbit_limits: OrbitLimits,
         //orbits: Vec<(f64, Option<OrbitElement>)>,
-        write!(f, "\
-            {}\n\
-            Mass: {}\n\
-            K (surface): {:.}\n\
-        ", self.population,
-        self.mass, self.temperature
-        )
+        let mut info = vec![];
+        info.push(format!("{}", self.population));
+        info.push(format!("Mass: {}", self.mass));
+        info.push(format!("Temp: {:.}", self.temperature));
+        info.push(format!("Evo.: {}{}", Type::from(self.mass_index()), self.evolution));
+        info.push(format!("Lum.: {:.1}", self.luminosity));
+        write!(f, "{}", info.join("\n"))
     }
 }

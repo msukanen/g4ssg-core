@@ -1,4 +1,4 @@
-use earth::EarthMass;
+use crate::unit::mass::earth::EarthMass;
 
 pub mod earth;
 

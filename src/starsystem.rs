@@ -74,18 +74,12 @@ impl StarSystem {
 impl std::fmt::Display for StarSystem {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         let mut s = vec![];
+        s.push(format!("Star system: {}", self.name));
+        s.push(format!("Stars: {}", self.stars.len()));
         for (count, star) in self.stars.iter().enumerate() {
             s.push(format!("♯{} {}\n", count + 1, star))
         }
 
-        write!(f,"\
-            Star system: {}\n\
-            Stars: {}\n\
-              -\n\
-            {}",
-        self.name,
-        self.stars.len(),
-        s.join("\n"),
-        )
+        write!(f, "{}", s.join("\n"))
     }
 }

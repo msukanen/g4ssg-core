@@ -9,10 +9,13 @@ pub(crate) trait MassIndex {
     fn solar_agespans(&self) -> (Option<f64>, Option<f64>, Option<f64>);
 }
 
+pub const MIN_MASS_INDEX: i32 = 0;
+pub const MAX_MASS_INDEX: i32 = 33;
+
 impl MassIndex for i32 {
     fn clamp_mass_index(&self) -> i32 {
-        if *self < 0 {0}
-        else if *self > 33 {33}
+        if *self < MIN_MASS_INDEX {MIN_MASS_INDEX}
+        else if *self > MAX_MASS_INDEX {MAX_MASS_INDEX}
         else {*self}
     }
 

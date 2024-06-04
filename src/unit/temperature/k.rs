@@ -1,4 +1,4 @@
-use std::ops::{Add, Mul, Sub};
+use std::ops::{Add, Div, Mul, Sub};
 
 pub struct K {
     value: f64,
@@ -11,6 +11,14 @@ impl K {
         } else {
             value
         }
+    }
+
+    pub fn as_f64(&self) -> f64 {
+        self.value
+    }
+
+    pub fn value(&self) -> f64 {
+        self.as_f64()
     }
 }
 
@@ -92,5 +100,19 @@ impl Mul<K> for K {
     type Output = Self;
     fn mul(self, rhs: K) -> Self::Output {
         self * rhs.value
+    }
+}
+
+impl Div<f64> for K {
+    type Output = Self;
+    fn div(self, rhs: f64) -> Self::Output {
+        K { value: self.value / rhs }
+    }
+}
+
+impl Div<K> for f64 {
+    type Output = K;
+    fn div(self, rhs: K) -> Self::Output {
+        K { value: K::validate(self / rhs.value) }
     }
 }

@@ -3,7 +3,6 @@
 
 pub mod life;
 pub mod starsystem;
-pub mod measurement;
 mod util;
 pub mod config;
 pub mod html;

@@ -30,3 +30,14 @@ impl From<(&Population, (Option<f64>, Option<f64>, Option<f64>))> for EvolutionS
         }
     }
 }
+
+impl std::fmt::Display for EvolutionStage {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", match self {
+            Self::D => "WD",// white dwarf
+            Self::G => "III",
+            Self::M => "V",
+            Self::S => "IV",
+        })
+    }
+}
