@@ -64,3 +64,9 @@ impl StarSystem {
         }
     }
 }
+
+impl std::fmt::Display for StarSystem {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Star system: {}", "a")
+    }
+}

@@ -1,3 +1,6 @@
+#![feature(const_trait_impl)]
+#![feature(effects)]
+
 pub mod life;
 pub mod starsystem;
 pub mod measurement;
