@@ -75,16 +75,13 @@ impl Star {
         let mut companion: Option<Box<Star>> = None;
         let mut forbidden_zone = None;
         if let Some(distance) = distance {
-            println!("#78# - distance: {}", distance);
             if distance.separation() == &OrbitalSeparation::Distant && 3.d6() >= 11 {
                 forbidden_zone = Some(ForbiddenZone::from((distance.min(), distance.max())));
-                println!("{} → {} {}", forbidden_zone.unwrap(), distance.min(), distance.max());
                 companion = Some(Box::new(Star::random(population, Some(mass_index), Some(OrbitalDistance::random(&OrbitalSeparation::random(false, -6))))))
             }
         }
 
         // Determine inner limit, outer limit and snowline (in AU) alongside forbidden zone.
-        println!("IL {}", initial_luminosity.sqrt());
         let orbit_limits = OrbitLimits::from((
             Distance::Au(Au::from(maxof!(0.1 * mass, 0.01 * luminosity.sqrt()))),
             Distance::Au(Au::from(40.0 * mass)),
@@ -103,8 +100,7 @@ impl Star {
             orbits.push((gga.distance(), Some(GasGiant::random(gga.distance() <= orbit_limits.snowline(), gga, &orbit_limits))));
         } else {
             let clamped = orbit_limits.outer(true);
-            middle_distance = orbit_limits.outer(true) / (1.0 + 1.d6() as f64 * 0.05);
-            println!("{}", orbit_limits);
+            middle_distance = clamped / (1.0 + 1.d6() as f64 * 0.05);
             if middle_distance.raw_value() <= 0.0 {
                 panic!("MD < 0.0 !?");
             }
