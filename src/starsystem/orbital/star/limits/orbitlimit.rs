@@ -13,6 +13,15 @@ pub struct OrbitLimits {
     forbidden_zone: Option<ForbiddenZone>,
 }
 
+impl std::fmt::Display for OrbitLimits {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "OL: {} - {}; {}; {}", self.inner, self.outer, self.snowline, match self.forbidden_zone {
+            None => "no-FZ".to_string(),
+            Some(z) => format!("{z}")
+        })
+    }
+}
+
 impl OrbitLimits {
     pub fn new(inner: Distance, outer: Distance, snowline: Distance, forbidden_zone: Option<ForbiddenZone>) -> OrbitLimits {
         OrbitLimits { inner, outer, snowline, forbidden_zone }

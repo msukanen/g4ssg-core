@@ -10,7 +10,7 @@ use measurement::massindex::MassIndex;
 use rand::Rng;
 use r#type::Type;
 
-use crate::{maxof, starsystem::orbital::{asteroidbelt::AsteroidBelt, planet::{gasgiant::{GasGiant, arrangement::GasGiantArrangement}, size::Size, terrestrial::Terrestrial}}, unit::{distance::{au::Au, Distance}, temperature::k::K}};
+use crate::{maxof, starsystem::orbital::{asteroidbelt::AsteroidBelt, planet::{gasgiant::{arrangement::GasGiantArrangement, GasGiant}, size::Size, terrestrial::Terrestrial}}, unit::{distance::{au::Au, Distance, Distanced}, temperature::k::K}};
 
 use self::{evolutionstage::EvolutionStage, limits::{forbiddenzone::ForbiddenZone, orbitlimit::OrbitLimits}, population::Population};
 
@@ -74,14 +74,17 @@ impl Star {
 
         let mut companion: Option<Box<Star>> = None;
         let mut forbidden_zone = None;
-        if let Some(ref distance) = distance {
+        if let Some(distance) = distance {
+            println!("#78# - distance: {}", distance);
             if distance.separation() == &OrbitalSeparation::Distant && 3.d6() >= 11 {
                 forbidden_zone = Some(ForbiddenZone::from((distance.min(), distance.max())));
+                println!("{} → {} {}", forbidden_zone.unwrap(), distance.min(), distance.max());
                 companion = Some(Box::new(Star::random(population, Some(mass_index), Some(OrbitalDistance::random(&OrbitalSeparation::random(false, -6))))))
             }
         }
 
         // Determine inner limit, outer limit and snowline (in AU) alongside forbidden zone.
+        println!("IL {}", initial_luminosity.sqrt());
         let orbit_limits = OrbitLimits::from((
             Distance::Au(Au::from(maxof!(0.1 * mass, 0.01 * luminosity.sqrt()))),
             Distance::Au(Au::from(40.0 * mass)),
@@ -99,7 +102,12 @@ impl Star {
             middle_distance = gga.distance();
             orbits.push((gga.distance(), Some(GasGiant::random(gga.distance() <= orbit_limits.snowline(), gga, &orbit_limits))));
         } else {
+            let clamped = orbit_limits.outer(true);
             middle_distance = orbit_limits.outer(true) / (1.0 + 1.d6() as f64 * 0.05);
+            println!("{}", orbit_limits);
+            if middle_distance.raw_value() <= 0.0 {
+                panic!("MD < 0.0 !?");
+            }
         }
 
         /**
@@ -124,7 +132,7 @@ impl Star {
         //
         loop {
             d /= rng_spacing_multiplier();
-            if d < orbit_limits.inner(){
+            if d < orbit_limits.inner() {
                 break;
             }
             if !orbit_limits.is_forbidden_distance(d) {
@@ -337,10 +345,10 @@ impl std::fmt::Display for Star {
 
         if !self.orbits.is_empty() {
             info.push("Orbits:".to_string());
-            for e in self.orbits.iter() {
+            for (count, e) in self.orbits.iter().enumerate() {
                 match &e.1 {
                     None => (),
-                    Some(o) => info.push(format!("{o}"))
+                    Some(o) => info.push(format!("  {}.) {o}", count + 1))
                 }
             }
         }

@@ -1,4 +1,4 @@
-use crate::unit::distance::{au::Au, Distance};
+use crate::unit::distance::{au::Au, ly::Ly, Distance};
 
 /**
  Forbidden zone.
@@ -9,8 +9,17 @@ pub struct ForbiddenZone {
     outer: Distance,
 }
 
+impl std::fmt::Display for ForbiddenZone {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "FZ {} - {}", self.inner, self.outer)
+    }
+}
+
 impl From<(Distance, Distance)> for ForbiddenZone {
     fn from(value: (Distance, Distance)) -> Self {
+        if value.0 < Distance::Au(Au::from(0.0)) {
+            panic!("WTF!")
+        }
         Self {
             inner: value.0 / 3.0,
             outer: value.1 * 3.0
@@ -32,6 +41,6 @@ impl ForbiddenZone {
     }
 
     pub fn unlimited() -> ForbiddenZone {
-        ForbiddenZone { inner: Distance::Au(Au::from(f64::MAX)), outer: Distance::Au(Au::from(f64::MAX)) }
+        ForbiddenZone { inner: Distance::Ly(Ly::from(1.0)), outer: Distance::Ly(Ly::from(1.0)) }
     }
 }

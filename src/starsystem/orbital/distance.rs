@@ -11,6 +11,12 @@ pub struct OrbitalDistance {
     step: i32,
 }
 
+impl std::fmt::Display for OrbitalDistance {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "OD {}, {}, {}", self.separation, self.eccentricity, self.step)
+    }
+}
+
 impl OrbitalDistance {
     pub fn random(separation: &OrbitalSeparation) -> OrbitalDistance {
         OrbitalDistance {
@@ -45,11 +51,11 @@ impl OrbitalDistance {
     }
 
     pub fn min(&self) -> Distance {
-        Distance::Au(Au::from(1.0 - self.eccentricity() * self.average()))
+        Distance::Au(Au::from((1.0 - self.eccentricity()) * self.average()))
     }
 
     pub fn max(&self) -> Distance {
-        Distance::Au(Au::from(1.0 + self.eccentricity() * self.average()))
+        Distance::Au(Au::from((1.0 + self.eccentricity()) * self.average()))
     }
 
     pub fn average(&self) -> Distance {

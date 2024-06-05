@@ -1,6 +1,6 @@
 use rand::Rng;
 
-use crate::unit::distance::Distance;
+use crate::unit::distance::{Distance, Distanced};
 
 use super::{OrbitElement, OrbitalInfo};
 
@@ -46,7 +46,7 @@ impl AsteroidBelt {
 
 impl std::fmt::Display for AsteroidBelt {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{} asteroid belt at {}", match self.r#type {
+        write!(f, "{} asteroid belt at {:.2}", match self.r#type {
             Type::C => "a C-type",
             Type::S => "an S-type",
             Type::M => "an M-type"

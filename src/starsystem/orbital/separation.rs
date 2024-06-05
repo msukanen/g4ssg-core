@@ -9,6 +9,18 @@ pub enum OrbitalSeparation {
     Distant
 }
 
+impl std::fmt::Display for OrbitalSeparation {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", match self {
+            Self::VeryClose => "<very close>",
+            Self::Close     => "<close>",
+            Self::Moderate  => "<moderate>",
+            Self::Wide      => "<wide>",
+            Self::Distant   => "<distant>",
+        })
+    }
+}
+
 impl OrbitalSeparation {
     pub fn radius_multiplier(&self) -> f64 {
         match self {
