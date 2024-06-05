@@ -1,14 +1,16 @@
+use crate::unit::distance::{au::Au, Distance};
+
 /**
  Forbidden zone.
  */
 #[derive(Clone, Copy)]
 pub struct ForbiddenZone {
-    inner: f64,
-    outer: f64,
+    inner: Distance,
+    outer: Distance,
 }
 
-impl From<(f64, f64)> for ForbiddenZone {
-    fn from(value: (f64, f64)) -> Self {
+impl From<(Distance, Distance)> for ForbiddenZone {
+    fn from(value: (Distance, Distance)) -> Self {
         Self {
             inner: value.0 / 3.0,
             outer: value.1 * 3.0
@@ -17,19 +19,19 @@ impl From<(f64, f64)> for ForbiddenZone {
 }
 
 impl ForbiddenZone {
-    pub fn inner(&self) -> f64 {
+    pub fn inner(&self) -> Distance {
         self.inner
     }
 
-    pub fn outer(&self) -> f64 {
+    pub fn outer(&self) -> Distance {
         self.outer
     }
 
-    pub fn is_within(&self, distance: f64) -> bool {
+    pub fn contains(&self, distance: Distance) -> bool {
         distance >= self.inner() && distance <= self.outer()
     }
 
     pub fn unlimited() -> ForbiddenZone {
-        ForbiddenZone { inner: f64::MAX, outer: f64::MAX }
+        ForbiddenZone { inner: Distance::Au(Au::from(f64::MAX)), outer: Distance::Au(Au::from(f64::MAX)) }
     }
 }

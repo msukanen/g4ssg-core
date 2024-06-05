@@ -83,9 +83,9 @@ impl Star {
 
         // Determine inner limit, outer limit and snowline (in AU) alongside forbidden zone.
         let orbit_limits = OrbitLimits::from((
-            maxof!(0.1 * mass, 0.01 * luminosity.sqrt()),
-            40.0 * mass,
-            4.85 * initial_luminosity.sqrt(),
+            Distance::Au(Au::from(maxof!(0.1 * mass, 0.01 * luminosity.sqrt()))),
+            Distance::Au(Au::from(40.0 * mass)),
+            Distance::Au(Au::from(4.85 * initial_luminosity.sqrt())),
             forbidden_zone,
         ));
 
@@ -117,7 +117,7 @@ impl Star {
             }
         }
 
-        let mut d: f64 = middle_distance;
+        let mut d: Distance = middle_distance;
 
         //
         // Inwards orbits. Note that they're in "reversed order" (furthest -> nearest) from the get go.
@@ -155,7 +155,7 @@ impl Star {
         //
         // Place gas giants ...
         //
-        fn can_place_gg(gga: &GasGiantArrangement, orbit_limits: &OrbitLimits, distance: f64) -> bool {
+        fn can_place_gg(gga: &GasGiantArrangement, orbit_limits: &OrbitLimits, distance: Distance) -> bool {
             match gga {
                 GasGiantArrangement::Conventional(_) => distance > orbit_limits.snowline() && 3.d6() < 16,
                 GasGiantArrangement::Eccentric(_) => distance <= orbit_limits.snowline() && 3.d6() < 8

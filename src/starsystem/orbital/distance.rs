@@ -53,6 +53,6 @@ impl OrbitalDistance {
     }
 
     pub fn average(&self) -> Distance {
-        self.step() * self.separation().radius_multiplier()
+        Distance::Au(Au::from(self.step() * self.separation().radius_multiplier()))
     }
 }

@@ -1,3 +1,5 @@
+use crate::unit::distance::Distance;
+
 use self::{asteroidbelt::AsteroidBelt, planet::{gasgiant::GasGiant, terrestrial::Terrestrial}};
 
 pub mod planet;
@@ -15,7 +17,7 @@ pub enum OrbitElement {
 }
 
 pub trait OrbitalInfo {
-    fn distance(&self) -> f64;
+    fn distance(&self) -> Distance;
 }
 
 impl std::fmt::Display for OrbitElement {

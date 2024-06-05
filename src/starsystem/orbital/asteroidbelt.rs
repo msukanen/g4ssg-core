@@ -1,5 +1,7 @@
 use rand::Rng;
 
+use crate::unit::distance::Distance;
+
 use super::{OrbitElement, OrbitalInfo};
 
 #[derive(Clone, Copy)]
@@ -23,18 +25,18 @@ impl Type {
 
 #[derive(Clone, Copy)]
 pub struct AsteroidBelt {
-    distance: f64,
+    distance: Distance,
     r#type: Type,
 }
 
 impl OrbitalInfo for AsteroidBelt {
-    fn distance(&self) -> f64 {
+    fn distance(&self) -> Distance {
         self.distance
     }
 }
 
 impl AsteroidBelt {
-    pub fn random(distance: f64) -> OrbitElement {
+    pub fn random(distance: Distance) -> OrbitElement {
         OrbitElement::AsteroidBelt(AsteroidBelt {
             distance,
             r#type: Type::random(),

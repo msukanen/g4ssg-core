@@ -1,8 +1,8 @@
-use std::ops::Mul;
+use std::ops::{Add, Div, Mul, Sub};
 
 use super::{au::Au, ly::Ly, mi::Mi, pc::Pc, Distanced};
 
-#[derive(Clone)]
+#[derive(Clone, Copy, PartialEq, PartialOrd)]
 pub struct Km {
     value: f64,
 }
@@ -53,5 +53,53 @@ impl Mul<f64> for Km {
     type Output = Self;
     fn mul(self, rhs: f64) -> Self::Output {
         Self { value: self.value * rhs }
+    }
+}
+
+impl Add<Km> for f64 {
+    type Output = Km;
+    fn add(self, rhs: Km) -> Self::Output {
+        rhs + self
+    }
+}
+
+impl Add<f64> for Km {
+    type Output = Self;
+    fn add(self, rhs: f64) -> Self::Output {
+        Self { value: self.value + rhs }
+    }
+}
+
+impl Sub<Km> for f64 {
+    type Output = Km;
+    fn sub(self, rhs: Km) -> Self::Output {
+        Km { value: self - rhs.value }
+    }
+}
+
+impl Sub<f64> for Km {
+    type Output = Self;
+    fn sub(self, rhs: f64) -> Self::Output {
+        Self { value: self.value - rhs}
+    }
+}
+
+impl Div<f64> for Km {
+    type Output = Self;
+    fn div(self, rhs: f64) -> Self::Output {
+        Self { value: self.value / rhs }
+    }
+}
+
+impl Div<Km> for f64 {
+    type Output = Km;
+    fn div(self, rhs: Km) -> Self::Output {
+        Km::from( self / rhs.value )
+    }
+}
+
+impl Km {
+    pub fn sqrt(&self) -> Self {
+        Self { value: self.value.sqrt() }
     }
 }

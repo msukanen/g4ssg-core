@@ -1,3 +1,5 @@
+use crate::unit::distance::Distance;
+
 use super::forbiddenzone::ForbiddenZone;
 
 /**
@@ -5,20 +7,20 @@ use super::forbiddenzone::ForbiddenZone;
  */
 #[derive(Clone, Copy)]
 pub struct OrbitLimits {
-    inner: f64,
-    outer: f64,
-    snowline: f64,
+    inner: Distance,
+    outer: Distance,
+    snowline: Distance,
     forbidden_zone: Option<ForbiddenZone>,
 }
 
 impl OrbitLimits {
-    pub fn new(inner: f64, outer: f64, snowline: f64, forbidden_zone: Option<ForbiddenZone>) -> OrbitLimits {
+    pub fn new(inner: Distance, outer: Distance, snowline: Distance, forbidden_zone: Option<ForbiddenZone>) -> OrbitLimits {
         OrbitLimits { inner, outer, snowline, forbidden_zone }
     }
 }
 
-impl From<(f64, f64, f64, Option<ForbiddenZone>)> for OrbitLimits {
-    fn from(value: (f64, f64, f64, Option<ForbiddenZone>)) -> Self {
+impl From<(Distance, Distance, Distance, Option<ForbiddenZone>)> for OrbitLimits {
+    fn from(value: (Distance, Distance, Distance, Option<ForbiddenZone>)) -> Self {
         Self::new(value.0, value.1, value.2, value.3)
     }
 }
@@ -27,14 +29,14 @@ impl OrbitLimits {
     /**
      Get inner limit.
      */
-    pub fn inner(&self) -> f64 {
+    pub fn inner(&self) -> Distance {
         self.inner
     }
 
     /**
      Get outer limit, optionally clamped by forbidden zone if applicable.
      */
-    pub fn outer(&self, forbidden_zone_clamp: bool) -> f64 {
+    pub fn outer(&self, forbidden_zone_clamp: bool) -> Distance {
         if let Some(fz) = self.forbidden_zone {
             if forbidden_zone_clamp {
                 if self.outer > fz.inner() {
@@ -50,11 +52,11 @@ impl OrbitLimits {
         }
     }
 
-    pub fn snowline(&self) -> f64 {
+    pub fn snowline(&self) -> Distance {
         self.snowline
     }
 
-    pub fn is_forbidden_distance(&self, distance: f64) -> bool {
+    pub fn is_forbidden_distance(&self, distance: Distance) -> bool {
         match self.forbidden_zone {
             None => false,
             Some(fz) => distance >= fz.inner() && distance <= fz.outer()

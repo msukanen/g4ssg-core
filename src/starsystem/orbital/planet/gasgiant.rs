@@ -7,7 +7,7 @@ use dice::DiceExt;
 use rand::Rng;
 use ringsystem::RingSystem;
 
-use crate::{starsystem::orbital::{star::limits::orbitlimit::OrbitLimits, OrbitElement, OrbitalInfo}, unit::{distance::{km::Km, mi::Mi, Distance}, mass::{earth::EarthMass, Mass}}};
+use crate::{starsystem::orbital::{star::limits::orbitlimit::OrbitLimits, OrbitElement, OrbitalInfo}, unit::{distance::{au::Au, km::Km, mi::Mi, Distance}, mass::{earth::EarthMass, Mass}}};
 
 use self::arrangement::GasGiantArrangement;
 
@@ -29,7 +29,7 @@ pub struct GasGiant {
 }
 
 impl OrbitalInfo for GasGiant {
-    fn distance(&self) -> f64 {
+    fn distance(&self) -> Distance {
         self.arrangement.distance()
     }
 }
@@ -69,26 +69,26 @@ impl GasGiant {
         let size = Size::random_gg(inside_snowline_or_first_outside);
 
         let moonlets = max(2.d6()
-         +  if      arrangement.distance() <= 0.1 {-10}
-            else if arrangement.distance()  < 0.5  {-8}
-            else if arrangement.distance()  < 0.75 {-6}
-            else if arrangement.distance()  < 1.5  {-3}
+         +  if      arrangement.distance() <= Distance::Au(Au::from(0.1)) {-10}
+            else if arrangement.distance()  < Distance::Au(Au::from(0.5))  {-8}
+            else if arrangement.distance()  < Distance::Au(Au::from(0.75)) {-6}
+            else if arrangement.distance()  < Distance::Au(Au::from(1.5))  {-3}
             else    {0}, 0);
 
-        let moonlets_outer = if arrangement.distance() > 0.5 {
+        let moonlets_outer = if arrangement.distance() > Distance::Au(Au::from(0.5)) {
             max(1.d6()
-                +   if      arrangement.distance() <= 0.75 {-5}
-                    else if arrangement.distance() <= 1.5  {-4}
-                    else if arrangement.distance() <= 3.0  {-1}
+                +   if      arrangement.distance() <= Distance::Au(Au::from(0.75)) {-5}
+                    else if arrangement.distance() <= Distance::Au(Au::from(1.5))  {-4}
+                    else if arrangement.distance() <= Distance::Au(Au::from(3.0))  {-1}
                     else    {0}, 0)
         } else {0};
 
         let mut major_moons = vec![];
-        if arrangement.distance() > 0.1 {
+        if arrangement.distance() > Distance::Au(Au::from(0.1)) {
             let num = 1.d6()
-                +   if      arrangement.distance() <= 0.5  {-5}
-                    else if arrangement.distance() <= 0.75 {-4}
-                    else if arrangement.distance() <= 1.5  {-1}
+                +   if      arrangement.distance() <= Distance::Au(Au::from(0.5))  {-5}
+                    else if arrangement.distance() <= Distance::Au(Au::from(0.75)) {-4}
+                    else if arrangement.distance() <= Distance::Au(Au::from(1.5))  {-1}
                     else    {0};
             for _ in 0..num {
                 major_moons.push(Size::random_moon(Size::Large))

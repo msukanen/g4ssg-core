@@ -9,13 +9,13 @@ use rand::Rng;
 use terratype::TerraType;
 use worldtype::WorldType;
 
-use crate::{starsystem::orbital::{resources::RVM, star::population::Population, OrbitElement, OrbitalInfo}, unit::{distance::{km::Km, Distance}, mass::{earth::EarthMass, Mass}}};
+use crate::{starsystem::orbital::{resources::RVM, star::population::Population, OrbitElement, OrbitalInfo}, unit::{distance::{au::Au, km::Km, Distance, Distanced}, mass::{earth::EarthMass, Mass}}};
 
 use super::{atmosphere::Atmosphere, climate::Climate, density::Density, g, hydrographic::coverage::HydrographicCoverage, size::Size, Planet};
 
 #[derive(Clone)]
 pub struct Terrestrial {
-    distance: f64,
+    distance: Distance,
     terratype: TerraType,
     major_moons: Vec<Size>,
     moonlets: i32,
@@ -29,7 +29,7 @@ pub struct Terrestrial {
 }
 
 impl OrbitalInfo for Terrestrial {
-    fn distance(&self) -> f64 {
+    fn distance(&self) -> Distance {
         self.distance
     }
 }
@@ -73,14 +73,14 @@ impl Terrestrial {
     /**
      Generate a random "terrestrial" planet.
      */
-    pub fn random(population: &Population, solar_mass: f64,  luminosity: f64, distance: f64, size: Size) -> OrbitElement {
+    pub fn random(population: &Population, solar_mass: f64,  luminosity: f64, distance: Distance, size: Size) -> OrbitElement {
         // sort out the moons...
         let mut major_moons = vec![];
         let mut moonlets = 0;
-        if distance > 0.5 {
+        if distance > Distance::Au(Au::from(0.5)) {
             let modifier
-             = if distance <= 0.75 {-3}
-               else if distance <= 1.5 {-1}
+             = if distance <= Distance::Au(Au::from(0.75)) {-3}
+               else if distance <= Distance::Au(Au::from(1.5)) {-1}
                else {0}
              + match size {
                  Size::Tiny => -2,
@@ -95,7 +95,7 @@ impl Terrestrial {
         }
 
         // blackbody avg temp...
-        let b = 278.0 * f64::powf(luminosity, 1.0 / 4.0) / distance.sqrt();
+        let b = (278.0 * f64::powf(luminosity, 1.0 / 4.0) / distance.sqrt()).raw_value();
         // terratype, obviously...
         let terratype = TerraType::from((size, WorldType::from_blackbody(population, solar_mass, size, b)));
         // hydrographics - may or may not be 'water'...

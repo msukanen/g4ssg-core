@@ -1,4 +1,4 @@
-use std::ops::Mul;
+use std::ops::{Add, Div, DivAssign, Mul, MulAssign, Sub};
 
 use crate::unit::distance::{km::Km, au::Au, ly::Ly, mi::Mi, pc::Pc};
 
@@ -12,7 +12,7 @@ pub trait Distanced {
     fn raw_value(&self) -> f64;
 }
 
-#[derive(Clone)]
+#[derive(Clone, Copy, PartialEq, PartialOrd)]
 pub enum Distance {
     Km(Km),
     Mi(Mi),
@@ -91,6 +91,114 @@ impl Mul<f64> for Distance {
             Distance::Au(a) => Distance::Au(a * rhs),
             Distance::Ly(a) => Distance::Ly(a * rhs),
             Distance::Pc(a) => Distance::Pc(a * rhs),
+        }
+    }
+}
+
+impl Add<Distance> for f64 {
+    type Output = Distance;
+    fn add(self, rhs: Distance) -> Self::Output {
+        rhs + self
+    }
+}
+
+impl Add<f64> for Distance {
+    type Output = Self;
+    fn add(self, rhs: f64) -> Self::Output {
+        match self {
+            Self::Km(a) => Self::Km(a + rhs),
+            Self::Mi(a) => Self::Mi(a + rhs),
+            Self::Au(a) => Self::Au(a + rhs),
+            Self::Ly(a) => Self::Ly(a + rhs),
+            Self::Pc(a) => Self::Pc(a + rhs)
+        }
+    }
+}
+
+impl Sub<Distance> for f64 {
+    type Output = Distance;
+    fn sub(self, rhs: Distance) -> Self::Output {
+        match rhs {
+            Distance::Km(a) => Distance::Km(self - a),
+            Distance::Mi(a) => Distance::Mi(self - a),
+            Distance::Au(a) => Distance::Au(self - a),
+            Distance::Ly(a) => Distance::Ly(self - a),
+            Distance::Pc(a) => Distance::Pc(self - a)
+        }
+    }
+}
+
+impl Sub<f64> for Distance {
+    type Output = Self;
+    fn sub(self, rhs: f64) -> Self::Output {
+        match self {
+            Self::Km(a) => Self::Km(a + rhs),
+            Self::Mi(a) => Self::Mi(a + rhs),
+            Self::Au(a) => Self::Au(a + rhs),
+            Self::Ly(a) => Self::Ly(a + rhs),
+            Self::Pc(a) => Self::Pc(a + rhs),
+        }
+    }
+}
+
+impl Div<f64> for Distance {
+    type Output = Self;
+    fn div(self, rhs: f64) -> Self::Output {
+        match self {
+            Self::Km(a) => Self::Km(a / rhs),
+            Self::Mi(a) => Self::Mi(a / rhs),
+            Self::Au(a) => Self::Au(a / rhs),
+            Self::Ly(a) => Self::Ly(a / rhs),
+            Self::Pc(a) => Self::Pc(a / rhs),
+        }
+    }
+}
+
+impl Div<Distance> for f64 {
+    type Output = Distance;
+    fn div(self, rhs: Distance) -> Self::Output {
+        match rhs {
+            Distance::Km(a) => Distance::Km(Km::from(self / a)),
+            Distance::Mi(a) => Distance::Mi(Mi::from(self / a)),
+            Distance::Au(a) => Distance::Au(Au::from(self / a)),
+            Distance::Ly(a) => Distance::Ly(Ly::from(self / a)),
+            Distance::Pc(a) => Distance::Pc(Pc::from(self / a)),
+        }
+    }
+}
+
+impl DivAssign<f64> for Distance {
+    fn div_assign(&mut self, rhs: f64) {
+        match self {
+            Self::Km(a) => *a = Km::from((*a) / rhs),
+            Self::Mi(a) => *a = Mi::from((*a) / rhs),
+            Self::Au(a) => *a = Au::from((*a) / rhs),
+            Self::Ly(a) => *a = Ly::from((*a) / rhs),
+            Self::Pc(a) => *a = Pc::from((*a) / rhs),
+        }
+    }
+}
+
+impl MulAssign<f64> for Distance {
+    fn mul_assign(&mut self, rhs: f64) {
+        match self {
+            Self::Km(a) => *a = Km::from((*a) * rhs),
+            Self::Mi(a) => *a = Mi::from((*a) * rhs),
+            Self::Au(a) => *a = Au::from((*a) * rhs),
+            Self::Ly(a) => *a = Ly::from((*a) * rhs),
+            Self::Pc(a) => *a = Pc::from((*a) * rhs),
+        }
+    }
+}
+
+impl Distance {
+    pub fn sqrt(&self) -> Self {
+        match self {
+            Self::Km(a) => Self::Km(a.sqrt()),
+            Self::Mi(a) => Self::Mi(a.sqrt()),
+            Self::Au(a) => Self::Au(a.sqrt()),
+            Self::Ly(a) => Self::Ly(a.sqrt()),
+            Self::Pc(a) => Self::Pc(a.sqrt()),
         }
     }
 }
