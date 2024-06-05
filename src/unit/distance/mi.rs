@@ -44,3 +44,9 @@ impl From<Pc> for Mi {
         Self::from(Ly::from(value))
     }
 }
+
+impl std::fmt::Display for Mi {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{} mi.", self.value)
+    }
+}

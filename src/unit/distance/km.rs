@@ -40,3 +40,9 @@ impl From<Pc> for Km {
         Self::from(Au::from(value))
     }
 }
+
+impl std::fmt::Display for Km {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}km", self.value)
+    }
+}

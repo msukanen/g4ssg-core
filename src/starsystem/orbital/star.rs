@@ -10,11 +10,11 @@ use measurement::massindex::MassIndex;
 use rand::Rng;
 use r#type::Type;
 
-use crate::{maxof, starsystem::orbital::{asteroidbelt::AsteroidBelt, planet::{gasgiant::arrangement::GasGiantArrangement, size::Size, terrestrial::Terrestrial}}, unit::temperature::k::K};
+use crate::{maxof, starsystem::orbital::{asteroidbelt::AsteroidBelt, planet::{gasgiant::{GasGiant, arrangement::GasGiantArrangement}, size::Size, terrestrial::Terrestrial}}, unit::{distance::{au::Au, Distance}, temperature::k::K}};
 
 use self::{evolutionstage::EvolutionStage, limits::{forbiddenzone::ForbiddenZone, orbitlimit::OrbitLimits}, population::Population};
 
-use super::{distance::OrbitalDistance, planet::gasgiant::GasGiant, separation::OrbitalSeparation, OrbitElement};
+use super::{distance::OrbitalDistance, separation::OrbitalSeparation, OrbitElement};
 
 pub struct Star {
     population: Population,
@@ -25,7 +25,7 @@ pub struct Star {
     temperature: K,
     evolution: EvolutionStage,
     luminosity: f64,
-    radius: f64,
+    radius: Distance,
     orbit_limits: OrbitLimits,
     orbits: Vec<(f64, Option<OrbitElement>)>,
 }
@@ -67,10 +67,10 @@ impl Star {
                 luminosity = rand::thread_rng().gen_range(0.000001..=0.001);
             }
         }
-        let radius = match evolution {
+        let radius = Au::from(match evolution {
             EvolutionStage::D => 0.0,
             _ => (155_000.0 * luminosity.sqrt()) / (temperature.value() * temperature.value())
-        };
+        });
 
         let mut companion: Option<Box<Star>> = None;
         let mut forbidden_zone = None;
@@ -243,7 +243,7 @@ impl Star {
             temperature,
             evolution,
             luminosity,
-            radius,
+            radius: Distance::Au(radius),
             orbit_limits,
             orbits,
         }
@@ -331,8 +331,9 @@ impl std::fmt::Display for Star {
         info.push(format!("{}", self.population));
         info.push(format!("Mass: {}", self.mass));
         info.push(format!("Temp: {:.}", self.temperature));
-        info.push(format!("Evo.: {}{}", Type::from(self.mass_index()), self.evolution));
+        info.push(format!("Evo.: {}{}", Type::from((self.mass_index(), &self.evolution)), self.evolution));
         info.push(format!("Lum.: {:.1}", self.luminosity));
+        info.push(format!("Rad.: {}", self.radius));
         write!(f, "{}", info.join("\n"))
     }
 }

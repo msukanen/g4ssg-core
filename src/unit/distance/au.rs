@@ -40,3 +40,9 @@ impl From<Pc> for Au {
         Self::from(Ly::from(value))
     }
 }
+
+impl std::fmt::Display for Au {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{} AU", self.value)
+    }
+}

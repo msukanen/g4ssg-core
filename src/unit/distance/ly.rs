@@ -40,3 +40,9 @@ impl From<Pc> for Ly {
         Self { value: value.raw_value() * 3.26156378 }
     }
 }
+
+impl std::fmt::Display for Ly {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{} ly", self.value)
+    }
+}

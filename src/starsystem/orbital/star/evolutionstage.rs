@@ -1,5 +1,6 @@
 use super::population::Population;
 
+#[derive(PartialEq)]
 pub enum EvolutionStage {
     M, S, G, D
 }

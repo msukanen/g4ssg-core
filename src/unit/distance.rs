@@ -60,3 +60,15 @@ impl From<Pc> for Distance {
         Distance::Pc(value)
     }
 }
+
+impl std::fmt::Display for Distance {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", match self {
+            Self::Km(x) => format!("{x}"),
+            Self::Mi(x) => format!("{x}"),
+            Self::Au(x) => format!("{x}"),
+            Self::Ly(x) => format!("{x}"),
+            Self::Pc(x) => format!("{x}"),
+        })
+    }
+}

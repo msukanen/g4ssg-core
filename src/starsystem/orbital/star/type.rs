@@ -1,6 +1,7 @@
-use super::measurement::massindex::{MassIndex, MAX_MASS_INDEX, MIN_MASS_INDEX};
+use super::{evolutionstage::{self, EvolutionStage}, measurement::massindex::{MassIndex, MAX_MASS_INDEX, MIN_MASS_INDEX}};
 
 pub enum Type {
+    D,
     M(i32),
     K(i32),
     G(i32),
@@ -8,12 +9,16 @@ pub enum Type {
     A(i32),
 }
 
-impl From<i32> for Type {
+impl From<(i32, &EvolutionStage)> for Type {
     /**
      Generate approximate `Type` from the given mass index.
      */
-    fn from(value: i32) -> Self {
-        let mass_index = value.clamp_mass_index();
+    fn from(value: (i32, &EvolutionStage)) -> Self {
+        if value.1 == &EvolutionStage::D {
+            return Self::D;
+        }
+
+        let mass_index = value.0.clamp_mass_index();
         match mass_index {
             ..=MIN_MASS_INDEX => Self::A(5),
             1 => Self::A(6),
@@ -59,7 +64,8 @@ impl std::fmt::Display for Type {
             Self::F(a) => format!("F{a}"),
             Self::G(a) => format!("G{a}"),
             Self::K(a) => format!("K{a}"),
-            Self::M(a) => format!("M{a}")
+            Self::M(a) => format!("M{a}"),
+            Self::D => "".to_string(),
         })
     }
 }
