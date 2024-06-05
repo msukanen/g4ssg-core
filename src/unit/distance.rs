@@ -1,3 +1,5 @@
+use std::ops::Mul;
+
 use crate::unit::distance::{km::Km, au::Au, ly::Ly, mi::Mi, pc::Pc};
 
 pub mod au;
@@ -70,5 +72,25 @@ impl std::fmt::Display for Distance {
             Self::Ly(x) => format!("{x}"),
             Self::Pc(x) => format!("{x}"),
         })
+    }
+}
+
+impl Mul<Distance> for f64 {
+    type Output = Distance;
+    fn mul(self, rhs: Distance) -> Self::Output {
+        rhs * self
+    }
+}
+
+impl Mul<f64> for Distance {
+    type Output = Self;
+    fn mul(self, rhs: f64) -> Self::Output {
+        match self {
+            Distance::Km(a) => Distance::Km(a * rhs),
+            Distance::Mi(a) => Distance::Mi(a * rhs),
+            Distance::Au(a) => Distance::Au(a * rhs),
+            Distance::Ly(a) => Distance::Ly(a * rhs),
+            Distance::Pc(a) => Distance::Pc(a * rhs),
+        }
     }
 }

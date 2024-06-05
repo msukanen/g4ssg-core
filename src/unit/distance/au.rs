@@ -1,3 +1,5 @@
+use std::ops::Mul;
+
 use super::{km::Km, ly::Ly, mi::Mi, pc::Pc, Distanced};
 
 #[derive(Clone)]
@@ -44,5 +46,12 @@ impl From<Pc> for Au {
 impl std::fmt::Display for Au {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{} AU", self.value)
+    }
+}
+
+impl Mul<f64> for Au {
+    type Output = Self;
+    fn mul(self, rhs: f64) -> Self::Output {
+        Self { value: self.value * rhs }
     }
 }

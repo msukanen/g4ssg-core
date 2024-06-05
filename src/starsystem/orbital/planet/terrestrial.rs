@@ -169,3 +169,10 @@ impl Terrestrial {
         &self.climate
     }
 }
+
+impl std::fmt::Display for Terrestrial {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        //TODO: printing in full
+        write!(f, "a terrestrial planet")
+    }
+}

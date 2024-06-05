@@ -17,3 +17,13 @@ pub enum OrbitElement {
 pub trait OrbitalInfo {
     fn distance(&self) -> f64;
 }
+
+impl std::fmt::Display for OrbitElement {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", match self {
+            Self::AsteroidBelt(a) => format!("{a}"),
+            Self::GasGiant(a) => format!("{a}"),
+            Self::Terrestrial(a) => format!("{a}")
+        })
+    }
+}

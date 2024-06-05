@@ -27,7 +27,7 @@ pub struct Star {
     luminosity: f64,
     radius: Distance,
     orbit_limits: OrbitLimits,
-    orbits: Vec<(f64, Option<OrbitElement>)>,
+    orbits: Vec<(Distance, Option<OrbitElement>)>,
 }
 
 impl Star {
@@ -89,10 +89,10 @@ impl Star {
             forbidden_zone,
         ));
 
-        let mut orbits: Vec<(f64, Option<OrbitElement>)> = vec![];
-        let mut inward_orbits: Vec<(f64, Option<OrbitElement>)> = vec![];
-        let mut outward_orbits: Vec<(f64, Option<OrbitElement>)> = vec![];
-        let middle_distance: f64;
+        let mut orbits: Vec<(Distance, Option<OrbitElement>)> = vec![];
+        let mut inward_orbits: Vec<(Distance, Option<OrbitElement>)> = vec![];
+        let mut outward_orbits: Vec<(Distance, Option<OrbitElement>)> = vec![];
+        let middle_distance: Distance;
         let gga = GasGiantArrangement::random(&orbit_limits);
 
         if let Some(gga) = gga {
@@ -166,7 +166,7 @@ impl Star {
         }
 
         // Populate orbits with GGs first.
-        let mut gg_orbits: Vec<(f64, Option<OrbitElement>)> = vec![];
+        let mut gg_orbits: Vec<(Distance, Option<OrbitElement>)> = vec![];
         for (index, mut o) in orbits.clone().into_iter().enumerate() {
             match gga {
                 None => (),
@@ -334,6 +334,16 @@ impl std::fmt::Display for Star {
         info.push(format!("Evo.: {}{}", Type::from((self.mass_index(), &self.evolution)), self.evolution));
         info.push(format!("Lum.: {:.1}", self.luminosity));
         info.push(format!("Rad.: {}", self.radius));
+
+        if !self.orbits.is_empty() {
+            info.push("Orbits:".to_string());
+            for e in self.orbits.iter() {
+                match &e.1 {
+                    None => (),
+                    Some(o) => info.push(format!("{o}"))
+                }
+            }
+        }
         write!(f, "{}", info.join("\n"))
     }
 }

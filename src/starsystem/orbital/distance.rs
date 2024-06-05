@@ -1,5 +1,7 @@
 use dice::DiceExt;
 
+use crate::unit::distance::{au::Au, Distance};
+
 use super::separation::OrbitalSeparation;
 
 #[derive(Clone, Copy)]
@@ -42,15 +44,15 @@ impl OrbitalDistance {
         &self.separation
     }
 
-    pub fn min(&self) -> f64 {
-        (1.0 - self.eccentricity()) * self.average()
+    pub fn min(&self) -> Distance {
+        Distance::Au(Au::from(1.0 - self.eccentricity() * self.average()))
     }
 
-    pub fn max(&self) -> f64 {
-        (1.0 + self.eccentricity()) * self.average()
+    pub fn max(&self) -> Distance {
+        Distance::Au(Au::from(1.0 + self.eccentricity() * self.average()))
     }
 
-    pub fn average(&self) -> f64 {
+    pub fn average(&self) -> Distance {
         self.step() * self.separation().radius_multiplier()
     }
 }
