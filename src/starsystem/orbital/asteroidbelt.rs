@@ -1,6 +1,6 @@
 use rand::Rng;
 
-use crate::unit::distance::{Distance, Distanced};
+use crate::unit::distance::Distance;
 
 use super::{OrbitElement, OrbitalInfo};
 
