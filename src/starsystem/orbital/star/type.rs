@@ -1,4 +1,4 @@
-use super::{evolutionstage::{self, EvolutionStage}, measurement::massindex::{MassIndex, MAX_MASS_INDEX, MIN_MASS_INDEX}};
+use super::{evolutionstage::EvolutionStage, measurement::massindex::{MAX_MASS_INDEX, MIN_MASS_INDEX}};
 
 pub enum Type {
     D,
@@ -18,7 +18,7 @@ impl From<(i32, &EvolutionStage)> for Type {
             return Self::D;
         }
 
-        let mass_index = value.0.clamp_mass_index();
+        let mass_index = value.0.clamp(MIN_MASS_INDEX, MAX_MASS_INDEX);
         match mass_index {
             ..=MIN_MASS_INDEX => Self::A(5),
             1 => Self::A(6),

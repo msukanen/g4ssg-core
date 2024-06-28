@@ -1,7 +1,6 @@
 use crate::unit::temperature::k::K;
 
 pub(crate) trait MassIndex {
-    fn clamp_mass_index(&self) -> i32;
     fn solar_mass(&self) -> f64;
     fn solar_temperature(&self) -> K;
     fn solar_lmin(&self) -> f64;
@@ -13,12 +12,6 @@ pub const MIN_MASS_INDEX: i32 = 0;
 pub const MAX_MASS_INDEX: i32 = 33;
 
 impl MassIndex for i32 {
-    fn clamp_mass_index(&self) -> i32 {
-        if *self < MIN_MASS_INDEX {MIN_MASS_INDEX}
-        else if *self > MAX_MASS_INDEX {MAX_MASS_INDEX}
-        else {*self}
-    }
-
     /**
      Derive approximate solar mass from mass index.
      */

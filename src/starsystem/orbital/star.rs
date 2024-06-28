@@ -6,7 +6,7 @@ pub mod measurement;
 pub mod r#type;
 
 use dice::DiceExt;
-use measurement::massindex::MassIndex;
+use measurement::massindex::{MassIndex, MAX_MASS_INDEX, MIN_MASS_INDEX};
 use rand::Rng;
 use r#type::Type;
 
@@ -33,7 +33,7 @@ pub struct Star {
 impl Star {
     pub fn random(population: &Population, companion_to_mass_index: Option<i32>, distance: Option<OrbitalDistance>) -> Star {
         let mass_index = if let Some(ctmi) = companion_to_mass_index {
-            (ctmi + (1.d6() - 1).d6()).clamp_mass_index()
+            (ctmi + (1.d6() - 1).d6()).clamp(MIN_MASS_INDEX, MAX_MASS_INDEX)
         } else {
             Self::rng_mass_index()
         };
