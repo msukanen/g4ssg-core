@@ -1,5 +1,6 @@
 use super::{evolutionstage::EvolutionStage, measurement::massindex::{MAX_MASS_INDEX, MIN_MASS_INDEX}};
 
+#[derive(Debug, PartialEq)]
 pub enum Type {
     D,
     M(i32),
@@ -67,5 +68,28 @@ impl std::fmt::Display for Type {
             Self::M(a) => format!("M{a}"),
             Self::D => "".to_string(),
         })
+    }
+}
+
+#[cfg(test)]
+mod type_test {
+    use crate::starsystem::orbital::star::{evolutionstage::EvolutionStage, measurement::massindex::MAX_MASS_INDEX};
+
+    use super::Type;
+
+    #[test]
+    pub fn negative_mass_index_treated_as_zero() {
+        let t0 = Type::from((0, &EvolutionStage::M));
+        let tn = Type::from((-100, &EvolutionStage::M));
+        assert_eq!(t0, Type::A(5));
+        assert_eq!(tn, t0);
+    }
+
+    #[test]
+    pub fn too_large_mass_index_treated_as_max_mass_index() {
+        let t0 = Type::from((MAX_MASS_INDEX, &EvolutionStage::M));
+        let tn = Type::from((1000, &EvolutionStage::M));
+        assert_eq!(t0, Type::M(7));
+        assert_eq!(tn, t0);
     }
 }
