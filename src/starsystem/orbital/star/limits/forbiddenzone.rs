@@ -1,4 +1,4 @@
-use crate::unit::distance::{au::Au, ly::Ly, Distance};
+use msuk_scifi::unit::distance::{au::Au, ly::Ly, Distance};
 
 /**
  Forbidden zone.

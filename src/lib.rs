@@ -5,7 +5,6 @@ pub mod starsystem;
 mod util;
 pub mod config;
 pub mod html;
-pub mod unit;
 
 pub fn add(left: usize, right: usize) -> usize {
     left + right

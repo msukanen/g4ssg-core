@@ -5,11 +5,12 @@ pub mod habitability;
 use std::cmp::max;
 
 use dicebag::{DiceExt, PercentageVariance};
+use msuk_scifi::unit::{distance::{au::Au, km::Km, Distance, Distanced}, mass::{earth::EarthMass, Mass}};
 use rand::Rng;
 use terratype::TerraType;
 use worldtype::WorldType;
 
-use crate::{starsystem::orbital::{resources::RVM, star::population::Population, OrbitElement, OrbitalInfo}, unit::{distance::{au::Au, km::Km, Distance, Distanced}, mass::{earth::EarthMass, Mass}}};
+use crate::starsystem::orbital::{resources::RVM, star::population::Population, OrbitElement, OrbitalInfo};
 
 use super::{atmosphere::Atmosphere, climate::Climate, density::Density, g, hydrographic::coverage::HydrographicCoverage, size::Size, Planet};
 

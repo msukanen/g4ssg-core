@@ -7,10 +7,11 @@ pub mod r#type;
 
 use dicebag::DiceExt;
 use measurement::massindex::{MassIndex, MAX_MASS_INDEX, MIN_MASS_INDEX};
+use msuk_scifi::unit::{distance::{au::Au, Distance}, temperature::k::K};
 use rand::Rng;
 use r#type::Type;
 
-use crate::{maxof, starsystem::orbital::{asteroidbelt::AsteroidBelt, planet::{gasgiant::{arrangement::GasGiantArrangement, GasGiant}, size::Size, terrestrial::Terrestrial}}, unit::{distance::{au::Au, Distance}, temperature::k::K}};
+use crate::{maxof, starsystem::orbital::{asteroidbelt::AsteroidBelt, planet::{gasgiant::{arrangement::GasGiantArrangement, GasGiant}, size::Size, terrestrial::Terrestrial}}};
 
 use self::{evolutionstage::EvolutionStage, limits::{forbiddenzone::ForbiddenZone, orbitlimit::OrbitLimits}, population::Population};
 

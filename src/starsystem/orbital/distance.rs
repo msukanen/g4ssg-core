@@ -1,6 +1,5 @@
 use dicebag::DiceExt;
-
-use crate::unit::distance::{au::Au, Distance};
+use msuk_scifi::unit::distance::{au::Au, Distance};
 
 use super::separation::OrbitalSeparation;
 

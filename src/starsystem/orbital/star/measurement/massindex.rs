@@ -1,4 +1,4 @@
-use crate::unit::temperature::k::K;
+use msuk_scifi::unit::temperature::k::K;
 
 pub(crate) trait MassIndex {
     fn solar_mass(&self) -> f64;

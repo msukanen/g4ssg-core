@@ -4,10 +4,11 @@ pub mod ringsystem;
 use std::cmp::max;
 
 use dicebag::DiceExt;
+use msuk_scifi::unit::{distance::{au::Au, km::Km, mi::Mi, Distance}, mass::{earth::EarthMass, Mass}};
 use rand::Rng;
 use ringsystem::RingSystem;
 
-use crate::{starsystem::orbital::{star::limits::orbitlimit::OrbitLimits, OrbitElement, OrbitalInfo}, unit::{distance::{au::Au, km::Km, mi::Mi, Distance}, mass::{earth::EarthMass, Mass}}};
+use crate::starsystem::orbital::{star::limits::orbitlimit::OrbitLimits, OrbitElement, OrbitalInfo};
 
 use self::arrangement::GasGiantArrangement;
 

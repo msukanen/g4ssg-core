@@ -1,6 +1,7 @@
 use dicebag::DiceExt;
+use msuk_scifi::unit::distance::{au::Au, Distance};
 
-use crate::{starsystem::orbital::star::limits::orbitlimit::OrbitLimits, unit::distance::{au::Au, Distance}};
+use crate::starsystem::orbital::star::limits::orbitlimit::OrbitLimits;
 
 /**
  Gas giant arrangement for a star system.

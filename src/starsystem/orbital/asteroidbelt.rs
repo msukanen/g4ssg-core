@@ -1,6 +1,5 @@
+use msuk_scifi::unit::distance::Distance;
 use rand::Rng;
-
-use crate::unit::distance::Distance;
 
 use super::{OrbitElement, OrbitalInfo};
 

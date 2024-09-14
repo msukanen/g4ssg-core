@@ -1,4 +1,4 @@
-use crate::unit::distance::Distance;
+use msuk_scifi::unit::distance::Distance;
 
 use self::{asteroidbelt::AsteroidBelt, planet::{gasgiant::GasGiant, terrestrial::Terrestrial}};
 
