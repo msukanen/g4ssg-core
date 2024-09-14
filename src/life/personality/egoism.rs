@@ -1,4 +1,4 @@
-use dice::DiceExt;
+use dicebag::DiceExt;
 
 use crate::life::{advantages::{selfless::Selfless, Advantage}, disadvantages::{selfish::Selfish, Disadvantage}, quirks::Quirks, sex::mating::MatingBehavior};
 

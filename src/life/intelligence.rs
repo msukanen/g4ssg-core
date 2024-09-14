@@ -1,4 +1,4 @@
-use dice::DiceExt;
+use dicebag::DiceExt;
 
 use super::{lifespan::Lifespan, sex::{reprstrategy::ReproductionStrategy, Reproduction}, size::SizeCategory, trophiclevel::{Herbivore, TrophicLevel, TrophicLevelType}};
 

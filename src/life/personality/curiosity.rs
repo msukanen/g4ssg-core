@@ -1,4 +1,4 @@
-use dice::DiceExt;
+use dicebag::DiceExt;
 
 use crate::life::{advantages::Advantage, disadvantages::{curious::Curious, incurious::Incurious, Disadvantage}, quirks::Quirks, senses::{vision::Vision, Senses}, sex::{reprstrategy::ReproductionStrategy, Reproduction}, trophiclevel::{Herbivore, TrophicLevel, TrophicLevelType}};
 

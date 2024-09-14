@@ -1,7 +1,7 @@
 use std::collections::HashSet;
 
 use derivative::Derivative;
-use dice::{lo, DiceExt, HiLo};
+use dicebag::{lo, DiceExt, HiLo};
 
 use crate::life::habitat::ArcticOrDesert;
 

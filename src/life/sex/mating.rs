@@ -1,4 +1,4 @@
-use dice::DiceExt;
+use dicebag::DiceExt;
 
 use super::{arrangement::SexualArrangement, gestation::Gestation, reprstrategy::ReproductionStrategy, ArrangementCheck, Reproduction};
 

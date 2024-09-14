@@ -1,4 +1,4 @@
-use dice::DiceExt;
+use dicebag::DiceExt;
 
 use crate::life::{advantages::{fearlessness::{Fearlessness, Unfazeable}, Advantage}, disadvantages::{cowardice::Cowardice, fearfulness::Fearfulness, overconfidence::Overconfidence, paranoia::Paranoia, Disadvantage}, quirks::Quirks, senses::vision::Vision, size::SizeCategory, trophiclevel::{Herbivore, TrophicLevel}};
 

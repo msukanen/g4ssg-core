@@ -5,7 +5,7 @@ pub mod limits;
 pub mod measurement;
 pub mod r#type;
 
-use dice::DiceExt;
+use dicebag::DiceExt;
 use measurement::massindex::{MassIndex, MAX_MASS_INDEX, MIN_MASS_INDEX};
 use rand::Rng;
 use r#type::Type;
@@ -61,14 +61,14 @@ impl Star {
                 temperature = K::from(3_000.0 + 200.0 * (2.d6() - 2) as f64);
                 luminosity = lmax.unwrap() * 25.0;
             },
-            EvolutionStage::D => {
+            EvolutionStage::Dead => {
                 temperature = mass_index.solar_temperature() * 12.5;
                 mass = 0.9 + 0.05 * (2.d6() - 2) as f64;
                 luminosity = rand::thread_rng().gen_range(0.000001..=0.001);
             }
         }
         let radius = Au::from(match evolution {
-            EvolutionStage::D => 0.0,
+            EvolutionStage::Dead => 0.0,
             _ => (155_000.0 * luminosity.sqrt()) / (temperature.value() * temperature.value())
         });
 

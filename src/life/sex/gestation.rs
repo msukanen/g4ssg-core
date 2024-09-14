@@ -1,4 +1,4 @@
-use dice::{DiceExt, HiLo};
+use dicebag::{DiceExt, HiLo};
 
 use crate::life::{bodytemp::TemperatureRegulation, breathing::Breathing, habitat::Habitat, locomotion::Locomotion};
 

@@ -1,4 +1,4 @@
-use dice::{DiceExt, HiLo};
+use dicebag::{DiceExt, HiLo};
 
 use crate::life::{habitat::Habitat, locomotion::{Locomotion, LocomotionMode}, size::SizeCategory, skeleton::Skeleton, trophiclevel::{Carnivore, TrophicLevel}};
 

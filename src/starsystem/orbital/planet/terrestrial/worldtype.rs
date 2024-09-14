@@ -1,6 +1,6 @@
 use std::cmp::min;
 
-use dice::DiceExt;
+use dicebag::DiceExt;
 
 use crate::{starsystem::orbital::{planet::size::Size, star::population::Population}, util::kind::Kind};
 

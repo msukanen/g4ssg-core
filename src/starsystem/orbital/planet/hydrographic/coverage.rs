@@ -1,4 +1,4 @@
-use dice::{DiceExt, PercentageVariance};
+use dicebag::{DiceExt, PercentageVariance};
 use rand::Rng;
 
 use crate::{maxof, starsystem::orbital::planet::terrestrial::{terratype::TerraType, worldtype::WorldType}};

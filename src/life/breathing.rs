@@ -1,4 +1,4 @@
-use dice::DiceExt;
+use dicebag::DiceExt;
 
 use super::{habitat::{land::LandHabitat, water::WaterHabitat, Habitat}, locomotion::{Locomotion, LocomotionMode}};
 

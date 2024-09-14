@@ -1,4 +1,4 @@
-use dice::DiceExt;
+use dicebag::DiceExt;
 
 #[derive(Clone, Copy)]
 pub enum Size {

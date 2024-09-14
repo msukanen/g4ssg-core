@@ -1,4 +1,4 @@
-use dice::DiceExt;
+use dicebag::DiceExt;
 
 use crate::life::{habitat::Habitat, locomotion::Locomotion, sex::Reproduction, trophiclevel::{Carnivore, Herbivore, TrophicLevel, TrophicLevelType}};
 

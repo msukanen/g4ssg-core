@@ -4,7 +4,7 @@ pub mod habitability;
 
 use std::cmp::max;
 
-use dice::{DiceExt, PercentageVariance};
+use dicebag::{DiceExt, PercentageVariance};
 use rand::Rng;
 use terratype::TerraType;
 use worldtype::WorldType;

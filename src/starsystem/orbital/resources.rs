@@ -1,4 +1,4 @@
-use dice::DiceExt;
+use dicebag::DiceExt;
 
 use super::{asteroidbelt::AsteroidBelt, planet::terrestrial::Terrestrial};
 

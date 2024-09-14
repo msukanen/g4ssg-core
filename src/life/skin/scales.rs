@@ -1,4 +1,4 @@
-use dice::DiceExt;
+use dicebag::DiceExt;
 
 use crate::life::{habitat::{ArcticOrDesert, Habitat}, locomotion::{Locomotion, LocomotionMode}, trophiclevel::TrophicLevel};
 

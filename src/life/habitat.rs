@@ -1,7 +1,7 @@
 pub mod land;
 pub mod water;
 
-use dice::{DiceExt, HiLo};
+use dicebag::{DiceExt, HiLo};
 
 use crate::starsystem::orbital::OrbitElement;
 

@@ -3,7 +3,7 @@ pub mod ringsystem;
 
 use std::cmp::max;
 
-use dice::DiceExt;
+use dicebag::DiceExt;
 use rand::Rng;
 use ringsystem::RingSystem;
 

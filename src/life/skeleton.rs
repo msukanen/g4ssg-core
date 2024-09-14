@@ -1,4 +1,4 @@
-use dice::DiceExt;
+use dicebag::DiceExt;
 
 use super::{habitat::Habitat, locomotion::{Locomotion, LocomotionMode}, size::SizeCategory, symmetry::Symmetry};
 

@@ -1,4 +1,4 @@
-use dice::DiceExt;
+use dicebag::DiceExt;
 
 use crate::life::{advantages::Advantage, disadvantages::{nosenseofhumor::NoSenseOfHumor, orh::wetblanket::WetBlanket, playfulness::CompulsivePlayfulness, trickster::Trickster, Disadvantage}, intelligence::Intelligence, sex::{reprstrategy::ReproductionStrategy, Reproduction}, trophiclevel::TrophicLevel, quirks::Quirks};
 

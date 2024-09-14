@@ -1,4 +1,4 @@
-use dice::{lo, DiceExt, HiLo};
+use dicebag::{lo, DiceExt, HiLo};
 
 use super::{habitat::{land::LandHabitat, water::WaterHabitat, Habitat}, trophiclevel::{Carnivore, Herbivore, TrophicLevel, TrophicLevelType}};
 

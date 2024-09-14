@@ -1,4 +1,4 @@
-use dice::DiceExt;
+use dicebag::DiceExt;
 
 use crate::life::{advantages::Advantage, disadvantages::{racialintolerance::RacialIntolerance, xenophilia::Xenophilia, xenophobia::Xenophobia, Disadvantage}, quirks::Quirks, sex::{arrangement::SexualArrangement, ArrangementCheck, Reproduction}, trophiclevel::{TrophicLevel, TrophicLevelType}};
 

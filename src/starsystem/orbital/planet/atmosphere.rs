@@ -1,4 +1,4 @@
-use dice::{DiceExt, FixedNumberVariance};
+use dicebag::{DiceExt, FixedNumberVariance};
 use marginal::MarginalComponent;
 use mass::AtmosphericMass;
 use rand::Rng;
@@ -21,6 +21,9 @@ pub struct Atmosphere {
 }
 
 impl Atmosphere {
+    /**
+     Generate random potential atmosphere mass (in relation to Earth atmos mass).
+     */
     pub fn potential_mass(terratype: &TerraType) -> Option<f64> {
         match terratype {
             TerraType::Tiny(_)                      |

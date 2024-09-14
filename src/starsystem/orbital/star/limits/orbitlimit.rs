@@ -36,14 +36,14 @@ impl From<(Distance, Distance, Distance, Option<ForbiddenZone>)> for OrbitLimits
 
 impl OrbitLimits {
     /**
-     Get inner limit.
+     Get inner limit (usually in AU).
      */
     pub fn inner(&self) -> Distance {
         self.inner
     }
 
     /**
-     Get outer limit, optionally clamped by forbidden zone if applicable.
+     Get outer limit (usually in AU). Distance is clamped by the forbidden zone, if applicable/desired.
      */
     pub fn outer(&self, forbidden_zone_clamp: bool) -> Distance {
         if let Some(fz) = self.forbidden_zone {
@@ -61,10 +61,16 @@ impl OrbitLimits {
         }
     }
 
+    /**
+     Get snowline distance (usually in AU).
+     */
     pub fn snowline(&self) -> Distance {
         self.snowline
     }
 
+    /**
+     Check if given `distance` falls within so called forbidden zone.
+     */
     pub fn is_forbidden_distance(&self, distance: Distance) -> bool {
         match self.forbidden_zone {
             None => false,
@@ -72,9 +78,12 @@ impl OrbitLimits {
         }
     }
 
+    /**
+     Get forbidden zone.
+     */
     pub fn forbidden_zone(&self) -> ForbiddenZone {
         match self.forbidden_zone {
-            None => ForbiddenZone::unlimited(),
+            None => ForbiddenZone::none(),
             Some(fz) => fz
         }
     }

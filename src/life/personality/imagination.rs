@@ -1,4 +1,4 @@
-use dice::DiceExt;
+use dicebag::DiceExt;
 
 use crate::life::{advantages::Advantage, disadvantages::{hidebound::Hidebound, orh::nonstopideafactory::NonstopIdeaFactory, Disadvantage}, quirks::Quirks, sex::{reprstrategy::ReproductionStrategy, Reproduction}, trophiclevel::{Carnivore, Herbivore, TrophicLevel, TrophicLevelType}};
 

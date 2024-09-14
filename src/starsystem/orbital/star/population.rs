@@ -1,4 +1,4 @@
-use dice::DiceExt;
+use dicebag::DiceExt;
 
 #[derive(PartialEq, Clone, Copy)]
 pub enum Generation {

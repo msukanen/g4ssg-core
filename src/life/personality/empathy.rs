@@ -1,4 +1,4 @@
-use dice::DiceExt;
+use dicebag::DiceExt;
 
 use crate::life::{advantages::{charitable::Charitable, empathy::Sensitive, Advantage}, disadvantages::{bloodlust::Bloodlust, callous::Callous, oblivious::Oblivious, Disadvantage}, sex::{reprstrategy::ReproductionStrategy, Reproduction}, trophiclevel::{Carnivore, Herbivore, TrophicLevel, TrophicLevelType}, quirks::Quirks};
 

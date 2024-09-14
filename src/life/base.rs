@@ -1,4 +1,4 @@
-use dice::DiceExt;
+use dicebag::DiceExt;
 
 pub enum SiliconBase {
     SulfuricAcid,

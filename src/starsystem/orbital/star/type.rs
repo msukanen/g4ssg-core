@@ -15,7 +15,7 @@ impl From<(i32, &EvolutionStage)> for Type {
      Generate approximate `Type` from the given mass index.
      */
     fn from(value: (i32, &EvolutionStage)) -> Self {
-        if value.1 == &EvolutionStage::D {
+        if value.1 == &EvolutionStage::Dead {
             return Self::D;
         }
 

@@ -1,4 +1,4 @@
-use dice::DiceExt;
+use dicebag::DiceExt;
 
 use crate::life::{advantages::{chummy::Chummy, gregarious::Gregarious, Advantage}, disadvantages::{loner::Loner, Disadvantage}, quirks::Quirks, sex::{arrangement::SexualArrangement, gestation::Gestation, ArrangementCheck, Reproduction}, trophiclevel::{Carnivore, TrophicLevel, TrophicLevelType}};
 

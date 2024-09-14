@@ -1,6 +1,6 @@
 use std::ops::Mul;
 
-use dice::DiceExt;
+use dicebag::DiceExt;
 
 use super::{base::{ExoticaBase, LifeBase}, habitat::{land::LandHabitat, water::WaterHabitat, Habitat}, locomotion::{FlightMode, Locomotion, LocomotionMode}, trophiclevel::{Herbivore, TrophicLevel, TrophicLevelType}};
 

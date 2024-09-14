@@ -1,4 +1,4 @@
-use dice::{DiceExt, HiLo};
+use dicebag::{DiceExt, HiLo};
 
 use super::{base::{ExoticaBase, LifeBase}, size::Size};
 

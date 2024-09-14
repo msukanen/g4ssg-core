@@ -1,4 +1,4 @@
-use dice::DiceExt;
+use dicebag::DiceExt;
 
 use crate::{starsystem::orbital::star::limits::orbitlimit::OrbitLimits, unit::distance::{au::Au, Distance}};
 
@@ -13,6 +13,9 @@ pub enum GasGiantArrangement {
 }
 
 impl GasGiantArrangement {
+    /**
+     Generate random GG arrangement within `orbit_limits` bounds.
+     */
     pub fn random(orbit_limits: &OrbitLimits) -> Option<GasGiantArrangement> {
         match 3.d6() {
             ..=10 => None,

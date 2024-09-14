@@ -1,4 +1,4 @@
-use dice::DiceExt;
+use dicebag::DiceExt;
 
 use crate::life::{advantages::{highpainthreshold::HighPainThreshold, singleminded::SingleMinded, Advantage}, disadvantages::{shortattspan::ShortAttentionSpan, Disadvantage}, quirks::Quirks, sex::{reprstrategy::ReproductionStrategy, Reproduction}, trophiclevel::{Carnivore, TrophicLevel}};
 

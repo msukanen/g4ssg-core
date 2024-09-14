@@ -1,6 +1,6 @@
 use std::collections::HashSet;
 
-use dice::DiceExt;
+use dicebag::DiceExt;
 
 use crate::config::OutputConfig;
 

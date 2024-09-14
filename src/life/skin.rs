@@ -4,7 +4,7 @@ pub mod fur;
 pub mod feathers;
 pub mod exoskeleton;
 
-use dice::DiceExt;
+use dicebag::DiceExt;
 
 use self::{exoskeleton::Exoskeleton, feathers::Feathers, fur::Fur, naked::Naked, scales::Scales};
 
