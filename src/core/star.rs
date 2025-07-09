@@ -1,10 +1,10 @@
 use std::sync::Arc;
-use log::{debug, info, warn};
+use log::{debug, info};
 use msuk_scifi::unit::{distance::au::Au, temperature::k::K};
 use rand::{rngs::SmallRng, Rng, SeedableRng};
 use dicebag::{DiceExt, FixedNumberVariance, PercentageVariance};
 
-use crate::core::{stellar_age::{ByrExt, StellarAge}, stellar_evo::{StellarEvolution, StellarEvolutionSequence, EVOLUTIONS}, stellar_mass::gen_stellar_mass};
+use crate::core::{stellar_age::{ByrExt, StellarAge}, stellar_evo::{StellarEvolution, StellarEvolutionSequence, StellarRemnantClassification, EVOLUTIONS}, stellar_mass::gen_stellar_mass};
 
 #[derive(Clone, PartialEq)]
 pub enum OrderInSystem {
@@ -145,11 +145,10 @@ impl BaseStar {
         info!("Evolving a base star into fully fledged star.");
         info!("Mass ({}): {}", self.evo.rel_mass, self.mass);
 
-        // First: sequence, after which we can math the rest …
-        let sequence = self.evo.determine_sequence(&age);
-
+        let sequence = self.evo.determine_sequence(&age);/* 1st */
         let luminosity = Star::determine_luminosity(&mut self.rng, self.evo, &age, &sequence);
-        let temperature = determine_temperature(&sequence, self.evo, &age, &mut self.rng);
+        let temperature = Star::determine_temperature(&mut self.rng, self.evo, &age, &sequence);
+        let radius = Star::determine_radius(&sequence, self.mass, luminosity, &temperature);
 
         Star {
             // Bring in [BaseStar] data first and foremeost…
@@ -162,7 +161,9 @@ impl BaseStar {
             // … and then the rest:
             sequence,
             age,
-            luminosity
+            luminosity,
+            temperature,
+            radius,
         }
     }
 }
@@ -243,8 +244,17 @@ impl Star {
     //   is inversely related to its mass (more massive ones are smaller).
     // * Neutron Stars: The radius is set by neutron degeneracy pressure.
     // * Black Holes: The radius is its Schwarzschild radius, which depends only on its mass.
-    fn determine_radius(luminosity: f64, temperature: &K) -> Au {
+    fn determine_radius(sequence: &StellarEvolutionSequence, mass: f64, luminosity: f64, temperature: &K) -> Au {
+        match sequence {
+            StellarEvolutionSequence::Remnant(x) => Star::determine_remnant_radius(x),
+            _ =>// R = (155,000 × √L) / T²
+                Au::from((155_000.0 * luminosity.sqrt()) / (temperature.value() * temperature.value()))
+        }
+    }
 
+    fn determine_remnant_radius(_classification: &StellarRemnantClassification) -> Au {
+        // TODO: the hard math …
+        0.000000001.into()
     }
 }
 

@@ -9,8 +9,7 @@ maintenance = { status = "experimental" }
 [dependencies]
 rand = "0.9.1"
 dicebag = "0.3"
-derivative = "2.2.0"
-msuk-scifi = "0.1.1"
+msuk-scifi = "0.2.1"
 once_cell = "1.21.3"
 log = "0.4"
 env_logger = "0.11.8"
