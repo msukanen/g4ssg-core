@@ -3,7 +3,7 @@
 use dicebag::DiceExt;
 use msuk_scifi::unit::distance::au::Au;
 
-use crate::core::orbit::orbital_element::OrbitalElement;
+use crate::core::{designation::IsNamed, orbit::orbital_element::IsOrbitalElement};
 
 pub enum GasGiantArrangement {
     Conventional { distance: Au },
@@ -35,6 +35,12 @@ pub struct GasGiant {
 
 }
 
-impl OrbitalElement for GasGiant {
+impl IsOrbitalElement for GasGiant {
     
+}
+
+impl IsNamed for GasGiant {
+    fn designation(&self) -> String {
+        todo!("IsNamed<GasGiant>: designation()")
+    }
 }

@@ -7,3 +7,4 @@ mod stellar_mass;
 pub mod stellar_evo;
 pub mod star;
 pub mod orbit;
+pub mod designation;
