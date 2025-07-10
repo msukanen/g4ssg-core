@@ -1,3 +1,4 @@
+//! StarSystem lives here!
 use std::sync::Arc;
 
 use dicebag::DiceExt;

@@ -1,5 +1,4 @@
 //! Planetary basics …
-
 use gasgiant::GasGiant;
 use ab::AsteroidBelt;
 use terrestrial::Terrestrial;
@@ -14,6 +13,10 @@ pub enum PlanetaryObject {
     AsteroidBelt(AsteroidBelt),
     Terrestrial(Terrestrial),
     GasGiant(GasGiant),
+}
+
+pub trait IsPlanet {
+    
 }
 
 impl IsOrbitalElement for PlanetaryObject {

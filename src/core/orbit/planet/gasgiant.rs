@@ -1,9 +1,8 @@
 //! Gas giant related stuff lives here …
-//
 use dicebag::DiceExt;
 use msuk_scifi::unit::distance::au::Au;
 
-use crate::core::{designation::IsNamed, orbit::orbital_element::IsOrbitalElement};
+use crate::core::{designation::IsNamed, orbit::{orbital_element::IsOrbitalElement, planet::IsPlanet}};
 
 pub enum GasGiantArrangement {
     Conventional { distance: Au },
@@ -43,4 +42,8 @@ impl IsNamed for GasGiant {
     fn designation(&self) -> String {
         todo!("IsNamed<GasGiant>: designation()")
     }
+}
+
+impl IsPlanet for GasGiant {
+    
 }

@@ -1,3 +1,4 @@
+//! BaseStar and Star live here!
 use std::sync::Arc;
 use log::{debug, info};
 use msuk_scifi::unit::{distance::au::Au, temperature::k::K};

@@ -1,6 +1,4 @@
 //! General orbital element related stuff …
-//
-
 use crate::core::designation::IsNamed;
 
 /// A trait to be shared between all orbital elements,
