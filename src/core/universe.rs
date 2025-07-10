@@ -7,8 +7,15 @@ use crate::{core::galaxy::Galaxy, util::pluralize::Pluralizer};
 const NOT_SO_ABSURD_NUM_OF_GALAXIES: usize = 1;
 
 pub struct Universe {
-    seed: u64,
+    _seed: u64,
     galaxies: Vec<Galaxy>
+}
+
+impl std::fmt::Display for Universe {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        // TODO!
+        write!(f, "{}", "Display<Universe>: TODO")
+    }
 }
 
 impl Universe {
@@ -17,10 +24,10 @@ impl Universe {
         let mut rng = SmallRng::seed_from_u64(root_seed);
         let root_seed = rng.random();
         let num_of_galaxies = Self::gen_num_of_galaxies();
-        info!("Generating a universe with {num_of_galaxies} {}", num_of_galaxies.pluralize("galaxy", "galxies"));
+        info!("Generating universe {{#{}}} with {num_of_galaxies} {}", index + 1, num_of_galaxies.pluralize("galaxy", "galxies"));
         
         Self {
-            seed: root_seed,
+            _seed: root_seed,
             galaxies: (0..num_of_galaxies)
                         .into_par_iter()
                         .map(move |index| {

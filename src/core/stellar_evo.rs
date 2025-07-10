@@ -377,29 +377,34 @@ impl StellarEvolution {
     /// # Arguments
     /// * `age`— stellar age.
     pub fn determine_sequence(&self, age: &StellarAge) -> StellarEvolutionSequence {
-        // M-span of None stars are virtually immortal… Let's use 0.0 as span value.
-        let Some(span_m) = self.span_m else {
-            return StellarEvolutionSequence::MainSequence;
-        };
-        if span_m <= age.years {
-            return StellarEvolutionSequence::MainSequence;
-        }
-        
-        let Some(span_s) = self.span_s else {
-            return StellarEvolutionSequence::Remnant(StellarRemnantClassification::WhiteDwarf);
-        };
-        if span_m + span_s <= age.years {
-            return StellarEvolutionSequence::Subgiant;
-        }
-        
-        let Some(span_g) = self.span_g else {
-            return StellarEvolutionSequence::Remnant(StellarRemnantClassification::WhiteDwarf);
-        };
-        if span_m + span_s + span_g <= age.years {
-            return StellarEvolutionSequence::Giant(GiantClassification::III);
-        }
+        fn subseq(evo: &StellarEvolution, age: &StellarAge) -> StellarEvolutionSequence {
+            // M-span of None stars are virtually immortal… Let's use 0.0 as span value.
+            let Some(span_m) = evo.span_m else {
+                return StellarEvolutionSequence::MainSequence;
+            };
+            if span_m <= age.years {
+                return StellarEvolutionSequence::MainSequence;
+            }
+            
+            let Some(span_s) = evo.span_s else {
+                return StellarEvolutionSequence::Remnant(StellarRemnantClassification::WhiteDwarf);
+            };
+            if span_m + span_s <= age.years {
+                return StellarEvolutionSequence::Subgiant;
+            }
+            
+            let Some(span_g) = evo.span_g else {
+                return StellarEvolutionSequence::Remnant(StellarRemnantClassification::WhiteDwarf);
+            };
+            if span_m + span_s + span_g <= age.years {
+                return StellarEvolutionSequence::Giant(GiantClassification::III);
+            }
 
-        StellarEvolutionSequence::Remnant(StellarRemnantClassification::WhiteDwarf)
+            StellarEvolutionSequence::Remnant(StellarRemnantClassification::WhiteDwarf)
+        }
+        let seq = subseq(self, age);
+        debug!("Sequence: {seq}");
+        seq
     }
 }
 

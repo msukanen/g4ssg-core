@@ -14,6 +14,13 @@ pub struct Galaxy {
     star_systems: Vec<StarSystem>
 }
 
+impl std::fmt::Display for Galaxy {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        // TODO!
+        write!(f, "{}", "Display<Galaxy>: TODO")
+    }
+}
+
 impl Galaxy {
     /// Generates a shiny, brand new galaxy!
     /// 

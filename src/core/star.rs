@@ -58,6 +58,7 @@ pub struct BaseStar {
     mass: f64,
 }
 
+/// Here be a star, yes.
 pub struct Star {
     seed: u64,
     rng: SmallRng,
@@ -70,6 +71,9 @@ pub struct Star {
     luminosity: f64,
     temperature: K,
     radius: Au,
+    // inner, outer, snow line:
+    orbital_zones: (Au, Au, Au),
+    forbidden_zones: Vec<(Au, Au)>,
 }
 
 impl BaseStar {
@@ -141,14 +145,27 @@ impl BaseStar {
     }
 
     /// Generate a [Star] at specified age.
+    /// 
+    /// NOTE: this consumes the [BaseStar].
+    /// 
+    /// # Arguments
+    /// * `self`— [BaseStar] (**mut**, consumed).
+    /// * `age`— Star system's [age][StellarAge].
     pub fn at_age(mut self, age: Arc<StellarAge>) -> Star {
         info!("Evolving a base star into fully fledged star.");
-        info!("Mass ({}): {}", self.evo.rel_mass, self.mass);
+        debug!("Mass ({}): {}", self.evo.rel_mass, self.mass);
 
         let sequence = self.evo.determine_sequence(&age);/* 1st */
         let luminosity = Star::determine_luminosity(&mut self.rng, self.evo, &age, &sequence);
         let temperature = Star::determine_temperature(&mut self.rng, self.evo, &age, &sequence);
         let radius = Star::determine_radius(&sequence, self.mass, luminosity, &temperature);
+
+        let lsqrt = luminosity.sqrt();
+        let orbital_zones = (
+            Au::from((0.1 * self.mass).max(0.01 * lsqrt)),
+            Au::from( 40.0 * self.mass),
+            Au::from( 4.85 * lsqrt)
+        );
 
         Star {
             // Bring in [BaseStar] data first and foremeost…
@@ -164,6 +181,8 @@ impl BaseStar {
             luminosity,
             temperature,
             radius,
+            orbital_zones,
+            forbidden_zones: vec![],// these will be decided later.
         }
     }
 }
@@ -180,7 +199,7 @@ impl Star {
     /// # Returns
     /// A luminosity value.
     fn determine_luminosity(rng: &mut SmallRng, evo: &'static StellarEvolution, age: &Arc<StellarAge>, sequence: &StellarEvolutionSequence) -> f64 {
-        match sequence {
+        let lum = match sequence {
             // Stellar remnants have barely any visible spectrum luminosity to speak of, e.g. rarely higher than 0.001 for a WD.
             StellarEvolutionSequence::Remnant(_) => rng.random::<f64>() / 1_000.0,
 
@@ -198,9 +217,11 @@ impl Star {
 
             // NOTE: (sub)giants ~always~ have lum.max. defined, thus safe to unwrap without testing.
             StellarEvolutionSequence::Giant(_) => evo.luminosity_max.unwrap() * 25.0
-        }
-        // Apply ±10% to final value.
-        .delta(10)
+        };
+        // ±10%:
+        let d_lum = lum.delta(10);
+        debug!("Luminosity {lum} → {d_lum}");
+        d_lum
     }
 
     /// Determine a [star's][Star] surface temperature (with up to ±100K variance).
@@ -214,26 +235,27 @@ impl Star {
     /// # Returns
     /// Kelvins.
     fn determine_temperature(rng: &mut SmallRng, evo: &'static StellarEvolution, age: &Arc<StellarAge>, sequence: &StellarEvolutionSequence) -> K {
-        match sequence {
-            StellarEvolutionSequence::MainSequence => evo.surface_temperature as f64,
+        let k = match sequence {
+            StellarEvolutionSequence::MainSequence =>
+                (evo.surface_temperature as f64).upto_delta(100.0).round(),
             StellarEvolutionSequence::Subgiant => {
-                // T = M - ((A / S) × (M - 4,800))
+                // T = (M - ((A / S) × (M - 4,800))) ± 100K
                 let m = evo.surface_temperature as f64;
                 let a = age.as_byr() - evo.span_m.unwrap();
                 let s = evo.span_s.unwrap();
-                let subgiant_age = m - (a / s) * (m - 4_800.0);
-                subgiant_age.round()
+                (m - (a / s) * (m - 4_800.0)).upto_delta(100.0).round()
             },
             StellarEvolutionSequence::Giant(_) => {
-                (rng.random::<f64>() * 3_000.0 + 2_000.0).round()
+                (rng.random::<f64>() * 3_000.0 + 2_000.0).upto_delta(100.0).round()
             },
             StellarEvolutionSequence::Remnant(_) => {
                 debug!("Assigning 0K as 'effective temperature' for a stellar remnant");
                 0.0
             }
         }
-        .upto_delta(100.0)
-        .into()
+        .into();
+        debug!("Temperature {k}");
+        k
     }
 
     /// Determine star radius.
@@ -245,11 +267,13 @@ impl Star {
     // * Neutron Stars: The radius is set by neutron degeneracy pressure.
     // * Black Holes: The radius is its Schwarzschild radius, which depends only on its mass.
     fn determine_radius(sequence: &StellarEvolutionSequence, mass: f64, luminosity: f64, temperature: &K) -> Au {
-        match sequence {
+        let r = match sequence {
             StellarEvolutionSequence::Remnant(x) => Star::determine_remnant_radius(x),
             _ =>// R = (155,000 × √L) / T²
                 Au::from((155_000.0 * luminosity.sqrt()) / (temperature.value() * temperature.value()))
-        }
+        };
+        debug!("Radius {r}");
+        r
     }
 
     fn determine_remnant_radius(_classification: &StellarRemnantClassification) -> Au {

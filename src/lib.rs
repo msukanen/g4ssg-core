@@ -8,7 +8,7 @@
 #![allow(unexpected_cfgs)]
 use crate::core::{galaxy::Galaxy, multiverse::Multiverse, starsystem::StarSystem, universe::Universe};
 pub mod core;
-mod util;
+pub mod util;
 
 /// Generate an entire multiverse.
 pub fn let_there_be_light() -> Multiverse {

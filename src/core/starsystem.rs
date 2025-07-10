@@ -1,17 +1,24 @@
 use std::sync::Arc;
 
 use dicebag::DiceExt;
-use log::{debug, info};
+use log::{debug, info, warn};
 use rand::{rngs::SmallRng, Rng, SeedableRng};
 use rayon::iter::{IntoParallelIterator, ParallelIterator};
 
-use crate::{core::{star::{BaseStar, Star}, stellar_age::StellarAge}, util::pluralize::Pluralizer};
+use crate::{core::{orbit::{eccentricity::OrbitalEccentricityExt, separation::OrbitalSeparation}, star::{BaseStar, Star}, stellar_age::StellarAge}, util::pluralize::Pluralizer};
 
 pub struct StarSystem {
     seed: u64,
     designation: String,
     stars: Vec<Star>,
     age: Arc<StellarAge>, // This will be propagated to all the contained [Star].
+}
+
+impl std::fmt::Display for StarSystem {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        // TODO!
+        write!(f, "{}", "Display<StarSystem>: TODO")
+    }
 }
 
 impl StarSystem {
@@ -41,6 +48,7 @@ impl StarSystem {
         // Base stars have to be created linearly before they can branch out
         // as standalone individuals.
         let mut base_stars = vec![];
+        let mut base_star_separation = vec![];
         let mut current_evo_index = 0;
 
         // TODO: as of now, star generation goes linearly [larger → smaller]. But in real life,
@@ -50,16 +58,26 @@ impl StarSystem {
             let star_seed = root_seed.wrapping_add(index as u64);
             let base_star = BaseStar::new(star_seed, index.into(), current_evo_index, designation);
             current_evo_index = base_star.evolution_index();
+
+            if index > 0 {
+                let sep = OrbitalSeparation::new(index >= 2);
+                let ecc = sep.new_ratio();
+                base_star_separation.push((sep, ecc));
+            }
+
             base_stars.push(base_star);
         }
 
-        let (plurs, plura) = if base_stars.len() > 1 {("s", "")} else {("", "a ")};
-        info!("Evolving BaseStar{plurs} into fully {plura}fledged Star{plurs}");
+        // Divide full-star evolution with (e.g.) Rayon into multiple threads.
+        if base_stars.len() == 1 {info!("Sending a BaseStar up the evolutionary ladder …")
+        } else {                  info!("Distributing BaseStars evolution …")};
         let stars = base_stars.into_par_iter()
                 .map(|b| {
                     b.at_age(Arc::clone(&age))
                 })
                 .collect();
+
+        warn!("TODO: forbidden zones!");
 
         StarSystem {
             seed: root_seed,
