@@ -3,6 +3,8 @@
 use dicebag::DiceExt;
 use msuk_scifi::unit::distance::au::Au;
 
+use crate::core::orbit::orbital_element::OrbitalElement;
+
 pub enum GasGiantArrangement {
     Conventional { distance: Au },
     Eccentric { distance: Au },
@@ -31,4 +33,8 @@ impl GasGiantArrangement {
 //
 pub struct GasGiant {
 
+}
+
+impl OrbitalElement for GasGiant {
+    
 }
