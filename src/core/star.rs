@@ -1,13 +1,35 @@
 //! BaseStar and Star live here!
 use std::sync::Arc;
 use log::{debug, info};
-use msuk_scifi::unit::{distance::au::Au, temperature::k::K};
 use rand::{rngs::SmallRng, Rng, SeedableRng};
 use dicebag::{DiceExt, FixedNumberVariance, PercentageVariance};
 
-use crate::core::{stellar_age::{ByrExt, StellarAge}, stellar_evo::{StellarEvolution, StellarEvolutionSequence, StellarRemnantClassification, EVOLUTIONS}, stellar_mass::gen_stellar_mass};
+use crate::core::{orbit::{planet::gasgiant::GasGiantArrangement, IsOrbitZone}, stellar_age::{ByrExt, StellarAge}, stellar_evo::{StellarEvolution, StellarEvolutionSequence, StellarRemnantClassification, EVOLUTIONS}, stellar_mass::gen_stellar_mass};
+
+pub struct StarOrbitZone {
+    inner: Au,
+    outer: Au,
+    snowline: Au,
+}
+
+impl IsOrbitZone for StarOrbitZone{
+    fn inner_limit(&self) -> &dyn IsDistance {
+        &self.inner
+    }
+
+    fn outer_limit(&self) -> &dyn IsDistance {
+        &self.outer
+    }
+}
+
+impl StarOrbitZone {
+    pub fn snowline(&self) -> &dyn IsDistance {
+        &self.snowline
+    }
+}
 
 #[derive(Clone, PartialEq)]
+/// Order in system, from primary to the outmost.
 pub enum OrderInSystem {
     Primary,
     Secondary,
@@ -161,12 +183,15 @@ impl BaseStar {
         let temperature = Star::determine_temperature(&mut self.rng, self.evo, &age, &sequence);
         let radius = Star::determine_radius(&sequence, self.mass, luminosity, &temperature);
 
-        let lsqrt = luminosity.sqrt();
-        let orbital_zones = (
-            Au::from((0.1 * self.mass).max(0.01 * lsqrt)),
-            Au::from( 40.0 * self.mass),
-            Au::from( 4.85 * lsqrt)
-        );
+        let orbital_zones = {
+            let lsqrt = luminosity.sqrt();
+            (Au::from((0.1 * self.mass).max(0.01 * lsqrt)),
+             Au::from( 40.0 * self.mass),
+             Au::from( 4.85 * lsqrt))
+        };
+        
+        // Place 1st GG, if any.
+        let fst_gg_arrangement = GasGiantArrangement::new(&orbital_zones);
 
         Star {
             // Bring in [BaseStar] data first and foremeost…

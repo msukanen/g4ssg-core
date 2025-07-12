@@ -1,8 +1,7 @@
 //! Gas giant related stuff lives here …
 use dicebag::DiceExt;
-use msuk_scifi::unit::distance::au::Au;
 
-use crate::core::{designation::IsNamed, orbit::{orbital_element::IsOrbitalElement, planet::IsPlanet}};
+use crate::core::{designation::IsNamed, orbit::{orbital_element::IsOrbitalElement, planet::IsPlanet, IsOrbitZone, OrbitZones}};
 
 pub enum GasGiantArrangement {
     Conventional { distance: Au },
@@ -31,7 +30,7 @@ impl GasGiantArrangement {
 /// Gas(oline) Giant specs live here.
 //
 pub struct GasGiant {
-
+    orbit_zones: OrbitZones,
 }
 
 impl IsOrbitalElement for GasGiant {
