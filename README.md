@@ -28,6 +28,9 @@ SOFTWARE.
 
 **W.I.P.** - YMMV, etc.
 
+# Requirements
+* [g4ssg-pm](https://github.com/msukanen/g4ssg-pm.git)
+
 # Multi-threading + Other "Noteworthy Stuff"
 G4SSG-Core uses a massively parallel modus operandi relying (at the time of
 writing at least) on Rayon.
