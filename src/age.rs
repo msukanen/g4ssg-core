@@ -6,14 +6,14 @@ use dicebag::DiceExt;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Deserialize, Serialize, Clone, PartialEq, PartialOrd)]
-pub enum StellarAge {
+pub enum StellarPopulation {
     E1,
     Y1(f64),
     I1(f64),
     O1(f64),
     I2(f64),
     E2(f64)
-} impl StellarAge {
+} impl StellarPopulation {
     pub fn random() -> Self {
         fn step(v: f64) -> f64 { v * (1.d6() - 1) as f64 }
         match 3.d6() {
@@ -28,18 +28,18 @@ pub enum StellarAge {
 
     pub fn gyr(&self) -> f64 {
         match self {
-            StellarAge::E2(v) |
-            StellarAge::I1(v) |
-            StellarAge::I2(v) |
-            StellarAge::O1(v) |
-            StellarAge::Y1(v) => *v,
-            StellarAge::E1 => 0.0
+            StellarPopulation::E2(v) |
+            StellarPopulation::I1(v) |
+            StellarPopulation::I2(v) |
+            StellarPopulation::O1(v) |
+            StellarPopulation::Y1(v) => *v,
+            StellarPopulation::E1 => 0.0
         }
     }
 }
 
-impl Eq for StellarAge {}
-impl Ord for StellarAge {
+impl Eq for StellarPopulation {}
+impl Ord for StellarPopulation {
     fn cmp(&self, other: &Self) -> Ordering {
         match (self, other) {
             (Self::E1, Self::E1) => return Ordering::Equal,
