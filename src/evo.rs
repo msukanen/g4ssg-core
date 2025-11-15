@@ -132,12 +132,15 @@ impl StellarData {
             _ => 33
         }];
 
-        // Pick a random [StellarEvolution] within a certain range from the pivot mass.
+        // Look up evolution entry/entries that get caught within "pivot mass" threshold range.
         // In default setup this generally grabs only one entry, but…
         let c: Vec<&'static StellarEvolution> =
         COMMON_STARS.iter()
-            .filter(|e| e.mass >= m - 0.0475 && e.mass <= m + 0.0475)
+            .filter(|e|
+                e.mass >= m - STELLAR_CFG.pivot_mass_threshold &&
+                e.mass <= m + STELLAR_CFG.pivot_mass_threshold)
             .collect();
+        // Pick an entry in random…
         c.random_of()
     }
 }
