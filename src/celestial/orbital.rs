@@ -146,3 +146,17 @@ impl Ord for OrbitSeparation {
         ord
     }
 }
+
+/// Generate a random orbital spacing ratio.
+pub fn random_orbital_spacing_ratio() -> f64 {
+    match 3.d6() {
+        ..=4  => 1.4,
+        ..=6  => 1.5,
+        ..=8  => 1.6,
+        ..=12 => 1.7,
+        ..=14 => 1.8,
+        ..=16 => 1.9,
+        _     => 2.0
+    }
+}
+
