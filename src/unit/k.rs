@@ -145,6 +145,22 @@ op_temperature_for_integer!(Sub, sub, 32);
 op_temperature_for_integer!(Sub, sub, 64);
 op_temperature_for_integer!(Sub, sub, size);
 
+impl Temperature {
+    // Temp squared. Generally a "WTF?", but useful in some contexts.
+    pub fn sq(&self) -> Self {
+        self * self
+    }
+
+    // Self "hypercubed". Definitely not in everyday use. However, you
+    // can blame Stefan-Blotzmann stuff et al for its existence…
+    pub fn hc(&self) -> Self {
+        match self {
+            Self::K(_) => self.sq().sq(),
+            _ => unimplemented!("Although you can hypercube other things than Kelvin, I'm not going to. Sort out the mess, mmkay?")
+        }
+    }
+}
+
 pub trait AsTemperature {
     fn k(&self) -> Temperature;
 }
