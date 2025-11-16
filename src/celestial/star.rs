@@ -3,7 +3,7 @@ use std::ops::RangeInclusive;
 use dicebag::{DiceExt, FixedNumberVariance, InclusiveRandomRange, PercentageVariance};
 use serde::{Deserialize, Serialize};
 
-use crate::{age::StellarPopulation, celestial::orbital::OrbitalEccentricity, evo::{AgeSpan, Luminosity, StellarData}, unit::{AsMetric, Metric, Temperature, Zone}};
+use crate::{age::StellarPopulation, celestial::orbital::OrbitEccentricity, evo::{AgeSpan, Luminosity, StellarData}, unit::{AsMetric, Metric, Temperature, Zone}};
 
 /// Giant star size categories from the smallest to the largest.
 #[derive(Debug, Deserialize, Serialize, Clone, PartialEq, Eq, PartialOrd, Ord)]
@@ -52,6 +52,7 @@ pub struct Star {
     rad: Metric,
     solid_zone: RangeInclusive<Metric>,
     snow_line: Metric,
+    forbidden_zone: Zone,
 }
 
 impl Star {
@@ -138,6 +139,7 @@ impl Star {
             rad,
             solid_zone: (0.1 * mass).max(0.01 * lum.sqrt()).au()..=(40.0 * mass).au(),
             snow_line: (4.85 * lum.sqrt()).au(),
+            forbidden_zone: fz.clone()
         }
     }
 
