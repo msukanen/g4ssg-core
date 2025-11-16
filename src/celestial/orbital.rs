@@ -10,22 +10,22 @@ use crate::unit::Metric;
 
 /// Orbital eccentricity.
 #[derive(Debug, Deserialize, Serialize, Clone)]
-pub struct OrbitalEccentricity {
+pub struct OrbitEccentricity {
     /// Eccentricity, generally \[0 → 0.95\].
     ecc: f64,
     /// Average distance.
     avg: Metric,
-} impl OrbitalEccentricity {
+} impl OrbitEccentricity {
     /// Generate random orbital eccentricity.
     /// 
     /// # Args
     /// 
     /// * `osep`— separation to the nearest relevant neighbor.
-    pub fn random(osep: &OrbitalSeparation) -> Self {
+    pub fn random(osep: &OrbitSeparation) -> Self {
         let m = match osep {
-            OrbitalSeparation::VC(_) => -6,
-            OrbitalSeparation::C(_) => -4,
-            OrbitalSeparation::M(_) => -2,
+            OrbitSeparation::VC(_) => -6,
+            OrbitSeparation::C(_) => -4,
+            OrbitSeparation::M(_) => -2,
             _ => 0
         };
 
@@ -81,9 +81,9 @@ pub enum OSDMethod {
     }
 }
 
-/// Orbital separation of stars.
+/// Orbital separation of celestial objects.
 #[derive(Debug, Deserialize, Serialize, Clone, PartialEq, PartialOrd)]
-pub enum OrbitalSeparation {
+pub enum OrbitSeparation {
     /// Very close.
     VC(Metric),
     /// Close.
@@ -94,7 +94,7 @@ pub enum OrbitalSeparation {
     W(Metric),
     /// Distant.
     D(Metric)
-} impl OrbitalSeparation {
+} impl OrbitSeparation {
     /// Generate random orbital separation.
     /// 
     /// # Args
@@ -127,16 +127,16 @@ pub enum OrbitalSeparation {
     }
 }
 
-impl Eq for OrbitalSeparation {}
-impl Ord for OrbitalSeparation {
+impl Eq for OrbitSeparation {}
+impl Ord for OrbitSeparation {
     fn cmp(&self, other: &Self) -> Ordering {
         let ord =
-        |x: &OrbitalSeparation| match x {
-            OrbitalSeparation::VC(_) => 0,
-            OrbitalSeparation::C(_) => 1,
-            OrbitalSeparation::M(_) => 2,
-            OrbitalSeparation::W(_) => 3,
-            OrbitalSeparation::D(_) => 4,
+        |x: &OrbitSeparation| match x {
+            OrbitSeparation::VC(_) => 0,
+            OrbitSeparation::C(_) => 1,
+            OrbitSeparation::M(_) => 2,
+            OrbitSeparation::W(_) => 3,
+            OrbitSeparation::D(_) => 4,
         };
 
         let mut ord = ord(self).cmp(&ord(other));
