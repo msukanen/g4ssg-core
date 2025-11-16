@@ -2,7 +2,7 @@ use std::ops::RangeInclusive;
 
 use serde::{Deserialize, Serialize};
 
-use crate::{celestial::orbital::OrbitalEccentricity, unit::{AsMetric, Metric}};
+use crate::{celestial::orbital::OrbitEccentricity, unit::{AsMetric, Metric}};
 
 pub enum ZoneDead {
     Z1,
@@ -19,8 +19,8 @@ pub enum Zone {
     Limited { inner: Metric, outer: Metric }
 }
 
-impl From<&OrbitalEccentricity> for Zone {
-    fn from(ecc: &OrbitalEccentricity) -> Self {
+impl From<&OrbitEccentricity> for Zone {
+    fn from(ecc: &OrbitEccentricity) -> Self {
         let inner = ecc.min_distance() / 3;
         let outer = ecc.max_distance() * 3;
         Self::Limited { inner, outer }
