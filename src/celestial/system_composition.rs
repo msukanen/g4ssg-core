@@ -1,6 +1,8 @@
+use std::collections::VecDeque;
+
 use serde::{Deserialize, Serialize};
 
-use crate::{celestial::{orbital::{OrbitalEccentricity, OrbitalSeparation}, star::Star}, star_system::OSepster, unit::Zone};
+use crate::{celestial::{CountCelestialMajors, orbital::{OrbitEccentricity, OrbitSeparation}, star::Star}, star_system::OrbitScaffolding, unit::Zone};
 
 /// Composition…
 /// 
@@ -9,59 +11,84 @@ use crate::{celestial::{orbital::{OrbitalEccentricity, OrbitalSeparation}, star:
 /// T — a trinary (or larger…)
 /// 
 #[derive(Debug, Deserialize, Serialize, Clone)]
-pub enum StarSystemComposition {
-    S,
-    B {
-        orbit_param: (OrbitalSeparation, OrbitalEccentricity),
-        forbidden_zone: Zone,
-        primary: Star,
-        secondary: Box<StarSystemComposition>,
-    },
-    T {
-        orbit_param: [(OrbitalSeparation, OrbitalEccentricity); 2],
-        forbidden_zone: [Zone; 2],
-        primary: Star,
-        secondary: Box<StarSystemComposition>,
-        tertiary: Box<StarSystemComposition>,
-    },
+pub enum Composition {
+    S (Star),
+    B { p: Star, s: OrbitSeparation, e: OrbitEccentricity, b: Box<Composition> },
+    T { p: Star,
+        s1: OrbitSeparation, s2: OrbitSeparation,
+        e1: OrbitEccentricity, e2: OrbitEccentricity,
+        b1: Box<Composition>, b2: Box<Composition>
+        }
 }
 
-impl StarSystemComposition {
-    pub fn num_major_celestials(&self) -> usize {
-        match self {
-            Self::S => 1,
-            Self::B {secondary,..} => 1 + secondary.num_major_celestials(),
-            Self::T {secondary, tertiary,..} => 1 + secondary.num_major_celestials() + tertiary.num_major_celestials(),
+impl From<&OrbitScaffolding> for Composition {
+    fn from(scaffolding: &OrbitScaffolding) -> Self {
+        match scaffolding {
+            OrbitScaffolding::S(p) => Composition::S(Star::random("<unnamed>", p, &Zone::Free)),
+            OrbitScaffolding::B { p, s, b, e } => Composition::B {
+                p: Star::random("<unnamed>", p, &Zone::from(e)),
+                s: s.clone(), e: e.clone(),
+                b: Box::new(Composition::from(&**b))
+            },
+            OrbitScaffolding::T { p, s1, s2, e1, e2, b1, b2 } => Composition::T {
+                p: Star::random("<unnamed>", p, &Zone::from(e1)),
+                s1: s1.clone(), s2: s2.clone(),
+                e1: e1.clone(), e2: e2.clone(),
+                b1: Box::new(Composition::from(&**b1)),
+                b2: Box::new(Composition::from(&**b2))
+            }
         }
     }
 }
 
-pub(crate) enum BaseSystemComposition {
-    S (Star),
-    B { p: Star, s: OrbitalSeparation, e: OrbitalEccentricity, b: Box<BaseSystemComposition> },
-    T { p: Star,
-        s1: OrbitalSeparation, s2: OrbitalSeparation,
-        e1: OrbitalEccentricity, e2: OrbitalEccentricity,
-        b1: Box<BaseSystemComposition>, b2: Box<BaseSystemComposition>
-        }
+impl Composition {
+    fn iter(&self) -> CompositionIter<'_> {
+        let mut stack = VecDeque::new();
+        stack.push_back(self);
+        CompositionIter { stack }
+    }
 }
 
-impl From<&OSepster> for BaseSystemComposition {
-    fn from(oseps: &OSepster) -> Self {
-        match oseps {
-            OSepster::S(p) => BaseSystemComposition::S(Star::random("<unnamed>", p, &Zone::Free)),
-            OSepster::B { p, s, b, e } => BaseSystemComposition::B {
-                p: Star::random("<unnamed>", p, &Zone::from(e)),
-                s: s.clone(), e: e.clone(),
-                b: Box::new(BaseSystemComposition::from(&**b))
-            },
-            OSepster::T { p, s1, s2, e1, e2, b1, b2 } => BaseSystemComposition::T {
-                p: Star::random("<unnamed>", p, &Zone::from(e1)),
-                s1: s1.clone(), s2: s2.clone(),
-                e1: e1.clone(), e2: e2.clone(),
-                b1: Box::new(BaseSystemComposition::from(&**b1)),
-                b2: Box::new(BaseSystemComposition::from(&**b2))
-            }
+impl CountCelestialMajors for Composition {
+    fn num_major_celestials(&self) -> usize {
+        match self {
+            Composition::S(_) => 1,
+            Composition::B { b,.. } => 1 + b.num_major_celestials(),
+            Composition::T { b1, b2,.. } => 1 + b1.num_major_celestials() + b2.num_major_celestials()
         }
+    }
+}
+
+pub struct CompositionIter<'a> {
+    stack: VecDeque<&'a Composition>,
+}
+
+impl <'a> Iterator for CompositionIter<'a> {
+    type Item = &'a Composition;
+    fn next(&mut self) -> Option<Self::Item> {
+        if let Some(node) = self.stack.pop_front() {
+            match node {
+                Composition::S(_) => {},
+                Composition::B { b, .. } => {
+                    self.stack.push_back(&**b);
+                },
+                Composition::T { b1, b2, .. } => {
+                    self.stack.push_back(&**b1);
+                    self.stack.push_back(&**b2);
+                }
+            }
+            Some(node)
+        } else {
+            None
+        }
+    }
+}
+
+impl <'a> IntoIterator for &'a Composition {
+    type Item = &'a Composition;
+    type IntoIter = CompositionIter<'a>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        CompositionIter { stack: VecDeque::new() }
     }
 }
