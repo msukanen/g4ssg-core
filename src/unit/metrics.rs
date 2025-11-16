@@ -15,7 +15,7 @@
 //! 
 //! * `to_au()` generates an **au** value.
 //! * `to_rsun()` generates **R☉** value.
-use std::ops::{Div, Mul};
+use std::ops::{Add, Div, DivAssign, Mul, MulAssign};
 
 use serde::{Deserialize, Serialize};
 
@@ -89,32 +89,31 @@ impl Ord for Metric {
     }
 }
 
-impl Mul<f64> for Metric {
-    type Output = Self;
+//
+// Mul
+//
+impl Mul<f64> for &Metric {
+    type Output = Metric;
     fn mul(self, rhs: f64) -> Self::Output {
         match self {
-            Self::AU(v) => Self::AU(v * rhs),
-            Self::SolRadii(v) => Self::SolRadii(v * rhs)
+            Metric::AU(v) => Metric::AU(v * rhs),
+            Metric::SolRadii(v) => Metric::SolRadii(v * rhs)
         }
     }
-} impl Mul<i32> for Metric {
+} impl Mul<i32> for &Metric {
     type Output = Metric;
-    fn mul(self, rhs: i32) -> Self::Output {<Metric as Mul<f64>>::mul(self, rhs as f64)}
+    fn mul(self, rhs: i32) -> Self::Output {<&Metric as Mul<f64>>::mul(self, rhs as f64)}
+} impl Mul<f64> for Metric {
+    type Output = Self;
+    fn mul(self, rhs: f64) -> Self::Output {<&Metric as Mul<f64>>::mul(&self, rhs)}
+} impl Mul<i32> for Metric {
+    type Output = Self;
+    fn mul(self, rhs: i32) -> Self::Output {<&Metric as Mul<f64>>::mul(&self, rhs as f64)}
 }
 
-impl Div<f64> for Metric {
-    type Output = Self;
-    fn div(self, rhs: f64) -> Self::Output {
-        match self {
-            Self::AU(v) => Self::AU(v / rhs),
-            Self::SolRadii(v) => Self::SolRadii(v / rhs)
-        }
-    }
-} impl Div<i32> for Metric {
-    type Output = Self;
-    fn div(self, rhs: i32) -> Self::Output {<Metric as Div<f64>>::div(self, rhs as f64)}
-}
-
+//
+// Mul
+//
 impl Mul<&Metric> for f64 {
     type Output = Metric;
     fn mul(self, rhs: &Metric) -> Self::Output {
@@ -123,18 +122,127 @@ impl Mul<&Metric> for f64 {
             Metric::SolRadii(v) => Metric::SolRadii(v * self)
         }
     }
-}
-
-impl Mul<Metric> for f64 {
+} impl Mul<Metric> for f64 {
     type Output = Metric;
     fn mul(self, rhs: Metric) -> Self::Output {<f64 as Mul<&Metric>>::mul(self, &rhs)}
-}
-
-impl Mul<Metric> for i32 {
+} impl Mul<Metric> for i32 {
     type Output = Metric;
     fn mul(self, rhs: Metric) -> Self::Output {<f64 as Mul<Metric>>::mul(self as f64, rhs)}
 }
 
+//
+// Metric × Metric = Metric²
+//
+impl Mul<&Metric> for &Metric {
+    type Output = Metric;
+    fn mul(self, rhs: &Metric) -> Self::Output {
+        match self {
+            Metric::AU(v) => *v * rhs,
+            Metric::SolRadii(v) => *v * rhs
+        }
+    }
+} impl Mul for Metric {
+    type Output = Metric;
+    fn mul(self, rhs: Self) -> Self::Output {<&Metric as Mul<&Metric>>::mul(&self, &rhs)}
+} impl Mul<&Metric> for Metric {
+    type Output = Metric;
+    fn mul(self, rhs: &Metric) -> Self::Output {<&Metric as Mul<&Metric>>::mul(&self, rhs)}
+} impl Metric {
+    /// Self squared…
+    pub fn sq(&self) -> Self {
+        self * self
+    }
+}
+
+//
+// Div
+//
+impl Div<f64> for &Metric {
+    type Output = Metric;
+    fn div(self, rhs: f64) -> Self::Output {
+        match self {
+            Metric::AU(v) => Metric::AU(v / rhs),
+            Metric::SolRadii(v) => Metric::SolRadii(v / rhs)
+        }
+    }
+} impl Div<i32> for &Metric {
+    type Output = Metric;
+    fn div(self, rhs: i32) -> Self::Output {<&Metric as Div<f64>>::div(self, rhs as f64)}
+} impl Div<f64> for Metric {
+    type Output = Self;
+    fn div(self, rhs: f64) -> Self::Output {<&Metric as Div<f64>>::div(&self, rhs)}
+} impl Div<i32> for Metric {
+    type Output = Self;
+    fn div(self, rhs: i32) -> Self::Output {<&Metric as Div<f64>>::div(&self, rhs as f64)}
+}
+
+
+//
+// Add
+//
+impl Add<f64> for &Metric {
+    type Output = Metric;
+    fn add(self, rhs: f64) -> Self::Output {
+        match self {
+            Metric::AU(v) => Metric::AU(v + rhs),
+            Metric::SolRadii(v) => Metric::SolRadii(v + rhs)
+        }
+    }
+} impl Add<f64> for Metric {
+    type Output = Metric;
+    fn add(self, rhs: f64) -> Self::Output {<&Metric as Add<f64>>::add(&self, rhs)}
+}
+
+impl Add<&Metric> for f64 {
+    type Output = Metric;
+    fn add(self, rhs: &Metric) -> Self::Output {
+        match rhs {
+            Metric::AU(v) => Metric::AU(*v + self),
+            Metric::SolRadii(v) => Metric::SolRadii(*v + self)
+        }
+    }
+} impl Add<Metric> for f64 {
+    type Output = Metric;
+    fn add(self, rhs: Metric) -> Self::Output {<f64 as Add<&Metric>>::add(self, &rhs)}
+}
+
+//
+// DivAssign
+//
+impl DivAssign<f64> for &mut Metric {
+    fn div_assign(&mut self, rhs: f64) {
+        match self {
+            Metric::AU(v) => *v /= rhs,
+            Metric::SolRadii(v) => *v /= rhs
+        }
+    }
+} impl DivAssign<f64> for Metric {
+    fn div_assign(&mut self, rhs: f64) {
+        match self {
+            Metric::AU(v) => *v /= rhs,
+            Self::SolRadii(v) => *v /= rhs
+        }
+    }
+}
+
+//
+// MulAssign
+//
+impl MulAssign<f64> for &mut Metric {
+    fn mul_assign(&mut self, rhs: f64) {
+        match self {
+            Metric::AU(v) => *v *= rhs,
+            Metric::SolRadii(v) => *v *= rhs
+        }
+    }
+} impl MulAssign<f64> for Metric {
+    fn mul_assign(&mut self, rhs: f64) {
+        match self {
+            Metric::AU(v) => *v *= rhs,
+            Self::SolRadii(v) => *v *= rhs
+        }
+    }
+}
 
 /// A little convenience extension for making **au** or **R☉** from given value.
 pub trait AsMetric {
