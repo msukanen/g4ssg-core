@@ -1,9 +1,9 @@
-use std::ops::RangeInclusive;
+use std::{collections::VecDeque, ops::RangeInclusive};
 
 use dicebag::{DiceExt, FixedNumberVariance, InclusiveRandomRange, PercentageVariance};
 use serde::{Deserialize, Serialize};
 
-use crate::{age::StellarPopulation, celestial::orbital::OrbitEccentricity, evo::{AgeSpan, Luminosity, StellarData}, unit::{AsMetric, Metric, Temperature, Zone}};
+use crate::{age::StellarPopulation, celestial::{GasGiantArrangement, orbital::{OrbitEccentricity, random_orbital_spacing_ratio}}, evo::{AgeSpan, Luminosity, StellarData}, unit::{AsMetric, Metric, Temperature, Zone}};
 
 /// Giant star size categories from the smallest to the largest.
 #[derive(Debug, Deserialize, Serialize, Clone, PartialEq, Eq, PartialOrd, Ord)]
@@ -50,7 +50,7 @@ pub struct Star {
     pop: StellarPopulation,
     /// Radius in AU. Usually™ near neglible except for giants and SMBHs.
     rad: Metric,
-    solid_zone: RangeInclusive<Metric>,
+    solid_zone: Zone,
     snow_line: Metric,
     forbidden_zone: Zone,
 }
@@ -126,9 +126,51 @@ impl Star {
                 2.0 * g * mass / (c * c)
             }.rsun(),
             StarLifeStage::WR => unimplemented!("TODO: WR-radius"),
-            _ => (155_000.0 * lum.sqrt() / (&k * &k)).as_f64().into()
+            _ => (155_000.0 * lum.sqrt() / k.sq()).as_f64().into()
         };
+        let solid_zone = Zone::from(
+                // inner limit
+                ((0.1 * mass).max(0.01 * lum.sqrt()).au(),
+                // outer limit
+                (40.0 * mass).au())
+            );
+        let snow_line = (4.85 * lum.sqrt()).au();
         
+        // walk the walk, the orbit walk…
+        struct GgContent {
+            distance: Metric,
+            gg: bool
+        } impl GgContent {
+            fn distance_only(distance: &Metric) -> Self {
+                Self { distance: distance.clone(), gg: false }
+            }
+        }
+        let gga = GasGiantArrangement::random();
+        let (fst, fst_is_gg) = if let Some(gga) = gga {
+            (gga.random_distance(&snow_line, &solid_zone), true)
+        } else {
+            (solid_zone.outer() / (0.05 * 1.d6() as f64 + 1.0), false)
+        };
+        let mut orbits = VecDeque::new();
+        let mut curr_orbit = fst.clone();
+        orbits.push_back(curr_orbit.clone());
+        loop {
+            curr_orbit /= random_orbital_spacing_ratio();
+            if curr_orbit < *solid_zone.inner() {
+                break;
+            }
+            orbits.push_front(curr_orbit.clone());
+        }
+        curr_orbit = fst.clone();
+        loop {
+            curr_orbit *= random_orbital_spacing_ratio();
+            if curr_orbit > *solid_zone.outer() {
+                break;
+            }
+            orbits.push_back(curr_orbit.clone());
+        }
+        
+        // "That's all folks!", with Looney Tunes…
         Self {
             name: name.into(),
             mass,
@@ -137,8 +179,7 @@ impl Star {
             stage,
             pop: age.clone(),
             rad,
-            solid_zone: (0.1 * mass).max(0.01 * lum.sqrt()).au()..=(40.0 * mass).au(),
-            snow_line: (4.85 * lum.sqrt()).au(),
+            solid_zone, snow_line,
             forbidden_zone: fz.clone()
         }
     }
