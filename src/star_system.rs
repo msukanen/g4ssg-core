@@ -1,9 +1,10 @@
-use std::fmt::Display;
-
+//! Star System Specs
+//! 
+//! [StarSystem] struct acts as the "root" of everything in any given star system.
 use dicebag::DiceExt;
 use serde::{Deserialize, Serialize};
 
-use crate::{age::StellarPopulation, celestial::{orbital::{OSDMethod, OrbitalEccentricity, OrbitalSeparation, Zone}, star::Star, system_composition::{BaseSystemComposition, StarSystemComposition}}, unit::Zone};
+use crate::{age::StellarPopulation, celestial::{CountCelestialMajors, orbital::{OSDMethod, OrbitEccentricity, OrbitSeparation}, system_composition::Composition}};
 
 
 /// "It's full of stars!", or at least one or a few…
@@ -11,15 +12,10 @@ use crate::{age::StellarPopulation, celestial::{orbital::{OSDMethod, OrbitalEcce
 pub struct StarSystem {
     pub name: String,
     age: StellarPopulation,
-    composition: StarSystemComposition,
+    composition: Composition,
 }
 
 impl StarSystem {
-    /// Get number of major celestial objects in the system (stars, black holes, etc.).
-    pub fn num_major_celestials(&self) -> usize {
-        self.composition.num_major_celestials()
-    }
-
     /// Generate a random star system.
     /// 
     /// # Args
@@ -35,57 +31,66 @@ impl StarSystem {
         };
 
         // Lets get the separation scaffolding in place first…
-        let oseps = match num_stars {
-            1 => OSepster::S(age.clone()),
-            2 => OSepster::random(&age, OSDMethod::Basic),
+        // TODO: inline with Composition::from()?
+        let scaffolding = match num_stars {
+            1 => OrbitScaffolding::S(age.clone()),
+            2 => OrbitScaffolding::random(&age, OSDMethod::Basic),
             3 => {
-                let s1 = OrbitalSeparation::random(OSDMethod::TOB);
-                let s2 = OrbitalSeparation::random(OSDMethod::TOB);
-                let b1 = Box::new(if let OrbitalSeparation::D(_) = &s1 {
-                    OSepster::random(&age, OSDMethod::SC)
-                } else { OSepster::S(age.clone()) });
-                let b2 = Box::new(if let OrbitalSeparation::D(_) = &s2 {
-                    OSepster::random(&age, OSDMethod::SC)
-                } else { OSepster::S(age.clone()) });
-                let e1 = OrbitalEccentricity::random(&s1);
-                let e2 = OrbitalEccentricity::random(&s2);
-                OSepster::T { p: age.clone(), s1, s2, e1, e2, b1, b2 }
+                let s1 = OrbitSeparation::random(OSDMethod::TOB);
+                let s2 = OrbitSeparation::random(OSDMethod::TOB);
+                let b1 = Box::new(if let OrbitSeparation::D(_) = &s1 {
+                    OrbitScaffolding::random(&age, OSDMethod::SC)
+                } else { OrbitScaffolding::S(age.clone()) });
+                let b2 = Box::new(if let OrbitSeparation::D(_) = &s2 {
+                    OrbitScaffolding::random(&age, OSDMethod::SC)
+                } else { OrbitScaffolding::S(age.clone()) });
+                let e1 = OrbitEccentricity::random(&s1);
+                let e2 = OrbitEccentricity::random(&s2);
+                OrbitScaffolding::T { p: age.clone(), s1, s2, e1, e2, b1, b2 }
             }
             _ => unreachable!("Base `num_stars` is always 1, 2, or 3.")
         };
 
         // Plug in base stars…
-        let stars = BaseSystemComposition::from(&oseps);
+        let composition = Composition::from(&scaffolding);
 
         Self {
             age,
             name: name.into(),
-            composition: StarSystemComposition::default(),
+            composition,
         }
     }
 }
 
+impl CountCelestialMajors for StarSystem {
+    fn num_major_celestials(&self) -> usize {
+        self.composition.num_major_celestials()
+    }
+}
+
 /// Orbital scaffolding intermediate.
-pub(crate) enum OSepster {
+pub(crate) enum OrbitScaffolding {
     S (StellarPopulation),
-    B { p: StellarPopulation, s: OrbitalSeparation, e: OrbitalEccentricity, b: Box<OSepster> },
+    B { p: StellarPopulation, s: OrbitSeparation, e: OrbitEccentricity, b: Box<OrbitScaffolding> },
     T { p: StellarPopulation,
-        s1: OrbitalSeparation, s2: OrbitalSeparation,
-        e1: OrbitalEccentricity, e2: OrbitalEccentricity,
-        b1: Box<OSepster>, b2: Box<OSepster>
+        s1: OrbitSeparation, s2: OrbitSeparation,
+        e1: OrbitEccentricity, e2: OrbitEccentricity,
+        b1: Box<OrbitScaffolding>, b2: Box<OrbitScaffolding>
         }
-} impl OSepster {
+} impl OrbitScaffolding {
+    /// Generate random specs for an orbital separation branch.
     fn random(age: &StellarPopulation, method: OSDMethod) -> Self {
-        let s = OrbitalSeparation::random(method);
-        let b = Box::new(if let OrbitalSeparation::D(_) = &s {
+        let s = OrbitSeparation::random(method);
+        let b = Box::new(if let OrbitSeparation::D(_) = &s {
             Self::random(age, OSDMethod::SC)
         } else {
             Self::S ( age.clone() )
         });
-        let e = OrbitalEccentricity::random(&s);
+        let e = OrbitEccentricity::random(&s);
         Self::B { p: age.clone(), s, b, e }
     }
 
+    #[cfg(test)]
     fn num_major_celestials(&self) -> usize {
         match self {
             Self::S(_) => 1,
@@ -96,47 +101,50 @@ pub(crate) enum OSepster {
 }
 
 #[cfg(test)]
-    impl Display for OSepster {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        fn fmt_inner(node: &OSepster, f: &mut std::fmt::Formatter<'_>, indent: usize) -> std::fmt::Result {
-            let pad = " ".repeat(indent);
-            match node {
-                OSepster::S => writeln!(f, "{}S", pad)?,
-                OSepster::B { s, b } => {
-                    writeln!(f, "{}B({:?})", pad, s)?;
-                    fmt_inner(b, f, indent + 2)?;
-                },
-                OSepster::T { s1, s2, b1, b2 } => {
-                    writeln!(f, "{}T [={}]\n  {}> S", pad, node.num_major_celestials(), pad)?;
-                    writeln!(f, "{}  ├─ s1 = {:?}", pad, s1)?;
-                    fmt_inner(b1, f, indent + 4)?;
-                    writeln!(f, "{}  └─ s2 = {:?}", pad, s2)?;
-                    fmt_inner(b2, f, indent + 4)?;
-                }
-            }
-            Ok(())
-        }
-
-        fmt_inner(self, f, 0)?;
-        Ok(())
-    }
-}
-
-#[cfg(test)]
 mod osepster_tests {
     use super::*;
+
+    impl std::fmt::Display for OrbitScaffolding {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            fn fmt_inner(node: &OrbitScaffolding, f: &mut std::fmt::Formatter<'_>, indent: usize) -> std::fmt::Result {
+                let pad = " ".repeat(indent);
+                match node {
+                    OrbitScaffolding::S(_) => writeln!(f, "{}S", pad)?,
+                    OrbitScaffolding::B { s, b, .. } => {
+                        writeln!(f, "{}B({:?})", pad, s)?;
+                        fmt_inner(b, f, indent + 2)?;
+                    },
+                    OrbitScaffolding::T { s1, s2, b1, b2, .. } => {
+                        writeln!(f, "{}T [={}]\n  {}> S", pad, node.num_major_celestials(), pad)?;
+                        writeln!(f, "{}  ├─ s1 = {:?}", pad, s1)?;
+                        fmt_inner(b1, f, indent + 4)?;
+                        writeln!(f, "{}  └─ s2 = {:?}", pad, s2)?;
+                        fmt_inner(b2, f, indent + 4)?;
+                    }
+                }
+                Ok(())
+            }
+
+            fmt_inner(self, f, 0)?;
+            Ok(())
+        }
+    }
+
     #[test]
     fn oseps_flat_trinary_as_root() {
+        let age = StellarPopulation::random();
         let oseps = {
-                let s1 = OrbitalSeparation::random(OSDMethod::TOB);
-                let s2 = OrbitalSeparation::random(OSDMethod::TOB);
-                let b1 = Box::new(if let OrbitalSeparation::D(_) = &s1 {
-                    OSepster::random(OSDMethod::SC)
-                } else { OSepster::S });
-                let b2 = Box::new(if let OrbitalSeparation::D(_) = &s2 {
-                    OSepster::random(OSDMethod::SC)
-                } else { OSepster::S });
-                OSepster::T { s1, s2, b1, b2 }
+                let s1 = OrbitSeparation::random(OSDMethod::TOB);
+                let s2 = OrbitSeparation::random(OSDMethod::TOB);
+                let b1 = Box::new(if let OrbitSeparation::D(_) = &s1 {
+                    OrbitScaffolding::random(&age, OSDMethod::SC)
+                } else { OrbitScaffolding::S(age.clone()) });
+                let b2 = Box::new(if let OrbitSeparation::D(_) = &s2 {
+                    OrbitScaffolding::random(&age, OSDMethod::SC)
+                } else { OrbitScaffolding::S(age.clone()) });
+                let e1 = OrbitEccentricity::random(&s1);
+                let e2 = OrbitEccentricity::random(&s2);
+                OrbitScaffolding::T { p: age.clone(), s1, s2, b1, b2, e1, e2 }
             };
         let _ = env_logger::try_init();
         log::debug!("\n{oseps}");
