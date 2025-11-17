@@ -4,37 +4,77 @@ use std::fs;
 
 use dicebag::{DiceExt, RandomOf};
 use lazy_static::lazy_static;
+use rand::Rng;
 use serde::{Deserialize, Serialize};
 
 /// A threshold value used for picking star(s) within certain range from ["pivot mass"][SD_MASS].
-static PIVOT_MASS_THRESHOLD: f64 = 0.0475;
+const PIVOT_MASS_THRESHOLD: f64 = 0.0475;
 /// Config's serde deserializer default for pivot mass.
 fn default_pivot_mass_threshold() -> f64 {PIVOT_MASS_THRESHOLD}
+const SALTPETER_SLOPE_ALPHA: f64 = 2.35;
 
 /// Evo specs and config live here…
 static EVO_FILE: &'static str = "./data/evo.json";
 lazy_static! {
-    static ref STELLAR_CFG: StellarData = serde_jsonc::from_str(
-        &fs::read_to_string(EVO_FILE)
-            .unwrap_or_else(|e| panic!("Ok, where'd you put '{EVO_FILE}' this time? Cuz I got {e:?}…"))
-    ).expect("JSON error…");
-
+    static ref STELLAR_CFG: StellarData = {
+        let cfg: StellarData = serde_jsonc::from_str(
+            &fs::read_to_string(EVO_FILE).unwrap_or_else(|e| panic!(
+                "Exhibit: The Missing File\n\
+                Period: Age of Absent Furnaces\n\
+                Description: '{EVO_FILE}' could not be found.\n\
+                Curator's Note: Editor misplaced the sacred JSON scrolls. Error: {e:?}"))
+            ).unwrap_or_else(|e| panic!(
+                "Exhibit: The Broken JSON\n\
+                Period: Age of Syntax Chaos\n\
+                Description: Failed to parse '{EVO_FILE}'\n\
+                Curator's Note: Whoever edited this JSON is a moron. Error: {e:?}"
+            ));
+        if cfg.common.is_empty() {
+            panic!(
+                "Exhibit: The Great Void\n\
+                Period: Age of Missing Stars\n\
+                Description: 'common' stars have gone missing…\n\
+                Curator's Note: Chuck at least one star in to start the stellar furnace…");
+        }
+        if cfg.massive.is_empty() {
+            panic!(
+                "Exhibit: Minutea Absurdica\n\
+                Period: Age of Minutea\n\
+                Description: 'massive' stars are having a (non-)existential crisis\n\
+                Curator's Note: Come on, the universe hasn't just neat little starlets. There's big boyos too! Fix it.");
+        }
+        cfg
+    };
     static ref COMMON_STARS: &'static Vec<StellarEvolution> = &STELLAR_CFG.common;
+    static ref MASSIVE_STARS: Vec<&'static StellarEvolutionMassive> = {
+        let mut massives: Vec<&'static StellarEvolutionMassive> = STELLAR_CFG.massive.iter().collect();
+        massives.sort_by(|a,b| a.mass.total_cmp(&b.mass));
+        massives
+    };
+    static ref MASSIVE_STARS_MIN_MASS: f64 = MASSIVE_STARS.first().unwrap().mass;
+    static ref MASSIVE_STARS_MAX_MASS: f64 = MASSIVE_STARS.last().unwrap().mass;
 }
 
+/// Stellar data lives here…
 #[derive(Debug, Deserialize, Clone)]
 pub struct StellarData {
     #[serde(default = "default_pivot_mass_threshold",
             rename = "pivot-mass-threshold")]
     pivot_mass_threshold: f64,
     common: Vec<StellarEvolution>,
+    massive: Vec<StellarEvolutionMassive>,
 }
 
+/// Stellar age spans for 'common' category of stars.
 #[derive(Debug, Deserialize, Serialize, Clone)]
 #[serde(untagged)]
 pub enum AgeSpan {
+    /// hundreds of billions of years to trillions and then some.
+    /// Virtually "immortal".
     Infinite,
+    /// Just main-sequence span.
     MSpanOnly(f64),
+    /// Main, subgiant and giant spans.
     MSGSpan(f64, f64, f64)
 } impl Default for AgeSpan {
     fn default() -> Self {
@@ -64,16 +104,21 @@ pub enum AgeSpan {
     }
 }
 
+/// A rough "approximate type". Just to give some at glance idea.
+/// Not to be used in system generation itself.
 #[derive(Debug, Deserialize, Serialize, Clone)]
 #[serde(untagged)]
 pub enum ApproxType {
     Spectra(String, u8)
 }
 
+/// Initial luminosity at main-sequence phase.
 #[derive(Debug, Deserialize, Serialize, Clone)]
 #[serde(untagged)]
 pub enum Luminosity {
+    /// L-min value only. L-max is not different enough to bother listing separately.
     LMinOnly(f64),
+    /// L-min and L-max.
     LMinMax(f64, f64)
 } impl Luminosity {
     pub fn min(&self) -> f64 {
@@ -92,6 +137,7 @@ pub enum Luminosity {
     }
 }
 
+/// Evolution specs (for common stars).
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct StellarEvolution {
     pub mass: f64,
@@ -101,6 +147,15 @@ pub struct StellarEvolution {
     pub lum: Luminosity,
     #[serde(default)]
     pub span: AgeSpan
+}
+
+/// Evolution specs (for massive stars ≥ 3× Sol).
+#[derive(Debug, Deserialize, Serialize, Clone)]
+pub struct StellarEvolutionMassive {
+    pub mass: f64,
+    pub k: f64,
+    pub lum: f64,
+    pub span_y: f64,
 }
 
 /// "Pivot mass" markers for selecting star(s) in random from [COMMON_STARS].
@@ -143,10 +198,53 @@ impl StellarData {
         // Pick an entry in random…
         c.random_of()
     }
+
+    /// Get/generate random massive's evolution data.
+    pub fn random_massive() -> StellarEvolutionMassive {
+        let u = rand::rng().random_range(0.0..1.0);
+        // inverse transform sampling
+        let p = 1.0 - SALTPETER_SLOPE_ALPHA;
+        let mut a = MASSIVE_STARS_MIN_MASS.powf(p);
+        //#[cfg(test)]{log::info!("min-mass araw) {a:?}")}
+        let mut b = MASSIVE_STARS_MAX_MASS.powf(p);
+        //#[cfg(test)]{log::info!("max-mass braw) {b:?}")}
+        if a > b {
+            std::mem::swap(&mut a, &mut b);
+        }
+        let mass = (a + (b - a) * u)
+            .powf(1.0 / p)
+            .clamp(*MASSIVE_STARS_MIN_MASS, *MASSIVE_STARS_MAX_MASS);// "Obey the law!", a.k.a. no sneaky border crossers allowed.
+        //#[cfg(test)]{log::info!("mass {mass:?}")}
+        let bracket = MASSIVE_STARS
+            .windows(2)
+            .find(|w| w[0].mass <= mass && mass <= w[1].mass)
+            .unwrap_or_else(|| panic!("AAARGH! What gives? No stars around {mass} mass?"));
+        let (lower, upper) = (bracket[0], bracket[1]);
+        
+        fn ipow(actual_mass: f64, low_mass: f64, y1: f64, hi_mass: f64, y2: f64) -> f64 {
+            let l_actual = actual_mass.ln();
+            let l_low_mass = low_mass.ln();
+            let l_hi_mass = hi_mass.ln();
+            let ly1 = y1.ln();
+            let ly2 = y2.ln();
+            let t = (l_actual - l_low_mass) / (l_hi_mass - l_low_mass);
+            (ly1 + t * (ly2 - ly1)).exp()
+        }
+
+        StellarEvolutionMassive {
+            k: ipow(mass, lower.mass, lower.k, upper.mass, upper.k),
+            span_y: ipow(mass, lower.mass, lower.span_y, upper.mass, upper.span_y),
+            lum: ipow(mass, lower.mass, lower.lum, upper.mass, upper.lum),
+            mass
+        }
+    }
 }
 
 #[cfg(test)]
 mod evo_tests {
+    use core::f64;
+    use std::ops::{Range, RangeInclusive};
+
     use super::*;
 
     #[test]
@@ -159,5 +257,46 @@ mod evo_tests {
         let e = StellarData::random();
         let _ = env_logger::try_init();
         log::info!("{e:?}");
+    }
+
+    #[test]
+    /// Lets verify that Saltpeter'ish generator keeps the massives in line…
+    fn random_massive_evo() {
+        let _ = env_logger::try_init();
+        const LOOPS: Range<usize> = 0..1_000;
+        const EXPECTED_AVG_PER_INNER_LOOP: RangeInclusive<f64> = 7.09..=9.54;
+        const EXPECTED_TOTAL_AVG: RangeInclusive<f64> = 8.21..=8.27;
+        let mut total_avg_mass = 0.0;
+        let mut high_std_dev = 0.0;
+        for _ in LOOPS {
+            let mut min_mass = f64::MAX;
+            let mut max_mass = f64::MIN;
+            let mut sum_mass = 0.0;
+            let mut sum_sq_mass = 0.0;
+            for _ in LOOPS {
+                let mass = StellarData::random_massive().mass;
+                sum_mass += mass;
+                sum_sq_mass += mass*mass;
+                if mass < min_mass {
+                    min_mass = mass
+                }
+                if mass > max_mass {
+                    max_mass = mass
+                }
+            }
+            let avg_mass = sum_mass / LOOPS.end as f64;
+            total_avg_mass += avg_mass;
+            let variance = (sum_sq_mass / LOOPS.end as f64) - avg_mass.powi(2);
+            let std_dev = variance.sqrt();
+            if std_dev > high_std_dev {
+                high_std_dev = std_dev;
+            }
+            log::info!("{} loops; range between {min_mass:.3}..{max_mass:.3} with avg. {avg_mass} ± {std_dev:.3}; ", LOOPS.end);
+            // average *should* fall between this range with 1000 of 1000-loops
+            assert!(EXPECTED_AVG_PER_INNER_LOOP.contains(&avg_mass));
+        }
+        total_avg_mass /= LOOPS.end as f64;
+        log::info!("Total avg: {total_avg_mass:.3} with max ± {high_std_dev:.3}");
+        assert!(EXPECTED_TOTAL_AVG.contains(&total_avg_mass));
     }
 }
