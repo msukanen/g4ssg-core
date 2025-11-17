@@ -3,7 +3,7 @@ use std::ops::RangeInclusive;
 use lazy_static::lazy_static;
 use serde::{Deserialize, Serialize};
 
-use crate::{celestial::orbital::OrbitEccentricity, unit::{AsMetric, Metric}};
+use crate::{celestial::orbital::{ORBIT_RATIO_MAX, OrbitEccentricity}, unit::{AsMetric, Metric}};
 
 pub enum ZoneDead {
     Z1,
@@ -49,11 +49,14 @@ impl From<(Metric, Metric)> for Zone {
 }
 
 impl Zone {
+    /// Adjust the limits…
+    //TODO: a stub for now…
     pub fn adjust_limits(_z1: &mut Zone, _z2: &mut Zone) -> Result<(), ZoneDead> {
         log::warn!("TODO: adjust_limits() - stub.");
         Ok(())
     }
 
+    /// Return the zone as an inclusive distance range.
     pub fn as_range(&self) -> RangeInclusive<Metric> {
         match self {
             Self::Free => 0.au()..=f64::MAX.au(),
@@ -61,6 +64,7 @@ impl Zone {
         }
     }
 
+    /// Get inner edge of the zone.
     pub fn inner(&self) -> &Metric {
         match self {
             Self::Free => &ZONE_FREE_INNER,
@@ -68,10 +72,25 @@ impl Zone {
         }
     }
 
+    /// Get outer edge of the zone.
     pub fn outer(&self) -> &Metric {
         match self {
             Self::Free => &ZONE_FREE_OUTER,
             Self::Limited { outer,..} => outer
         }
+    }
+
+    /// See if given `distance` falls between inner and outer limit.
+    pub fn contains(&self, distance: &Metric) -> bool {
+        match self {
+            Self::Free => true,
+            Self::Limited { inner, outer } => distance >= inner && distance <= outer
+        }
+    }
+
+    /// See if any portion of the zone contains `distance` when orbital ratios are applied onto it.
+    pub fn orbit_corridor_intersects(&self, distance: &Metric) -> bool {
+        let range = self.inner() / ORBIT_RATIO_MAX..=self.outer()*ORBIT_RATIO_MAX;
+        range.contains(&distance)
     }
 }
