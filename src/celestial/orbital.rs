@@ -4,9 +4,15 @@
 use std::cmp::Ordering;
 
 use dicebag::DiceExt;
+use rand::Rng;
 use serde::{Deserialize, Serialize};
 
-use crate::unit::Metric;
+use crate::{celestial::terrestrial::SizeCategory, unit::{Metric, Zone}};
+
+pub(crate) const ORBIT_RATIO_MIN: f64 = 1.4;
+pub(crate) const ORBIT_RATIO_MAX: f64 = 2.0;
+const ORBIT_RATIO_ROLL_SLOTS_BETWEEN: usize = 5;
+const ORBIT_RATIO_SLOT_DELTA: f64 = (ORBIT_RATIO_MAX - ORBIT_RATIO_MIN) / (ORBIT_RATIO_ROLL_SLOTS_BETWEEN + 1) as f64;
 
 /// Orbital eccentricity.
 #[derive(Debug, Deserialize, Serialize, Clone)]
@@ -149,14 +155,66 @@ impl Ord for OrbitSeparation {
 
 /// Generate a random orbital spacing ratio.
 pub fn random_orbital_spacing_ratio() -> f64 {
+    let shape = 3.d6();
+    let normalized = (shape - 3) as f64 / (18 - 3) as f64;
+    // add a bit of jitter...
+    let jitter = rand::rng().random::<f64>() / 15.0;
+    let clamped = (normalized + jitter).min(1.0);
+    ORBIT_RATIO_MIN + clamped * (ORBIT_RATIO_MAX - ORBIT_RATIO_MIN)
+    /* 
     match 3.d6() {
-        ..=4  => 1.4,
-        ..=6  => 1.5,
-        ..=8  => 1.6,
-        ..=12 => 1.7,
-        ..=14 => 1.8,
-        ..=16 => 1.9,
-        _     => 2.0
+        ..=4  => ORBIT_RATIO_MIN,
+        ..=6  => ORBIT_RATIO_MIN + ORBIT_RATIO_SLOT_DELTA,
+        ..=8  => ORBIT_RATIO_MIN + ORBIT_RATIO_SLOT_DELTA * 2.0,
+        ..=12 => ORBIT_RATIO_MIN + ORBIT_RATIO_SLOT_DELTA * 3.0,
+        ..=14 => ORBIT_RATIO_MIN + ORBIT_RATIO_SLOT_DELTA * 4.0,
+        ..=16 => ORBIT_RATIO_MIN + ORBIT_RATIO_SLOT_DELTA * 5.0,
+        _     => ORBIT_RATIO_MAX
+    } */
+}
+
+/// What's on the orbit?
+pub(crate) enum OrbitContent {
+    Empty,// to distinguish from "not-yet-defined" None.
+    AB,// Asteroid belt or Debris (or both)
+    T (SizeCategory),
+    GG,// Gas giant of some sort
+    KB,// Kuiper belt
+    Oort,// Oort cloud
+} impl OrbitContent {
+    /// Generate a random orbit content marker. Gas giants are handled separately elsewhere…
+    pub fn random(
+        prev_is_gg: bool,
+        next_is_gg: bool,
+        distance: &Metric,
+        fz: &Zone,
+        limits: &Zone,
+    ) -> Self {
+        let m
+            = if prev_is_gg {-3} else {0}
+            + if next_is_gg {-6} else {0}
+            + if orbit_adjacent_to_inner_limit(distance, limits) {-3} else {0}
+            + if orbit_adjacent_to_outer_limit(distance, limits) {-3} else {0}
+            + if fz.orbit_corridor_intersects(distance) {-6} else {0};
+        match 3.d6() + m {
+            ..=3  => Self::Empty,
+            ..=6  => Self::AB,
+            ..=8  => Self::T(SizeCategory::Tiny),
+            ..=11 => Self::T(SizeCategory::Small),
+            ..=15 => Self::T(SizeCategory::Medium),
+            _     => Self::T(SizeCategory::Large)
+        }
     }
 }
 
+/// Check if the given orbit is the next orbit from the absolute inner limit of its parent celestial.
+pub fn orbit_adjacent_to_inner_limit(distance: &Metric, limits: &Zone) -> bool {
+    let range = (distance/2.0)..=(distance/1.4);
+    range.contains(limits.inner())
+}
+
+/// Check if the given orbit is the next orbit before the absolute outer limit of its parent celestial.
+pub fn orbit_adjacent_to_outer_limit(distance: &Metric, limits: &Zone) -> bool {
+    let range = (distance*1.4)..=(distance*2.0);
+    range.contains(limits.outer())
+}
