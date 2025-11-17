@@ -48,18 +48,17 @@ pub(crate) fn random_gg_distance(
 }
 
 /// See if given arrangement lets a GG sit at given distance.
-pub(crate) fn orbit_can_contain_gg(gga: Option<&GasGiantArrangement>, distance: &Metric, snow_line: &Metric) -> bool {
-    if gga.is_none() { return false;}
-    
-    match gga.unwrap() {
+pub(crate) fn orbit_can_contain_gg(gga: &Option<GasGiantArrangement>, distance: &Metric, snow_line: &Metric) -> bool {
+    match gga {
+        None => false,
         // Conventional GGA can have GGs only at/beyond snow-line.
-        GasGiantArrangement::Conventional =>
+        Some(GasGiantArrangement::Conventional) =>
             if distance >= snow_line && 3.d6() < 16 {true} else {false},
-        GasGiantArrangement::Eccentric =>
+        Some(GasGiantArrangement::Eccentric) =>
             if distance < snow_line && 3.d6() < 9 {true}
             else if distance >= snow_line && 3.d6() < 15 {true}
             else {false},
-        GasGiantArrangement::Epistellar =>
+        Some(GasGiantArrangement::Epistellar) =>
             if distance < snow_line && 3.d6() < 7 {true}
             else if distance >= snow_line && 3.d6() < 15 {true}
             else {false}
