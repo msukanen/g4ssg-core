@@ -3,7 +3,7 @@ use std::{collections::VecDeque, ops::RangeInclusive};
 use dicebag::{DiceExt, FixedNumberVariance, InclusiveRandomRange, PercentageVariance};
 use serde::{Deserialize, Serialize};
 
-use crate::{age::StellarPopulation, celestial::{GasGiantArrangement, orbital::{OrbitEccentricity, random_orbital_spacing_ratio}}, evo::{AgeSpan, Luminosity, StellarData}, unit::{AsMetric, Metric, Temperature, Zone}};
+use crate::{age::StellarPopulation, celestial::{GasGiantArrangement, gas_giant::orbit_can_contain_gg, orbital::{OrbitContent, OrbitEccentricity, random_orbital_spacing_ratio}}, evo::{AgeSpan, Luminosity, StellarData}, unit::{AsMetric, Metric, Temperature, Zone}};
 
 /// Giant star size categories from the smallest to the largest.
 #[derive(Debug, Deserialize, Serialize, Clone, PartialEq, Eq, PartialOrd, Ord)]
@@ -136,38 +136,55 @@ impl Star {
             );
         let snow_line = (4.85 * lum.sqrt()).au();
         
-        // walk the walk, the orbit walk…
-        struct GgContent {
-            distance: Metric,
-            gg: bool
-        } impl GgContent {
-            fn distance_only(distance: &Metric) -> Self {
-                Self { distance: distance.clone(), gg: false }
-            }
-        }
+        //
+        // Walk the walk, the orbit walk…
+        //
         let gga = GasGiantArrangement::random();
-        let (fst, fst_is_gg) = if let Some(gga) = gga {
+        let (fst, fst_is_gg) = if let Some(gga) = &gga {
             (gga.random_distance(&snow_line, &solid_zone), true)
         } else {
             (solid_zone.outer() / (0.05 * 1.d6() as f64 + 1.0), false)
         };
         let mut orbits = VecDeque::new();
         let mut curr_orbit = fst.clone();
-        orbits.push_back(curr_orbit.clone());
+        orbits.push_back((curr_orbit.clone(), if fst_is_gg {Some(OrbitContent::GG)} else {None}));
         loop {
             curr_orbit /= random_orbital_spacing_ratio();
-            if curr_orbit < *solid_zone.inner() {
+            if curr_orbit < *solid_zone.inner() || fz.contains(&curr_orbit) {
                 break;
             }
-            orbits.push_front(curr_orbit.clone());
+            orbits.push_front((curr_orbit.clone(), None));
         }
         curr_orbit = fst.clone();
         loop {
             curr_orbit *= random_orbital_spacing_ratio();
-            if curr_orbit > *solid_zone.outer() {
+            if curr_orbit > *solid_zone.outer() || fz.contains(&curr_orbit) {
                 break;
             }
-            orbits.push_back(curr_orbit.clone());
+            orbits.push_back((curr_orbit.clone(), None));
+        }
+
+        // plonk a few GGs in place, if able to.
+        if fst_is_gg {
+            for o in orbits.iter_mut() {
+                match o {
+                    (distance, None) => if orbit_can_contain_gg(&gga, distance, &snow_line) {
+                        o.1 = Some(OrbitContent::GG);
+                    }
+                    _ => (/* ignore, already occupied */)
+                }
+            }
+        }
+
+        // …and after that dust settles, lets see about the rest…
+        for oidx in 0..orbits.len() {
+            let prev_is_gg = oidx > 0 && matches!(orbits[oidx-1].1, Some(OrbitContent::GG));
+            let next_is_gg = oidx + 1 < orbits.len() && matches!(orbits[oidx+1].1, Some(OrbitContent::GG));
+            let (distance, stuff) = &mut orbits[oidx];
+
+            if stuff.is_none() {
+                *stuff = OrbitContent::random(prev_is_gg, next_is_gg, distance, fz, &solid_zone).into();
+            }
         }
         
         // "That's all folks!", with Looney Tunes…
