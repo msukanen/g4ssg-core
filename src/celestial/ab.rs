@@ -26,6 +26,7 @@ pub enum AsteroidBeltType {
     S (ABSubtype),
 } impl AsteroidBeltType {
     pub fn random(region: ABRegion, albedo_hint: Option<f32>) -> Self {
+        // Helper for S-kind
         fn ab_s(region: ABRegion) -> AsteroidBeltType {
             let roll = 1.d100();
             AsteroidBeltType::S(match region {
@@ -35,6 +36,7 @@ pub enum AsteroidBeltType {
             })
         }
 
+        // Helper for M's
         fn ab_m(albedo_hint: Option<f32>) -> AsteroidBeltType {
             // for splitting X-group… high→E, very low→P/D, else M
             let a = albedo_hint.unwrap_or(0.08);
