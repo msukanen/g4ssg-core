@@ -9,5 +9,6 @@
 pub mod age;
 pub mod celestial;
 pub(crate) mod evo;
+pub mod math;
 pub mod star_system;
 pub mod unit;
