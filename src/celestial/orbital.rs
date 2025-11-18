@@ -11,8 +11,6 @@ use crate::{celestial::terrestrial::SizeCategory, unit::{Metric, Zone}};
 
 pub(crate) const ORBIT_RATIO_MIN: f64 = 1.4;
 pub(crate) const ORBIT_RATIO_MAX: f64 = 2.0;
-const ORBIT_RATIO_ROLL_SLOTS_BETWEEN: usize = 5;
-const ORBIT_RATIO_SLOT_DELTA: f64 = (ORBIT_RATIO_MAX - ORBIT_RATIO_MIN) / (ORBIT_RATIO_ROLL_SLOTS_BETWEEN + 1) as f64;
 
 /// Orbital eccentricity.
 #[derive(Debug, Deserialize, Serialize, Clone)]
@@ -174,14 +172,14 @@ pub fn random_orbital_spacing_ratio() -> f64 {
 }
 
 /// What's on the orbit?
-pub(crate) enum OrbitContent {
+pub(crate) enum RawOrbitContent {
     Empty,// to distinguish from "not-yet-defined" None.
     AB,// Asteroid belt or Debris (or both)
     T (SizeCategory),
     GG,// Gas giant of some sort
     KB,// Kuiper belt
     Oort,// Oort cloud
-} impl OrbitContent {
+} impl RawOrbitContent {
     /// Generate a random orbit content marker. Gas giants are handled separately elsewhere…
     pub fn random(
         prev_is_gg: bool,
