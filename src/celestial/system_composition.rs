@@ -2,7 +2,7 @@ use std::collections::VecDeque;
 
 use serde::{Deserialize, Serialize};
 
-use crate::{celestial::{CountCelestialMajors, orbital::{OrbitEccentricity, OrbitSeparation}, star::Star}, star_system::OrbitScaffolding, unit::Zone};
+use crate::{celestial::{CountCelestialMajors, orbital::{OrbitEccentricity, OrbitSeparation}, star::Star}, star_system::{OrbitScaffolding, ScaffoldingCtx}, unit::Zone};
 
 /// Composition…
 /// 
@@ -21,21 +21,21 @@ pub enum Composition {
         }
 }
 
-impl From<&OrbitScaffolding> for Composition {
-    fn from(scaffolding: &OrbitScaffolding) -> Self {
-        match scaffolding {
-            OrbitScaffolding::S(p) => Composition::S(Star::random("<unnamed>", p, &Zone::Free)),
+impl<'a> From<ScaffoldingCtx<'a>> for Composition {
+    fn from(ctx: ScaffoldingCtx<'a>) -> Self {
+        match ctx.scaffolding {
+            OrbitScaffolding::S(p) => Composition::S(Star::random("<unnamed>", p, &Zone::Free, ctx.genctx)),
             OrbitScaffolding::B { p, s, b, e } => Composition::B {
-                p: Star::random("<unnamed>", p, &Zone::from(e)),
+                p: Star::random("<unnamed>", p, &Zone::from(e), ctx.genctx),
                 s: s.clone(), e: e.clone(),
-                b: Box::new(Composition::from(&**b))
+                b: Box::new(Composition::from( ScaffoldingCtx { scaffolding: &**b, genctx: ctx.genctx }))
             },
             OrbitScaffolding::T { p, s1, s2, e1, e2, b1, b2 } => Composition::T {
-                p: Star::random("<unnamed>", p, &Zone::from(e1)),
+                p: Star::random("<unnamed>", p, &Zone::from(e1), ctx.genctx),
                 s1: s1.clone(), s2: s2.clone(),
                 e1: e1.clone(), e2: e2.clone(),
-                b1: Box::new(Composition::from(&**b1)),
-                b2: Box::new(Composition::from(&**b2))
+                b1: Box::new(Composition::from( ScaffoldingCtx{ scaffolding: &**b1, genctx: ctx.genctx })),
+                b2: Box::new(Composition::from( ScaffoldingCtx{ scaffolding: &**b2, genctx: ctx.genctx }))
             }
         }
     }
