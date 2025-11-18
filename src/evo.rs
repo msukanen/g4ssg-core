@@ -7,6 +7,8 @@ use lazy_static::lazy_static;
 use rand::Rng;
 use serde::{Deserialize, Serialize};
 
+use crate::math::ipow;
+
 /// A threshold value used for picking star(s) within certain range from ["pivot mass"][SD_MASS].
 const PIVOT_MASS_THRESHOLD: f64 = 0.0475;
 /// Config's serde deserializer default for pivot mass.
@@ -109,7 +111,12 @@ pub enum AgeSpan {
 #[derive(Debug, Deserialize, Serialize, Clone)]
 #[serde(untagged)]
 pub enum ApproxType {
+    None,
     Spectra(String, u8)
+} impl Default for ApproxType {
+    fn default() -> Self {
+        Self::None
+    }
 }
 
 /// Initial luminosity at main-sequence phase.
@@ -156,6 +163,8 @@ pub struct StellarEvolutionMassive {
     pub k: f64,
     pub lum: f64,
     pub span_y: f64,
+    #[serde(default, skip)]
+    approx_type: ApproxType
 }
 
 /// "Pivot mass" markers for selecting star(s) in random from [COMMON_STARS].
@@ -205,37 +214,24 @@ impl StellarData {
         // inverse transform sampling
         let p = 1.0 - SALTPETER_SLOPE_ALPHA;
         let mut a = MASSIVE_STARS_MIN_MASS.powf(p);
-        //#[cfg(test)]{log::info!("min-mass araw) {a:?}")}
         let mut b = MASSIVE_STARS_MAX_MASS.powf(p);
-        //#[cfg(test)]{log::info!("max-mass braw) {b:?}")}
         if a > b {
             std::mem::swap(&mut a, &mut b);
         }
         let mass = (a + (b - a) * u)
             .powf(1.0 / p)
             .clamp(*MASSIVE_STARS_MIN_MASS, *MASSIVE_STARS_MAX_MASS);// "Obey the law!", a.k.a. no sneaky border crossers allowed.
-        //#[cfg(test)]{log::info!("mass {mass:?}")}
-        let bracket = MASSIVE_STARS
-            .windows(2)
+        let bracket = MASSIVE_STARS.windows(2)
             .find(|w| w[0].mass <= mass && mass <= w[1].mass)
             .unwrap_or_else(|| panic!("AAARGH! What gives? No stars around {mass} mass?"));
         let (lower, upper) = (bracket[0], bracket[1]);
         
-        fn ipow(actual_mass: f64, low_mass: f64, y1: f64, hi_mass: f64, y2: f64) -> f64 {
-            let l_actual = actual_mass.ln();
-            let l_low_mass = low_mass.ln();
-            let l_hi_mass = hi_mass.ln();
-            let ly1 = y1.ln();
-            let ly2 = y2.ln();
-            let t = (l_actual - l_low_mass) / (l_hi_mass - l_low_mass);
-            (ly1 + t * (ly2 - ly1)).exp()
-        }
-
         StellarEvolutionMassive {
             k: ipow(mass, lower.mass, lower.k, upper.mass, upper.k),
             span_y: ipow(mass, lower.mass, lower.span_y, upper.mass, upper.span_y),
             lum: ipow(mass, lower.mass, lower.lum, upper.mass, upper.lum),
-            mass
+            mass,
+            approx_type: ApproxType::None
         }
     }
 }
