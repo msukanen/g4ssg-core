@@ -2,12 +2,10 @@
 
 use std::fs;
 
-use dicebag::RandomOf;
 use lazy_static::lazy_static;
-use rand::Rng;
 use serde::{Deserialize, Serialize};
 
-use crate::{math::{inverse_transform_sample, loginterpol}, unit::{age::AgeSpan, kroupa_imf_icdf}};
+use crate::unit::{age::AgeSpan, kroupa_imf_icdf};
 
 /// A threshold value used for picking star(s) within certain range from ["pivot mass"][SD_MASS].
 const PIVOT_MASS_THRESHOLD: f64 = 0.0475;
