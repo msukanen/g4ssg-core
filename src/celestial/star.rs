@@ -4,7 +4,7 @@ use std::collections::VecDeque;
 use dicebag::{DiceExt, FixedNumberVariance, InclusiveRandomRange, PercentageVariance};
 use serde::{Deserialize, Serialize};
 
-use crate::{age::{AsYears, StellarPopulation}, celestial::{GasGiantArrangement, gas_giant::orbit_can_contain_gg, orbital::{RawOrbitContent, random_orbital_spacing_ratio}}, evo::{AgeSpan, Luminosity, StellarData}, unit::{AsMetric, Metric, Temperature, Zone}};
+use crate::{age::{AsYears, StellarPopulation}, celestial::{GasGiantArrangement, gas_giant::orbit_can_contain_gg, orbital::{RawOrbitContent, random_orbital_spacing_ratio}}, evo::{AgeSpan, CFG_STAR_DATA_MIN_MASS, INTERMEDIATE_STARS, Luminosity, MASSIVE_STARS, StellarData}, unit::{AsMetric, Metric, Temperature, Zone, kroupa_imf_icdf}};
 
 /// Giant star size categories from the smallest to the largest.
 #[derive(Debug, Deserialize, Serialize, Clone, PartialEq, Eq, PartialOrd, Ord)]
@@ -60,12 +60,22 @@ pub struct Star {
     forbidden_zone: Zone,
 }
 
+pub enum WhatCanNextStarBe {
+    Common,
+    Intermediate,
+    Massive
+} impl Default for WhatCanNextStarBe {
+    fn default() -> Self {
+        Self::Massive
+    }
+}
+
 pub struct StarGenCtx {
     smallest_mass: f64,
-    next_can_be_massive: bool,
+    next_can_be: WhatCanNextStarBe,
 } impl Default for StarGenCtx {
     fn default() -> Self {
-        Self { smallest_mass: f64::MAX, next_can_be_massive: true }
+        Self { smallest_mass: f64::MAX, next_can_be: WhatCanNextStarBe::Massive }
     }
 }
 
@@ -79,10 +89,22 @@ impl Star {
     /// * `limits`— upper limits for the generated star.
     pub fn random(name: &str, age: &StellarPopulation, fz: &Zone, limits: &mut StarGenCtx) -> Self {
         let gyr = age.gyr();
+        let mass = loop {
+            let mass = kroupa_imf_icdf();
+            const MIN_MASS_TOLERANCE: f64 = 0.0075;
+            if mass <= limits.smallest_mass || (mass - *CFG_STAR_DATA_MIN_MASS).abs() < MIN_MASS_TOLERANCE {
+                limits.smallest_mass = mass;
+                break mass;
+            }
+        };
+
         let (mass, stage, k, lum, rad)
-        = if !limits.next_can_be_massive {
+        = //
+         // A common/intermediate type of a star to fire up?
+        //_
+        if !matches!(limits.next_can_be, WhatCanNextStarBe::Massive) {
             let (evo, stage, (orig_mass, mass)) = loop {
-                let evo = StellarData::random();
+                let evo = StellarData::random(1.d100() <= 4);
                 let stage = match evo.span {
                     AgeSpan::Infinite => StarLifeStage::M,
                     AgeSpan::MSpanOnly(m) => if m >= gyr { StarLifeStage::M } else { StarLifeStage::D },
@@ -142,7 +164,11 @@ impl Star {
                 _ => (155_000.0 * lum.sqrt() / k.sq()).as_f64().into()
             };
             (mass, stage, k, lum, rad)
-        } else {// massive
+        }
+        //
+        // Lets deal with the massive stars now then…
+        //
+        else {
             let evo = StellarData::random_massive();
             let stage = {
                 let ms_over = age.as_years() > evo.span_y;
@@ -184,7 +210,7 @@ impl Star {
 
             let rad = {
                 match &stage {
-                    StarLifeStage::N => 1e4.rsun(),
+                    StarLifeStage::N => 1e-4.rsun(),
                     StarLifeStage::X |
                     StarLifeStage::SMBH => {
                         // Schwarzschild rad
@@ -198,8 +224,8 @@ impl Star {
                         })
                 }
             };
-            if evo.mass <= 3.01 {
-                limits.next_can_be_massive = false;
+            if evo.mass < 0.005 + MASSIVE_STARS.first().unwrap().mass {
+                limits.next_can_be = WhatCanNextStarBe::Common;
             }
             (evo.mass, stage, k, lum, rad)
         };
@@ -267,7 +293,10 @@ impl Star {
 
         // TODO: potential adjustments here… maybe…
 
-        // Now that we know what sort of stuff goes where…
+        // Now that we know what sort of stuff goes where… lets put them there.
+        orbits.iter().for_each(|(d, content)|{
+
+        });
         
         // "That's all folks!", with Looney Tunes…
         Self {
