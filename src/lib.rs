@@ -6,7 +6,6 @@
 //! 
 //! [`Markku Sukanen`]: https://msukanen.net
 #![allow(unexpected_cfgs)]
-pub mod age;
 pub mod celestial;
 pub(crate) mod evo;
 pub mod math;
