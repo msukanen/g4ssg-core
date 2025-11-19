@@ -59,10 +59,13 @@ impl CountCelestialMajors for Composition {
     }
 }
 
+/// [Composition] iterator's internal guts.
 pub struct CompositionIter<'a> {
+    // To remember the past, maybe present, hardly ever the future…
     stack: VecDeque<&'a Composition>,
 }
 
+/// Breadth-first iterator for [Composition].
 impl <'a> Iterator for CompositionIter<'a> {
     type Item = &'a Composition;
     fn next(&mut self) -> Option<Self::Item> {
