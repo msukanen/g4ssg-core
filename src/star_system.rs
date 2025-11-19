@@ -4,7 +4,7 @@
 use dicebag::DiceExt;
 use serde::{Deserialize, Serialize};
 
-use crate::{age::StellarPopulation, celestial::{CountCelestialMajors, orbital::{OSDMethod, OrbitEccentricity, OrbitSeparation}, star::StarGenCtx, system_composition::Composition}};
+use crate::{unit::age::StellarPopulation, celestial::{CountCelestialMajors, orbital::{OSDMethod, OrbitEccentricity, OrbitSeparation}, star::StarGenCtx, system_composition::Composition}};
 
 
 /// "It's full of stars!", or at least one or a few…
@@ -34,7 +34,7 @@ impl StarSystem {
         let scaffolding = match num_stars {
             1 => OrbitScaffolding::S(age.clone()),
             2 => OrbitScaffolding::random(&age, OSDMethod::Basic),
-            3 => {
+            _ => {
                 let s1 = OrbitSeparation::random(OSDMethod::TOB);
                 let s2 = OrbitSeparation::random(OSDMethod::TOB);
                 let b1 = Box::new(if let OrbitSeparation::D(_) = &s1 {
@@ -47,10 +47,9 @@ impl StarSystem {
                 let e2 = OrbitEccentricity::random(&s2);
                 OrbitScaffolding::T { p: age.clone(), s1, s2, e1, e2, b1, b2 }
             }
-            _ => unreachable!("Base `num_stars` is always 1, 2, or 3.")
         };
 
-        // Plug in base stars…
+        // Now, with the scaffolding, plug in the stars and their stuff.
         let mut genctx = StarGenCtx::default();
         let composition = Composition::from( ScaffoldingCtx { scaffolding: &scaffolding, genctx: &mut genctx });
 
