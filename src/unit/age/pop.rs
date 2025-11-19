@@ -9,6 +9,13 @@ use serde::{Deserialize, Serialize};
 const AGE_OF_UNIVERSE_GYR: f64 = 13.813;
 
 #[derive(Debug, Deserialize, Serialize, Clone, PartialEq, PartialOrd)]
+pub enum PopIIIObservation {
+    Theoretical,
+    Candidate,
+    Confirmed,
+}
+
+#[derive(Debug, Deserialize, Serialize, Clone, PartialEq, PartialOrd)]
 pub enum StellarPopulation {
     /// Extremely young population-I — coincidentally also covers existing superstars.
     E1,
@@ -23,8 +30,8 @@ pub enum StellarPopulation {
     /// Extreme population-II ~10Gyr to ~13.5Gyr (near the approximate age of the universe, as we know it)
     E2(f64),
     /// Immensely old population-III — too rare to come up with a random roll.
-    // Age value not present as by nature they're almost exactly as old as the universe itself, if they actually exist at all.
-    III
+    // Age value not present as by nature they're almost exactly as old as the universe itself.
+    III(PopIIIObservation)
 } impl StellarPopulation {
     pub fn random() -> Self {
         fn step(v: f64) -> f64 { v * (1.d6() - 1) as f64 }
@@ -34,7 +41,14 @@ pub enum StellarPopulation {
             ..=10 => Self::I1(( 2.0 + step(0.6) + step(0.1)).jitter_percentage(1.0)),
             ..=14 => Self::O1(( 5.6 + step(0.6) + step(0.1)).jitter_percentage(1.0)),
             ..=17 => Self::I2(( 8.0 + step(0.6) + step(0.1)).jitter_percentage(1.0)),
-            _     => Self::E2((10.0 + step(0.6) + step(0.1)).jitter_percentage(1.0))
+            _     => {
+                #[cfg(feature = "popiii_candidate")] {
+                    if 1.d(1_000_000_000).is_one() {
+                        return Self::III(PopIIIObservation::Candidate);
+                    }
+                }
+                Self::E2((10.0 + step(0.6) + step(0.1)).jitter_percentage(1.0))
+            }
         }
     }
 
@@ -46,7 +60,7 @@ pub enum StellarPopulation {
             StellarPopulation::O1(v) |
             StellarPopulation::Y1(v) => *v,
             StellarPopulation::E1 => 0.0,
-            StellarPopulation::III => AGE_OF_UNIVERSE_GYR,
+            StellarPopulation::III(_) => AGE_OF_UNIVERSE_GYR,
         }
     }
 }
