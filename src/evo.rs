@@ -5,7 +5,7 @@ use std::fs;
 use lazy_static::lazy_static;
 use serde::{Deserialize, Serialize};
 
-use crate::unit::{age::AgeSpan, kroupa_imf_icdf};
+use crate::unit::{age::AgeSpan, metrics::kroupa_imf_icdf};
 
 /// A threshold value used for picking star(s) within certain range from ["pivot mass"][SD_MASS].
 const PIVOT_MASS_THRESHOLD: f64 = 0.0475;
@@ -116,6 +116,12 @@ pub enum Luminosity {
             // max for l-min-only is the same as l-min
             Self::LMinOnly(m)  => *m
         }
+    }
+}
+
+impl From<f64> for Luminosity {
+    fn from(value: f64) -> Self {
+        Self::LMinOnly(value)
     }
 }
 

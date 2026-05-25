@@ -1,10 +1,10 @@
 //! Stellar Age Span Stuff
 
-use serde::Deserialize;
+use serde::{Deserialize, Deserializer};
 
 /// Stellar age spans.
-#[derive(Debug, Deserialize, Clone)]
-#[serde(untagged)]
+// NOTE: if messing with the fields here, reflect the changes (if relevant) in the deserializer impl.
+#[derive(Debug, Clone)]
 pub enum AgeSpan {
     /// hundreds of billions of years to trillions and then some.
     /// Virtually "immortal".
@@ -49,13 +49,34 @@ impl AgeSpan {
     }
 }
 
-#[derive(Deserialize)]
-struct GiantSpan {
-    y: usize,
+impl From<usize> for AgeSpan {
+    fn from(value: usize) -> Self {<AgeSpan as From<f64>>::from(value as f64)}
 }
 
-impl From<GiantSpan> for AgeSpan {
-    fn from(gs: GiantSpan) -> Self {
-        AgeSpan::MSpanOnly(gs.y as f64 / 1_000_000_000.0)
+impl From<f64> for AgeSpan {
+    fn from(value: f64) -> Self {
+        Self::MSpanOnly(value)
+    }
+}
+
+impl <'de> Deserialize<'de> for AgeSpan {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where D: Deserializer<'de> {
+        #[derive(Deserialize)]
+        #[serde(untagged)]
+        enum ASHalp {
+            Infinite,
+            MO(f64),
+            MSG(f64,f64,f64),
+            G { y: usize }
+        }
+        
+        let ash: ASHalp = ASHalp::deserialize(deserializer)?;
+        Ok(match ash {
+            ASHalp::G { y } => AgeSpan::MSpanOnly(y as f64 / 1_000_000_000.0),
+            ASHalp::MO(v) => AgeSpan::MSpanOnly(v),
+            ASHalp::Infinite => AgeSpan::Infinite,
+            ASHalp::MSG(m,s,g) => AgeSpan::MSGSpan(m, s, g)
+        })
     }
 }

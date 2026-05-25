@@ -52,6 +52,7 @@ impl StarSystem {
         // Now, with the scaffolding, plug in the stars and their stuff.
         let mut genctx = StarGenCtx::default();
         let composition = Composition::from( ScaffoldingCtx { scaffolding: &scaffolding, genctx: &mut genctx });
+        // TODO: binary interactions, novae effects?
 
         Self {
             age,

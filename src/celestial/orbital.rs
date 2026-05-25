@@ -3,11 +3,12 @@
 
 use std::cmp::Ordering;
 
+use astrometrics::{AsSpatialUnit, SpatialUnit};
 use dicebag::DiceExt;
-use rand::Rng;
+use rand::RngExt;
 use serde::{Deserialize, Serialize};
 
-use crate::{celestial::terrestrial::SizeCategory, unit::{Metric, Zone}};
+use crate::{celestial::terrestrial::SizeCategory, unit::Zone};
 
 pub(crate) const ORBIT_RATIO_MIN: f64 = 1.4;
 pub(crate) const ORBIT_RATIO_MAX: f64 = 2.0;
@@ -18,7 +19,7 @@ pub struct OrbitEccentricity {
     /// Eccentricity, generally \[0 → 0.95\].
     ecc: f64,
     /// Average distance.
-    avg: Metric,
+    avg: SpatialUnit,
 } impl OrbitEccentricity {
     /// Generate random orbital eccentricity.
     /// 
@@ -57,17 +58,17 @@ pub struct OrbitEccentricity {
     }
 
     /// Get average distance (in **au**, usually).
-    pub fn avg_distance(&self) -> Metric {
+    pub fn avg_distance(&self) -> SpatialUnit {
         self.avg.clone()
     }
 
     /// Get minimum distance (periapsis; in **au**, usually).
-    pub fn min_distance(&self) -> Metric {
+    pub fn min_distance(&self) -> SpatialUnit {
         (1.0 - self.ecc) * &self.avg
     }
 
     /// Get maximum distance (apoapsis; in **au**, usually).
-    pub fn max_distance(&self) -> Metric {
+    pub fn max_distance(&self) -> SpatialUnit {
         (1.0 + self.ecc) * &self.avg
     }
 }
@@ -89,15 +90,15 @@ pub enum OSDMethod {
 #[derive(Debug, Deserialize, Serialize, Clone, PartialEq, PartialOrd)]
 pub enum OrbitSeparation {
     /// Very close.
-    VC(Metric),
+    VC(SpatialUnit),
     /// Close.
-    C(Metric),
+    C(SpatialUnit),
     /// Moderate.
-    M(Metric),
+    M(SpatialUnit),
     /// Wide.
-    W(Metric),
+    W(SpatialUnit),
     /// Distant.
-    D(Metric)
+    D(SpatialUnit)
 } impl OrbitSeparation {
     /// Generate random orbital separation.
     /// 
@@ -105,7 +106,7 @@ pub enum OrbitSeparation {
     /// 
     /// `third_or_beyond`— set to `true` for other but primary and secondary star of a system.
     pub fn random(method: OSDMethod) -> Self {
-        let base_au: Metric = 2.d6().into();
+        let base_au: SpatialUnit = 2.d6().au();
         match 3.d6() + match method {
             OSDMethod::Basic => 0,
             OSDMethod::TOB => 6,
@@ -120,7 +121,7 @@ pub enum OrbitSeparation {
     }
 
     /// Get the separation, usually as **au**.
-    pub fn as_metric(&self) -> Metric {
+    pub fn as_metric(&self) -> SpatialUnit {
         match self {
             Self::C(v) |
             Self::D(v) |
@@ -145,7 +146,7 @@ impl Ord for OrbitSeparation {
 
         let mut ord = ord(self).cmp(&ord(other));
         if let Ordering::Equal = ord {
-            ord = self.as_metric().cmp(&other.as_metric())
+            ord = self.as_metric().partial_cmp(&other.as_metric()).unwrap()
         }
         ord
     }
@@ -153,22 +154,12 @@ impl Ord for OrbitSeparation {
 
 /// Generate a random orbital spacing ratio.
 pub fn random_orbital_spacing_ratio() -> f64 {
-    let shape = 3.d6();
-    let normalized = (shape - 3) as f64 / (18 - 3) as f64;
+    const SHAPE_MAXZ: f64 = 15.0;// max of 3d6-3
+    let normalized = (3.d6() - 3) as f64 / SHAPE_MAXZ;
     // add a bit of jitter...
-    let jitter = rand::rng().random::<f64>() / 15.0;
+    let jitter = rand::rng().random::<f64>() / SHAPE_MAXZ;
     let clamped = (normalized + jitter).min(1.0);
     ORBIT_RATIO_MIN + clamped * (ORBIT_RATIO_MAX - ORBIT_RATIO_MIN)
-    /* 
-    match 3.d6() {
-        ..=4  => ORBIT_RATIO_MIN,
-        ..=6  => ORBIT_RATIO_MIN + ORBIT_RATIO_SLOT_DELTA,
-        ..=8  => ORBIT_RATIO_MIN + ORBIT_RATIO_SLOT_DELTA * 2.0,
-        ..=12 => ORBIT_RATIO_MIN + ORBIT_RATIO_SLOT_DELTA * 3.0,
-        ..=14 => ORBIT_RATIO_MIN + ORBIT_RATIO_SLOT_DELTA * 4.0,
-        ..=16 => ORBIT_RATIO_MIN + ORBIT_RATIO_SLOT_DELTA * 5.0,
-        _     => ORBIT_RATIO_MAX
-    } */
 }
 
 /// What's on the orbit?
@@ -184,7 +175,7 @@ pub(crate) enum RawOrbitContent {
     pub fn random(
         prev_is_gg: bool,
         next_is_gg: bool,
-        distance: &Metric,
+        distance: &SpatialUnit,
         fz: &Zone,
         limits: &Zone,
     ) -> Self {
@@ -206,13 +197,13 @@ pub(crate) enum RawOrbitContent {
 }
 
 /// Check if the given orbit is the next orbit from the absolute inner limit of its parent celestial.
-pub fn orbit_adjacent_to_inner_limit(distance: &Metric, limits: &Zone) -> bool {
+pub fn orbit_adjacent_to_inner_limit(distance: &SpatialUnit, limits: &Zone) -> bool {
     let range = (distance/2.0)..=(distance/1.4);
     range.contains(limits.inner())
 }
 
 /// Check if the given orbit is the next orbit before the absolute outer limit of its parent celestial.
-pub fn orbit_adjacent_to_outer_limit(distance: &Metric, limits: &Zone) -> bool {
+pub fn orbit_adjacent_to_outer_limit(distance: &SpatialUnit, limits: &Zone) -> bool {
     let range = (distance*1.4)..=(distance*2.0);
     range.contains(limits.outer())
 }

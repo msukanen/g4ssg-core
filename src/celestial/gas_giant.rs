@@ -1,8 +1,9 @@
 //! Here be Gas(oline) Giants
 
+use astrometrics::SpatialUnit;
 use dicebag::DiceExt;
 
-use crate::unit::{Metric, Zone};
+use crate::unit::Zone;
 
 /// An enum used in determining gas giant arrangement of any given star's local system.
 pub(crate) enum GasGiantArrangement {
@@ -22,33 +23,33 @@ impl GasGiantArrangement {
         }
     }
 
-    /// Generate random [distance][Metric] for this arrangement
+    /// Generate random [SpatialUnit] for this arrangement
     /// based on the given [Star]'s snow-line radius and/or other factors.
-    pub fn random_distance(&self, snow_line: &Metric, limits: &Zone ) -> Metric {
+    pub fn random_distance(&self, snow_line: &SpatialUnit, limits: &Zone ) -> SpatialUnit {
         random_gg_distance(Some(self), snow_line, limits).unwrap()
     }
 }
 
-/// Generate random [distance][Metric] for the given [arrangement][GasGiantArrangement], if any.
+/// Generate random [distance][SpatialUnit] for the given [arrangement][GasGiantArrangement], if any.
 pub(crate) fn random_gg_distance(
     // Gas giant arrangement, if any.
     gga: Option<&GasGiantArrangement>,
     // A [Star]'s snow-line distance.
-    snow_line: &Metric,
+    snow_line: &SpatialUnit,
     // A [Star]'s inner/outer zone.
     limits: &Zone
-) -> Option<Metric> {
+) -> Option<SpatialUnit> {
     if gga.is_none() { return None;}
     
     Some(match gga.unwrap() {
-        GasGiantArrangement::Conventional => 0.05 * 2.d6() as f64 + 1.0 * snow_line,
+        GasGiantArrangement::Conventional => (0.05 * 2.d6() as f64 + 1.0) * snow_line,
         GasGiantArrangement::Eccentric => 0.125 * 1.d6() as f64 * snow_line,
         GasGiantArrangement::Epistellar => 0.1 * 3.d6() as f64 * limits.inner()
     })
 }
 
 /// See if given arrangement lets a GG sit at given distance.
-pub(crate) fn orbit_can_contain_gg(gga: &Option<GasGiantArrangement>, distance: &Metric, snow_line: &Metric) -> bool {
+pub(crate) fn orbit_can_contain_gg(gga: &Option<GasGiantArrangement>, distance: &SpatialUnit, snow_line: &SpatialUnit) -> bool {
     match gga {
         None => false,
         // Conventional GGA can have GGs only at/beyond snow-line.

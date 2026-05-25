@@ -1,10 +1,12 @@
 use core::f64;
-use std::collections::VecDeque;
+use std::{collections::VecDeque, ops::RangeInclusive};
 
+use astrometrics::{AsMass, AsSpatialUnit, Mass, SpatialUnit, Temperature};
 use dicebag::{DiceExt, FixedNumberVariance, InclusiveRandomRange, PercentageVariance};
+use rand::Rng;
 use serde::{Deserialize, Serialize};
 
-use crate::{age::{AsYears, StellarPopulation}, celestial::{GasGiantArrangement, gas_giant::orbit_can_contain_gg, orbital::{RawOrbitContent, random_orbital_spacing_ratio}}, evo::{AgeSpan, CFG_STAR_DATA_MIN_MASS, INTERMEDIATE_STARS, Luminosity, MASSIVE_STARS, StellarData}, unit::{AsMetric, Metric, Temperature, Zone, kroupa_imf_icdf}};
+use crate::{celestial::{GasGiantArrangement, gas_giant::orbit_can_contain_gg, orbital::{RawOrbitContent, random_orbital_spacing_ratio}}, evo::{CFG_STAR_DATA_MIN_MASS, Luminosity, StellarData, StellarDataChoice}, math::LogInterpolator, unit::{Zone, age::{AgeSpan, StellarPopulation}, metrics::kroupa_imf_icdf}};
 
 /// Giant star size categories from the smallest to the largest.
 #[derive(Debug, Deserialize, Serialize, Clone, PartialEq, Eq, PartialOrd, Ord)]
@@ -19,25 +21,85 @@ pub enum GiantStarCategory {
     IaP, // Hype giant
 }
 
+/// Brown dwarf types in ascending surface temperature order.
+#[derive(Debug, Deserialize, Serialize, Clone, PartialEq, PartialOrd)]
+pub enum BrownDwarfType {
+    Y, T, L, M
+} impl BrownDwarfType {
+    /// Generate a random brownie (could be a cookie, too).
+    pub fn random() -> Self {
+        match rand::rng().random::<f64>() {
+            x if x < 0.96  => Self::M,
+            x if x < 0.975 => Self::L,
+            x if x < 0.985 => Self::T,
+            _ => Self::Y
+        }
+    }
+
+    /// Get typical surface temperature range.
+    pub fn k_range(&self) -> RangeInclusive<Temperature> {
+        match self {
+            Self::M => 2_100.0.into()..=3_500.0.into(),
+            Self::L => 1_300.0.into()..=2_100.0.into(),
+            Self::T => 600.0.into()..=1_1300.0.into(),
+            Self::Y => 250.0.into()..=600.0.into(),// https://www.universetoday.com/articles/brrr-jwst-looks-at-the-coldest-brown-dwarf
+        }
+    }
+
+    /// Get median surface temperature.
+    pub fn median_k(&self) -> Temperature {
+        let r = self.k_range();
+        (r.start() + r.end()) / 2.0
+    }
+
+    /// Get random luminosity by type.
+    pub fn random_lum(&self) -> f64 {
+        match self {
+            Self::M => (1e-3..=1e-1).random_of(),
+            Self::L => (1e-4..=1e-3).random_of(),
+            Self::T => (1e-5..=1e-4).random_of(),
+            Self::Y => 1e-6,//…or less.
+        }
+    }
+}
+
+impl TryFrom<Temperature> for BrownDwarfType {
+    type Error = String;
+    fn try_from(value: Temperature) -> Result<Self, Self::Error> {
+        [Self::M, Self::L, Self::T, Self::Y]
+            .iter().find(|bdt| bdt.k_range().contains(&value))
+            .cloned()
+            .ok_or_else(|| {
+                if value < *Self::Y.k_range().start() {
+                    format!("Too cold - {value} is colder than any known BD")
+                } else {
+                    format!("Too hot - {value} is hotter than any known BD")
+                }
+            })
+    }
+}
+
 /// Star's life stage — from main-sequence to giant(s).
-#[derive(Debug, Deserialize, Serialize, Clone, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Deserialize, Serialize, Clone, PartialEq)]
 pub enum StarLifeStage {
-    /// Neutron/pulsar
+    /// Neutron/pulsar.
     N,
-    /// White Dorf
+    /// White Dorf.
     D,
+    /// Brownie.
+    B(BrownDwarfType),
     /// Main-sequence.
     M,
     /// Main-sequence for giants.
     MG,
     /// Subgiant.
     S,
-    /// Wolf-Rayet
+    /// Wolf-Rayet.
     WR,
     G(GiantStarCategory),
-    /// Supergiant
+    /// Supergiant.
     SG,
-    /// Black hooligan
+    /// Black hooligan.
     X,
     SMBH
 }
@@ -45,8 +107,7 @@ pub enum StarLifeStage {
 #[derive(Debug, Deserialize, Serialize, Clone)]
 pub struct Star {
     pub name: String,
-    /// Mass in Sol masses.
-    mass: f64,
+    mass: Mass,
     /// Surface temperature in Kelvin.
     k: Temperature,
     /// Luminosity relative to Sol.
@@ -54,9 +115,9 @@ pub struct Star {
     stage: StarLifeStage,
     pop: StellarPopulation,
     /// Radius in AU. Usually™ near neglible except for giants and SMBHs.
-    rad: Metric,
+    rad: SpatialUnit,
     solid_zone: Zone,
-    snow_line: Metric,
+    snow_line: SpatialUnit,
     forbidden_zone: Zone,
 }
 
@@ -72,12 +133,18 @@ pub enum WhatCanNextStarBe {
 
 pub struct StarGenCtx {
     smallest_mass: f64,
-    next_can_be: WhatCanNextStarBe,
 } impl Default for StarGenCtx {
     fn default() -> Self {
-        Self { smallest_mass: f64::MAX, next_can_be: WhatCanNextStarBe::Massive }
+        Self { smallest_mass: f64::MAX }
     }
 }
+
+const G: f64 = 6.67430e-11;
+const C: f64 = 2.9979258e8;
+// Schwarzschild rad: 2GM/c^2
+const TWO_G_OVER_C2: f64 = 2.0 * G / (C*C);
+#[cfg(test)]
+pub(crate) const UNNAMED: &'static str = "<unnamed>";
 
 impl Star {
     /// Generate a star in random.
@@ -88,157 +155,139 @@ impl Star {
     /// * `fz`— forbidden zone.
     /// * `limits`— upper limits for the generated star.
     pub fn random(name: &str, age: &StellarPopulation, fz: &Zone, limits: &mut StarGenCtx) -> Self {
-        let gyr = age.gyr();
+        // Initial (probabilistic random) mass (refined later by current life stage).
         let mass = loop {
-            let mass = kroupa_imf_icdf();
+            #[cfg(test)]// FYI: test treats `name` as a specific mass representation except when it's specifically [UNNAMED].
+            let kr = |x:&str| if x == UNNAMED {kroupa_imf_icdf()} else {x.parse::<f64>().unwrap()};
+            #[cfg(not(test))]// …but in production, `name` is irrelevant for real mass generation.
+            let kr = |_| kroupa_imf_icdf();
+            let mass = kr(name);
+
             const MIN_MASS_TOLERANCE: f64 = 0.0075;
             if mass <= limits.smallest_mass || (mass - *CFG_STAR_DATA_MIN_MASS).abs() < MIN_MASS_TOLERANCE {
                 limits.smallest_mass = mass;
                 break mass;
             }
+        }.mo();
+
+        // Initial MS surface [Temperature], [Luminosity] and stable/main [AgeSpan].
+        let (k, orig_lum, span) = match StellarData::get(mass.into()) {
+            StellarDataChoice::Exact(x) => (x.k, x.lum.clone(), x.span.clone()),
+            StellarDataChoice::Interpolate(a, b) => (
+                mass.as_f64().loginterpol(a.mass.into(), a.k, b.mass.into(), b.k),
+                mass.as_f64().loginterpol(a.mass.into(), a.lum.min(), b.mass, b.lum.min()).into(),
+                mass.as_f64().loginterpol(a.mass.into(), a.span.mspan().unwrap(), b.mass.into(), b.span.mspan().unwrap()).into(),
+            )
         };
 
-        let (mass, stage, k, lum, rad)
-        = //
-         // A common/intermediate type of a star to fire up?
-        //_
-        if !matches!(limits.next_can_be, WhatCanNextStarBe::Massive) {
-            let (evo, stage, (orig_mass, mass)) = loop {
-                let evo = StellarData::random(1.d100() <= 4);
-                let stage = match evo.span {
-                    AgeSpan::Infinite => StarLifeStage::M,
-                    AgeSpan::MSpanOnly(m) => if m >= gyr { StarLifeStage::M } else { StarLifeStage::D },
-                    AgeSpan::MSGSpan(m, s, g) => {
-                        if m >= gyr { StarLifeStage::M }
-                        else if m+s >= gyr { StarLifeStage::S }
-                        else if m+s+g >= gyr { StarLifeStage::G(GiantStarCategory::III) }
-                        else { StarLifeStage::D }
-                    }
-                };
-                let (orig_mass, mass) = match &stage {
-                    StarLifeStage::D => (evo.mass, (0.9..=1.4).random_of()),
-                    _ => { let m = evo.mass.jitter_percentage(2.25); (m,m) }
-                };
-                if orig_mass <= limits.smallest_mass {
-                    break (evo, stage, (orig_mass, mass));
+        // Figure out current state of affairs for our star-in-making…
+        let stage = match &span {
+            AgeSpan::Infinite => StarLifeStage::M,
+            AgeSpan::MSpanOnly(s) => {
+                let ms_over = age > s;
+                let is_massive = mass >= 3.0.mo();
+                let frac = age / s;
+                let go_neutron =|m|m >= 8.0.mo(); // <8.0M☉ go white dwarf way, heavier shrink to neutron
+                let is_midlife =|x|x <= 0.5; // check if `x` is in first half of MS span.
+
+                match (ms_over, is_massive, frac <= 0.05) {
+                    // Ded!
+                    (true, ..) if mass >= 25.mo()     => StarLifeStage::X,
+                    (true, ..) if go_neutron(mass) => StarLifeStage::N,
+                    (true, ..)                     => StarLifeStage::D,
+
+                    // Still breathing…
+                    (false, false, ..) if mass <= 0.08.mo() => StarLifeStage::B(BrownDwarfType::random()),
+                    (false, false, ..) if mass < 3.mo() => StarLifeStage::M, // ye average hippie
+                    (false, .., true)                => StarLifeStage::MG, // massive early frac (giant MS "blink")
+                    (false, ..) if mass >= 25.mo() && is_midlife(frac) => StarLifeStage::SG, // mid-life superstar
+                    (false, ..)                      => StarLifeStage::WR, // eldery bugger, Wolf-Rayeting about
                 }
-            };
-            // D's current mass does -not- override earlier smallest mass - it has been bigger bugger back in the day…
-            // Check vs it's ye olde mass instead:
-            if orig_mass < limits.smallest_mass {
-                limits.smallest_mass = orig_mass;
+            },
+            AgeSpan::MSGSpan(m, s, g) => {
+                if *m >= age { StarLifeStage::M }
+                else if *m+*s >= age { StarLifeStage::S }
+                else if *m+*s+*g >= age { StarLifeStage::G(GiantStarCategory::III) }
+                else { StarLifeStage::D }
             }
-            
-            let k = match &stage {
-                StarLifeStage::D => Temperature::D,
-                StarLifeStage::M => evo.k.jitter_within(100.0).into(),
+        };
+
+        // Mass refining by current stage.
+        //
+        // <2.0M☉ stars that fall into D lose major portion of their mass. Lets reflect that too.
+        let (orig_mass, mass) = match &stage {
+            StarLifeStage::D => if mass <= 0.5 {(mass, mass * 0.95)}
+                                else if mass <= 2.0 {(mass, mass * 0.7)}
+                                else {(mass, mass.min(1.44).max(0.7))},
+            StarLifeStage::B(bdt) => match bdt {
+                BrownDwarfType::M => 
+            }
+            _ => (mass, mass)//TODO: N/X
+        };
+
+        // Surface K by current stage.
+        let k: Temperature = match &stage {
+                StarLifeStage::M => k.jitter_within(100.0).into(),
                 StarLifeStage::S => {
-                    let msk = evo.k.jitter_within(100.0);
-                    let a = gyr - evo.span.mspan().unwrap_or_else(
-                        || panic!("Fix the data — missing M-span for {evo:?}"));
-                    
-                    (msk - ((a / evo.span.sspan().unwrap_or_else(
-                        || panic!("Fix the data — missing S-span for {evo:?}")
-                    )) * (msk - 4_800.0)))
+                    let msk = k.jitter_within(100.0);
+                    let a = age.gyr() - span.mspan().unwrap();
+                    //TODO: loginterpol over range?
+                    (msk - ((a / span.sspan().unwrap())) * (msk - 4_800.0))
                         .into()
                 },
                 StarLifeStage::G(_) => (3_000.0..=5_000.0).random_of().into(),
-                _ => unreachable!("Truly massive stars are handled elsewhere…")
-            };
-            let lum = match &stage {
-                StarLifeStage::D |
-                StarLifeStage::M => match evo.lum {
-                    Luminosity::LMinOnly(m) => m,
-                    // all stars which have l-min & l-max should have a useful m-span — but if not… fix the data source.
-                    Luminosity::LMinMax(a, b) =>
-                        a + (gyr / evo.span.mspan()
-                                        .unwrap_or_else(|| panic!("Fix the data - missing M-Span for {evo:?}")))
-                        * (b - a)
-                },
-                StarLifeStage::S => evo.lum.max(),
-                StarLifeStage::G(_) => 25.0 * evo.lum.max(),
-                _ => unreachable!("Truly massive stars are handled elsewhere…")
-            }.jitter_percentage(10.0);
-            let rad = match &stage {
-                StarLifeStage::D => 0.01.rsun(),
-                _ => (155_000.0 * lum.sqrt() / k.sq()).as_f64().into()
-            };
-            (mass, stage, k, lum, rad)
-        }
-        //
-        // Lets deal with the massive stars now then…
-        //
-        else {
-            let evo = StellarData::random_massive();
-            let stage = {
-                let ms_over = age.as_years() > evo.span_y;
-                let is_25er_at_least = evo.mass >= 25.0;
-                let frac = age.as_years() / evo.span_y;
-
-                match (ms_over, is_25er_at_least, frac <= 0.05) {
-                    // Ded!
-                    (true, true, _) => StarLifeStage::X,
-                    (true, ..) => StarLifeStage::N,
-
-                    // Still breathing…
-                    (false, false, _) => StarLifeStage::M, // ye average hippie
-                    (false, _, true) => StarLifeStage::MG, // massive early frac (giant MS "blink")
-                    (false, true, _) if frac <= 0.5 => StarLifeStage::SG, // mid-life superstar
-                    (false, true, _) => StarLifeStage::WR, // eldery bugger, Wolf-Rayeting about
-                }
-            };
-            let k: Temperature = match &stage {
-                StarLifeStage::M => evo.k,
-                StarLifeStage::MG => evo.k * 1.1,
-                StarLifeStage::SG => evo.k * 0.5,
-                StarLifeStage::WR => evo.k * 3.0,
-                StarLifeStage::N => 1.0e6,
+                StarLifeStage::MG => (k.jitter_within(100.0) * 1.1).into(),
+                StarLifeStage::SG => (k.jitter_within(100.0) * 0.5).into(),
+                StarLifeStage::WR => (k.jitter_within(100.0) * 3.0).into(),
+                StarLifeStage::N => Temperature::N,
                 StarLifeStage::X |
-                StarLifeStage::SMBH => f64::NAN,
-                _ => unreachable!("<3M☉ are handled elsewhere.")
-            }.into();
-            let lum = match &stage {
-                StarLifeStage::M => evo.lum,
-                StarLifeStage::MG => evo.lum * 1.2,
-                StarLifeStage::SG => evo.lum * 2.0,
-                StarLifeStage::WR => evo.lum * 3.0,
-                StarLifeStage::N |
-                StarLifeStage::X |
-                StarLifeStage::SMBH => f64::NAN,
-                _ => unreachable!("<3M☉ are handled elsewhere.")
-            };
+                StarLifeStage::SMBH => Temperature::X,
+                StarLifeStage::D => Temperature::D,
+                StarLifeStage::B(x) => x.median_k(),
+        };
 
-            let rad = {
-                match &stage {
-                    StarLifeStage::N => 1e-4.rsun(),
-                    StarLifeStage::X |
-                    StarLifeStage::SMBH => {
-                        // Schwarzschild rad
-                        let g = 6.67430e-11;
-                        let c = 2.9979258e8;
-                        2.0 * g * evo.mass / (c * c)
-                    }.rsun(),
-                    _ => Metric::SolRadii({
-                        const T_SUN: f64 = 5772.0;
-                        ((lum / (k.as_f64() / T_SUN)).powi(4)).sqrt()
-                        })
-                }
-            };
-            if evo.mass < 0.005 + MASSIVE_STARS.first().unwrap().mass {
-                limits.next_can_be = WhatCanNextStarBe::Common;
+        // Current luminosity.
+        let lum = match &stage {
+            StarLifeStage::B(x) => x.random_lum(),
+            StarLifeStage::D |
+            StarLifeStage::M => match orig_lum {
+                Luminosity::LMinOnly(m) => m,
+                // all stars which have l-min & l-max should have a useful m-span — but if not… fix the data source.
+                Luminosity::LMinMax(a, b) => a + (age / span.mspan().unwrap()).gyr() * (b - a)
+            },
+            StarLifeStage::S => orig_lum.max(),
+            StarLifeStage::G(_) => 25.0 * orig_lum.max(),
+            StarLifeStage::MG => orig_lum.max() * 1.2, //TODO: needs refining?
+            StarLifeStage::SG => orig_lum.max() * 2.0, //TODO: needs refining?
+            StarLifeStage::WR => orig_lum.max() * 3.0, //TODO: needs refining?
+            StarLifeStage::N |
+            StarLifeStage::X |
+            StarLifeStage::SMBH => f64::NAN,
+        }.jitter_percentage(10.0);
+
+        let rad = {
+            match &stage {
+                StarLifeStage::D => (0.008..=0.02).random_of().ro(),
+                StarLifeStage::N => 0.000016.ro(),
+                StarLifeStage::X |
+                StarLifeStage::SMBH => (TWO_G_OVER_C2 * mass).ro(),
+                StarLifeStage::M => (155_000.0 * lum.sqrt() / k.sq().as_f64()).into(),
+                _ => SpatialUnit::RO({
+                    const T_SUN: f64 = 5772.0;
+                    ((lum / (k.as_f64() / T_SUN)).powi(4)).sqrt()
+                    })
             }
-            (evo.mass, stage, k, lum, rad)
         };
 
         // Figure out where planetary solids can exist, excluding Kuiper & Oort stuff.
         let solid_zone = Zone::from(
                 // inner limit
-                ((0.1 * mass).max(0.01 * lum.sqrt()).au(),
+                ((0.1 * orig_mass).max(0.01 * orig_lum.min().sqrt()).au(),
                 // outer limit
-                (40.0 * mass).au())
+                (40.0 * orig_mass).au())
             );
         // Potential placement for the 1st GG, if any.
-        let snow_line = (4.85 * lum.sqrt()).au();
+        let snow_line = (4.85 * orig_lum.min().sqrt()).au();
         
         //
         // Walk the walk, the orbit walk…
@@ -330,5 +379,45 @@ impl Star {
             }
         }
         curve
+    }
+}
+
+#[cfg(test)]
+mod star_tests {
+    use crate::{celestial::star::{Star, StarGenCtx, StarLifeStage, UNNAMED}, unit::{Zone, age::StellarPopulation}};
+
+    const AGE_8KYR: StellarPopulation = StellarPopulation::I2(8.0 / 1_000_000.0);
+    const AGE_1MYR: StellarPopulation = StellarPopulation::I2(0.001);
+    const AGE_5GYR: StellarPopulation = StellarPopulation::I2(5.0);
+
+    #[test]
+    fn star_spam() {
+        const TIMES: usize = 100_000;
+        let mut limits = StarGenCtx::default();
+        for _x in 0..TIMES {
+            let _star = Star::random(UNNAMED, &AGE_5GYR, &Zone::FREE, &mut limits);
+        }
+    }
+
+    #[test]
+    fn edge_case_and_boundary_values() {
+        let _ = env_logger::try_init();
+        let delta_m = |m:f64|m-0.01..=m+0.01;
+        // to make 0.01-100.0 range simpler to step-by-step at 0.01 interval, use 1..10000 i32 insted and divide...
+        for m in 1..=10000 {
+            let mut limits = StarGenCtx::default();
+            let m = m as f64 / 100.0;
+            let star = Star::random(format!("{m:.2}").as_str(), &AGE_8KYR, &Zone::FREE, &mut limits);
+            if star.mass < 3.0 {
+                assert!(delta_m(m).contains(&star.mass) && matches!(star.stage, StarLifeStage::M));
+            } else {
+                assert!(delta_m(m).contains(&star.mass) && matches!(star.stage, StarLifeStage::MG | StarLifeStage::SG | StarLifeStage::WR));
+            }
+
+            let star = Star::random(format!("{m:.2}").as_str(), &AGE_1MYR, &Zone::FREE, &mut limits);
+            if star.mass < (25.0 - f64::EPSILON) && matches!(star.stage, StarLifeStage::X) {
+                panic!("<25M☉ star should not result in a black hole!")
+            }
+        }
     }
 }

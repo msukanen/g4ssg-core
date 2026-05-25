@@ -1,7 +1,7 @@
 //! Stellar Population
 //! 
 //! Populations I and II, plus theoretical III.
-use std::cmp::Ordering;
+use std::{cmp::Ordering, ops::Div};
 
 use dicebag::{DiceExt, PercentageVariance};
 use serde::{Deserialize, Serialize};
@@ -91,5 +91,57 @@ pub trait AsYears {
 impl AsYears for StellarPopulation {
     fn as_years(&self) -> f64 {
         self.gyr() * 1_000_000_000.0
+    }
+}
+
+impl PartialEq<f64> for StellarPopulation {
+    fn eq(&self, other: &f64) -> bool {
+        matches!(self.cmp(&Self::E2(*other)), Ordering::Equal)
+    }
+}
+
+impl PartialOrd<f64> for StellarPopulation {
+    fn partial_cmp(&self, other: &f64) -> Option<Ordering> {
+        match self {
+            Self::E1 => Some(Ordering::Less),
+            Self::E2(v)|
+            Self::I1(v)|
+            Self::I2(v)|
+            Self::O1(v)|
+            Self::Y1(v) => v.partial_cmp(other),
+            Self::III(_)      => None
+        }
+    }
+}
+
+impl Div<&f64> for &StellarPopulation {
+    type Output = StellarPopulation;
+    fn div(self, rhs: &f64) -> Self::Output {
+        match self {
+            StellarPopulation::E1 => StellarPopulation::E1,
+            StellarPopulation::E2(v) => StellarPopulation::E2(*v / *rhs),
+            StellarPopulation::I1(v) => StellarPopulation::I1(*v / *rhs),
+            StellarPopulation::I2(v) => StellarPopulation::I2(*v / *rhs),
+            StellarPopulation::III(_) => self.clone(),
+            StellarPopulation::O1(v) => StellarPopulation::O1(*v / *rhs),
+            StellarPopulation::Y1(v) => StellarPopulation::Y1(*v / *rhs)
+        }
+    }
+}
+
+impl Div<f64> for &StellarPopulation {
+    type Output = StellarPopulation;
+    fn div(self, rhs: f64) -> Self::Output {<&StellarPopulation as Div<&f64>>::div(self, &rhs)}
+}
+
+impl PartialEq<&StellarPopulation> for f64 {
+    fn eq(&self, other: &&StellarPopulation) -> bool {
+        self.eq(&other.gyr())
+    }
+}
+
+impl PartialOrd<&StellarPopulation> for f64 {
+    fn partial_cmp(&self, other: &&StellarPopulation) -> Option<Ordering> {
+        self.partial_cmp(&other.gyr())
     }
 }

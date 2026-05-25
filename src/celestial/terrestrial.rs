@@ -1,8 +1,8 @@
 //! Terrestrial Planets, Planetoids, Moons, etc.
 
-use dicebag::DiceExt;
+use serde::{Deserialize, Serialize};
 
-use crate::{celestial::orbital::{orbit_adjacent_to_inner_limit, orbit_adjacent_to_outer_limit}, unit::{Metric, Zone}};
+#[derive(Debug, Deserialize, Serialize, Clone, Copy)]
 pub enum SizeCategory {
     /// A tiny planet/planetoid. In some contexts synonymous with 'Moon'.
     Tiny,

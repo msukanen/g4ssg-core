@@ -61,11 +61,10 @@ pub enum AsteroidBeltType {
 
             // 15-20% S
             //  5-10% M
-            mut roll => {
-                roll = 1.d(25);
-                match roll {
-                    _ if roll >= 20 => if 1.d2().is_one() { ab_s(region) } else { ab_m(albedo_hint) },
-                    _ if roll <= 15 => ab_s(region),
+            _ => {
+                match 1.d(25) {
+                    20.. => if 1.d2().is_one() { ab_s(region) } else { ab_m(albedo_hint) },
+                    ..=15 => ab_s(region),
                     _ => ab_m(albedo_hint)
                 }
             }
