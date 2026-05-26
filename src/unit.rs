@@ -6,7 +6,6 @@
 pub mod age;
 
 pub(crate) mod metrics;
-pub(crate) use metrics::kroupa_imf_icdf;
 
 mod zone;
 pub use zone::Zone;
