@@ -1,9 +1,9 @@
 use core::f64;
 use std::{collections::VecDeque, ops::RangeInclusive};
 
-use astrometrics::{AsMass, AsSpatialUnit, Mass, SpatialUnit, Temperature};
+use astrometrics::{AsCelestialRadii, AsMass, AsSpatialUnit, DefoAble, Mass, SpatialUnit, Temperature};
 use dicebag::{DiceExt, FixedNumberVariance, InclusiveRandomRange, PercentageVariance};
-use rand::Rng;
+use rand::RngExt;
 use serde::{Deserialize, Serialize};
 
 use crate::{celestial::{GasGiantArrangement, gas_giant::orbit_can_contain_gg, orbital::{RawOrbitContent, random_orbital_spacing_ratio}}, evo::{CFG_STAR_DATA_MIN_MASS, Luminosity, StellarData, StellarDataChoice}, math::LogInterpolator, unit::{Zone, age::{AgeSpan, StellarPopulation}, metrics::kroupa_imf_icdf}};
@@ -182,7 +182,14 @@ impl Star {
 
         // Figure out current state of affairs for our star-in-making…
         let stage = match &span {
-            AgeSpan::Infinite => StarLifeStage::M,
+            AgeSpan::Infinite => {
+                if mass >= 0.08.mo() { StarLifeStage::M }
+                else if mass >= 0.07.mo() { StarLifeStage::B(BrownDwarfType::M)}
+                else if mass >= 0.05.mo() { StarLifeStage::B(BrownDwarfType::L)}
+                else if mass >= 0.03.mo() { StarLifeStage::B(BrownDwarfType::T)}
+                else                      { StarLifeStage::B(BrownDwarfType::Y)}
+            }
+
             AgeSpan::MSpanOnly(s) => {
                 let ms_over = age > s;
                 let is_massive = mass >= 3.0.mo();
@@ -203,7 +210,8 @@ impl Star {
                     (false, ..) if mass >= 25.mo() && is_midlife(frac) => StarLifeStage::SG, // mid-life superstar
                     (false, ..)                      => StarLifeStage::WR, // eldery bugger, Wolf-Rayeting about
                 }
-            },
+            }
+            
             AgeSpan::MSGSpan(m, s, g) => {
                 if *m >= age { StarLifeStage::M }
                 else if *m+*s >= age { StarLifeStage::S }
@@ -214,15 +222,34 @@ impl Star {
 
         // Mass refining by current stage.
         //
-        // <2.0M☉ stars that fall into D lose major portion of their mass. Lets reflect that too.
+        // <2.0M☉ stars that fall into D lose major portion of their mass. Let's reflect that too.
         let (orig_mass, mass) = match &stage {
             StarLifeStage::D => if mass <= 0.5 {(mass, mass * 0.95)}
                                 else if mass <= 2.0 {(mass, mass * 0.7)}
-                                else {(mass, mass.min(1.44).max(0.7))},
-            StarLifeStage::B(bdt) => match bdt {
-                BrownDwarfType::M => 
+                                else {(mass, mass.clamp(0.7.mo(), 1.44.mo()))
             }
-            _ => (mass, mass)//TODO: N/X
+            
+            StarLifeStage::B(bdt) => {
+                let refined = match bdt {
+                    BrownDwarfType::M => mass.clamp(0.07.mo(), 0.09.mo()),
+                    BrownDwarfType::L => mass.clamp(0.03.mo(), 0.07.mo()),
+                    BrownDwarfType::T => mass.clamp(0.01.mo(), 0.05.mo()),
+                    BrownDwarfType::Y => mass.clamp(0.005.mo(), 0.03.mo()),
+                };
+                (mass, refined)
+            }
+
+            StarLifeStage::N => (mass, (mass * 0.1_f64).clamp(1.1.mo(), 2.0.mo())),
+
+            StarLifeStage::X => (mass, (mass * 0.2_f64).clamp(3.0.mo(), 30.0.mo())),
+
+            StarLifeStage::MG => (mass, mass * 0.95),
+
+            StarLifeStage::SG => (mass, mass * 0.7),
+
+            StarLifeStage::WR => (mass, mass * 0.4),
+
+            _ => (mass, mass)
         };
 
         // Surface K by current stage.
@@ -268,10 +295,10 @@ impl Star {
         let rad = {
             match &stage {
                 StarLifeStage::D => (0.008..=0.02).random_of().ro(),
-                StarLifeStage::N => 0.000016.ro(),
+                StarLifeStage::N => 0.000016_f32.ro(),
                 StarLifeStage::X |
-                StarLifeStage::SMBH => (TWO_G_OVER_C2 * mass).ro(),
-                StarLifeStage::M => (155_000.0 * lum.sqrt() / k.sq().as_f64()).into(),
+                StarLifeStage::SMBH => (TWO_G_OVER_C2 * mass).raw().ro(),
+                StarLifeStage::M => (155_000.0 * lum.sqrt() / k.sq().as_f64()).ro(),
                 _ => SpatialUnit::RO({
                     const T_SUN: f64 = 5772.0;
                     ((lum / (k.as_f64() / T_SUN)).powi(4)).sqrt()
@@ -282,9 +309,9 @@ impl Star {
         // Figure out where planetary solids can exist, excluding Kuiper & Oort stuff.
         let solid_zone = Zone::from(
                 // inner limit
-                ((0.1 * orig_mass).max(0.01 * orig_lum.min().sqrt()).au(),
+                ((0.1 * orig_mass.raw()).max(0.01 * orig_lum.min().sqrt()).au(),
                 // outer limit
-                (40.0 * orig_mass).au())
+                (40.0 * orig_mass.raw()).au())
             );
         // Potential placement for the 1st GG, if any.
         let snow_line = (4.85 * orig_lum.min().sqrt()).au();
@@ -402,21 +429,22 @@ mod star_tests {
     #[test]
     fn edge_case_and_boundary_values() {
         let _ = env_logger::try_init();
-        let delta_m = |m:f64|m-0.01..=m+0.01;
-        // to make 0.01-100.0 range simpler to step-by-step at 0.01 interval, use 1..10000 i32 insted and divide...
+        // to make [0.01,100.0] range simpler to step-by-step at 0.01 interval, use [1,10000] i32 insted and divide…
         for m in 1..=10000 {
             let mut limits = StarGenCtx::default();
             let m = m as f64 / 100.0;
             let star = Star::random(format!("{m:.2}").as_str(), &AGE_8KYR, &Zone::FREE, &mut limits);
-            if star.mass < 3.0 {
-                assert!(delta_m(m).contains(&star.mass) && matches!(star.stage, StarLifeStage::M));
+            if m < 0.08 {
+                assert!(matches!(star.stage, StarLifeStage::B(_)), "Not B?! {:?}", star);
+            } else if m < 3.0 {
+                assert!(matches!(star.stage, StarLifeStage::M), "Not M?! {:?}", star);
             } else {
-                assert!(delta_m(m).contains(&star.mass) && matches!(star.stage, StarLifeStage::MG | StarLifeStage::SG | StarLifeStage::WR));
+                assert!(matches!(star.stage, StarLifeStage::MG | StarLifeStage::SG | StarLifeStage::WR), "Not MG|SG|WR?! {:?}", star);
             }
 
             let star = Star::random(format!("{m:.2}").as_str(), &AGE_1MYR, &Zone::FREE, &mut limits);
-            if star.mass < (25.0 - f64::EPSILON) && matches!(star.stage, StarLifeStage::X) {
-                panic!("<25M☉ star should not result in a black hole!")
+            if m < (25.0 - f64::EPSILON) && matches!(star.stage, StarLifeStage::X) {
+                panic!("<25M☉ star ({}) should not result in a black hole!", star.mass)
             }
         }
     }
