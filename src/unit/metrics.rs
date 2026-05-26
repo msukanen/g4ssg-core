@@ -39,12 +39,9 @@ lazy_static! {
 /// 
 /// # Returns
 /// `0.1..100.0`
-/// 
-/// # Example
-/// ```
-/// let stellar_mass = kroupa_imf_icdf();
-/// ```
+//
 // The PDF is `dN/dm ~ m^-alpha`.
+//
 pub(crate) fn kroupa_imf_icdf() -> f64 {
     let u: f64 = rand::rng().random();
     let derive_mass =

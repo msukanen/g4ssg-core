@@ -21,19 +21,19 @@ lazy_static! {
                 "Exhibit: The Missing File\n\
                 Period: Age of Absent Furnaces\n\
                 Description: '{EVO_FILE}' could not be found.\n\
-                Curator's Note: Editor misplaced the sacred JSON scrolls. Error: {e:?}"))
+                Editor misplaced the sacred JSON scrolls. Error: {e:?}"))
             ).unwrap_or_else(|e| panic!(
                 "Exhibit: The Broken JSON\n\
                 Period: Age of Syntax Chaos\n\
                 Description: Failed to parse '{EVO_FILE}'\n\
-                Curator's Note: Whoever edited this JSON is a moron. Error: {e:?}"
+                Whoever edited this JSON is a moron. Error: {e:?}"
             ));
         if cfg.data.is_empty() {
             panic!(
                 "Exhibit: The Great Void\n\
                 Period: Age of Missing Stars\n\
                 Description: 'common' stars have gone missing…\n\
-                Curator's Note: Chuck at least one star in to start the stellar furnace…");
+                Chuck at least one star in to start the stellar furnace…");
         }
         cfg
     };
