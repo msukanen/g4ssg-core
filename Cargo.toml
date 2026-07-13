@@ -4,6 +4,7 @@ version = "0.1.1"
 edition = "2024"
 authors = ["Markku Sukanen <markku.sukanen@gmail.com>"]
 license = "MIT OR Apache-2.0"
+repository = "https://github.com/msukanen/g4ssg-core.git"
 
 [badges]
 maintenance = { status = "experimental" }
@@ -12,15 +13,14 @@ maintenance = { status = "experimental" }
 path = "src/lib.rs"
 
 [dependencies]
-rand = "0.10.1"
-dicebag = "0.3"
+dicebag = "0.3.19"
 log = "0.4"
-env_logger = "0.11.10"
+env_logger = "0.11.11"
 paste = "1.0.15"
 lazy_static = "1.5.0"
 serde_jsonc = "1.0.108"
 serde = { version = "1.0.228", features = ["derive"]}
-astrometrics = "0.1.7"
+astrometrics = "0.1.9"
 
 [features]
 default = []

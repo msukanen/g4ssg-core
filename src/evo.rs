@@ -98,7 +98,7 @@ pub struct StellarData {
 #[derive(Debug, Deserialize, Serialize, Clone)]
 #[serde(untagged)]
 pub enum Luminosity {
-    /// L-min value only. L-max is not different enough to bother listing separately.
+    /// L-min value only. L-max is approx. equal (and thus not worth repeating).
     LMinOnly(f64),
     /// L-min and L-max.
     LMinMax(f64, f64)
@@ -143,7 +143,11 @@ pub(crate) enum StellarDataChoice {
 
 impl StellarData {
     /// Fetches either more-or-less exact data (when able to) or neighbors from which
-    /// exact data has to be interpolated.
+    /// data has to be interpolated.
+    /// 
+    /// # Args
+    /// - `needle_mass` to get data with.
+    /// 
     pub fn get(needle_mass: f64) -> StellarDataChoice {
         // Common/Intermediate masses can be "pinpointed" with relative impunity…
         if needle_mass <= 3.0 {
@@ -166,6 +170,7 @@ impl StellarData {
     }
     
     /// Get a random [evolution][StellarEvolution] entry.
+    /// 
     pub fn random() -> StellarDataChoice {
         // fetch StellarEvolution data by probabilistic random mass.
         Self::get(kroupa_imf_icdf())

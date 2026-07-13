@@ -3,7 +3,6 @@ use std::{collections::VecDeque, ops::RangeInclusive};
 
 use astrometrics::{AsCelestialRadii, AsMass, AsSpatialUnit, DefoAble, Mass, SpatialUnit, Temperature};
 use dicebag::{DiceExt, FixedNumberVariance, InclusiveRandomRange, PercentageVariance};
-use rand::RngExt;
 use serde::{Deserialize, Serialize};
 
 use crate::{celestial::{GasGiantArrangement, gas_giant::orbit_can_contain_gg, orbital::{RawOrbitContent, random_orbital_spacing_ratio}}, evo::{CFG_STAR_DATA_MIN_MASS, Luminosity, StellarData, StellarDataChoice}, math::LogInterpolator, unit::{Zone, age::{AgeSpan, StellarPopulation}, metrics::kroupa_imf_icdf}};
@@ -28,7 +27,7 @@ pub enum BrownDwarfType {
 } impl BrownDwarfType {
     /// Generate a random brownie (could be a cookie, too).
     pub fn random() -> Self {
-        match rand::rng().random::<f64>() {
+        match (0.0..=1.0).random_of() {
             x if x < 0.96  => Self::M,
             x if x < 0.975 => Self::L,
             x if x < 0.985 => Self::T,
@@ -262,7 +261,7 @@ impl Star {
                     (msk - ((a / span.sspan().unwrap())) * (msk - 4_800.0))
                         .into()
                 },
-                StarLifeStage::G(_) => (3_000.0..=5_000.0).random_of().into(),
+                StarLifeStage::G(_) => (3_000.0_f64..=5_000.0).random_of().into(),
                 StarLifeStage::MG => (k.jitter_within(100.0) * 1.1).into(),
                 StarLifeStage::SG => (k.jitter_within(100.0) * 0.5).into(),
                 StarLifeStage::WR => (k.jitter_within(100.0) * 3.0).into(),
@@ -294,7 +293,7 @@ impl Star {
 
         let rad = {
             match &stage {
-                StarLifeStage::D => (0.008..=0.02).random_of().ro(),
+                StarLifeStage::D => (0.008_f32..=0.02).random_of().ro(),
                 StarLifeStage::N => 0.000016_f32.ro(),
                 StarLifeStage::X |
                 StarLifeStage::SMBH => (TWO_G_OVER_C2 * mass).raw().ro(),
@@ -366,8 +365,6 @@ impl Star {
                 *stuff = RawOrbitContent::random(prev_is_gg, next_is_gg, distance, fz, &solid_zone).into();
             }
         }
-
-        // TODO: potential adjustments here… maybe…
 
         // Now that we know what sort of stuff goes where… lets put them there.
         orbits.iter().for_each(|(d, content)|{

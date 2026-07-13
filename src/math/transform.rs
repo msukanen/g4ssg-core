@@ -1,4 +1,4 @@
-use rand::RngExt;
+use dicebag::InclusiveRandomRange;
 
 use crate::math::SALPETER_SLOPE_ALPHA;
 
@@ -9,7 +9,7 @@ use crate::math::SALPETER_SLOPE_ALPHA;
 /// `max`— ditto.
 /// `alpha`— optional; if `None`, default to Salpeter.
 pub fn inverse_transform_sample(min: f64, max: f64, alpha: Option<f64>) -> f64 {
-    let u = rand::rng().random_range(0.0..1.0);
+    let u = (0.0..=1.0).random_of();
     // inverse transform sampling
     let pow_exp = 1.0 - if let Some(alpha) = alpha {
         if (alpha - 1.0).abs() < f64::EPSILON {

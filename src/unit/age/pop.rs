@@ -1,6 +1,7 @@
 //! Stellar Population
 //! 
 //! Populations I and II, plus theoretical III.
+//! 
 use std::{cmp::Ordering, ops::Div};
 
 use dicebag::{DiceExt, PercentageVariance};
@@ -8,14 +9,14 @@ use serde::{Deserialize, Serialize};
 
 const AGE_OF_UNIVERSE_GYR: f64 = 13.813;
 
-#[derive(Debug, Deserialize, Serialize, Clone, PartialEq, PartialOrd)]
+#[derive(Debug, Deserialize, Serialize, Clone, Copy, PartialEq, PartialOrd)]
 pub enum PopIIIObservation {
     Theoretical,
     Candidate,
     Confirmed,
 }
 
-#[derive(Debug, Deserialize, Serialize, Clone, PartialEq, PartialOrd)]
+#[derive(Debug, Deserialize, Serialize, Clone, Copy, PartialEq, PartialOrd)]
 pub enum StellarPopulation {
     /// Extremely young population-I — coincidentally also covers existing superstars.
     E1,
@@ -30,7 +31,7 @@ pub enum StellarPopulation {
     /// Extreme population-II ~10Gyr to ~13.5Gyr (near the approximate age of the universe, as we know it)
     E2(f64),
     /// Immensely old population-III — too rare to come up with a random roll.
-    // Age value not present as by nature they're almost exactly as old as the universe itself.
+    // Age value not present; by nature III's nearly as old as the universe itself.
     III(PopIIIObservation)
 } impl StellarPopulation {
     pub fn random() -> Self {

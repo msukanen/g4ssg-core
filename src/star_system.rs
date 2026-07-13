@@ -106,7 +106,7 @@ pub(crate) struct ScaffoldingCtx<'a> {
 }
 
 #[cfg(test)]
-mod osepster_tests {
+mod orbit_separation_tests {
     use super::*;
 
     impl std::fmt::Display for OrbitScaffolding {
@@ -143,13 +143,13 @@ mod osepster_tests {
                 let s2 = OrbitSeparation::random(OSDMethod::TOB);
                 let b1 = Box::new(if let OrbitSeparation::D(_) = &s1 {
                     OrbitScaffolding::random(&age, OSDMethod::SC)
-                } else { OrbitScaffolding::S(age.clone()) });
+                } else { OrbitScaffolding::S(age) });
                 let b2 = Box::new(if let OrbitSeparation::D(_) = &s2 {
                     OrbitScaffolding::random(&age, OSDMethod::SC)
-                } else { OrbitScaffolding::S(age.clone()) });
+                } else { OrbitScaffolding::S(age) });
                 let e1 = OrbitEccentricity::random(&s1);
                 let e2 = OrbitEccentricity::random(&s2);
-                OrbitScaffolding::T { p: age.clone(), s1, s2, b1, b2, e1, e2 }
+                OrbitScaffolding::T { p: age, s1, s2, b1, b2, e1, e2 }
             };
         let _ = env_logger::try_init();
         log::debug!("\n{oseps}");

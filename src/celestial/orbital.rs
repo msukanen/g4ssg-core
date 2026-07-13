@@ -4,8 +4,7 @@
 use std::cmp::Ordering;
 
 use astrometrics::{AsSpatialUnit, SpatialUnit};
-use dicebag::DiceExt;
-use rand::RngExt;
+use dicebag::{DiceExt, InclusiveRandomRange};
 use serde::{Deserialize, Serialize};
 
 use crate::{celestial::terrestrial::SizeCategory, unit::Zone};
@@ -155,9 +154,9 @@ impl Ord for OrbitSeparation {
 /// Generate a random orbital spacing ratio.
 pub fn random_orbital_spacing_ratio() -> f64 {
     const SHAPE_MAXZ: f64 = 15.0;// max of 3d6-3
-    let normalized = (3.d6() - 3) as f64 / SHAPE_MAXZ;
+    let normalized: f64 = (3.d6() - 3) as f64 / SHAPE_MAXZ;
     // add a bit of jitter...
-    let jitter = rand::rng().random::<f64>() / SHAPE_MAXZ;
+    let jitter: f64 = (0.0..=1.0).random_of() / SHAPE_MAXZ;
     let clamped = (normalized + jitter).min(1.0);
     ORBIT_RATIO_MIN + clamped * (ORBIT_RATIO_MAX - ORBIT_RATIO_MIN)
 }

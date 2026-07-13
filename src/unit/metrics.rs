@@ -1,8 +1,8 @@
 //! Some Metrics
 use core::f64;
 
+use dicebag::InclusiveRandomRange;
 use lazy_static::lazy_static;
-use rand::RngExt;
 
 use crate::evo::{CFG_STAR_DATA_MAX_MASS, CFG_STAR_DATA_MIN_MASS};
 
@@ -43,7 +43,7 @@ lazy_static! {
 // The PDF is `dN/dm ~ m^-alpha`.
 //
 pub(crate) fn kroupa_imf_icdf() -> f64 {
-    let u: f64 = rand::rng().random();
+    let u = (0.0..=1.0).random_of();
     let derive_mass =
         |low: f64, hi: f64, u: f64, alpha: f64| {
         let p = 1.0 - alpha;
@@ -66,5 +66,6 @@ pub(crate) fn kroupa_imf_icdf() -> f64 {
          (u - *KROUPA_A2) / (1.0 - *KROUPA_A2),
          ALPHA_2)
     };
+    
     derive_mass(low, hi, u, alpha)//.max(0.0) //uncomment .max() if not trusting the equation to auto-clamp at 0.0 ...
 }
