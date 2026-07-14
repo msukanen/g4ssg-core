@@ -9,4 +9,4 @@ pub mod math;
 pub mod star_system;
 pub mod unit;
 
-pub(crate) const UNNAMED: &'static str = "<unnamed>";
+pub const UNNAMED: &'static str = "<unnamed>";

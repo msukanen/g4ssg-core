@@ -1,11 +1,11 @@
 //! Terrestrial Planets, Planetoids, Moons, etc.
 
-use dicebag::DiceExt;
+use dicebag::{DiceExt, lo};
 use either::Either;
 use mshc::Named;
 use serde::{Deserialize, Serialize};
 
-use crate::{UNNAMED, celestial::{ab::{ABRegion, AsteroidBeltType}, orbital::OrbitContent, rnd_atm_mass}};
+use crate::{UNNAMED, celestial::{Atmosphere, ab::{ABRegion, AsteroidBeltType}, hydrocover::Hydrocover, orbital::OrbitContent}};
 
 #[derive(Debug, Deserialize, Serialize, Clone, Copy, PartialEq, Eq)]
 pub enum SizeCategory {
@@ -55,11 +55,12 @@ pub struct Terrestrial {
     overall: TerrestrialOverallType,
     sub: TerrestrialSubType,
     size: SizeCategory,
-    atm_mass: Option<f64>,
+    atm: Option<Atmosphere>,
+    hydrocover: Option<f64>,
 }
 
 impl Terrestrial {
-    /// Generate a random terrestrial planet(oid).
+    /// Generate a random terrestrial planet(oid)… or an asteroid belt if things so judge.
     pub fn random() -> Either<Self, OrbitContent> {
         use TerrestrialOverallType as O;
         use TerrestrialSubType as S;
@@ -89,14 +90,67 @@ impl Terrestrial {
             _ => (S::Garden, Large)
         };
 
-        let atm_mass = rnd_atm_mass(sub.into(), size.into());
+        Either::Left(Self::random_oss(overall, sub, size))
+    }
 
-        Either::Left(Self {
+    pub fn random_sized(size: SizeCategory) -> Self {
+        use TerrestrialOverallType as O;
+        use TerrestrialSubType as S;
+        use SizeCategory as C;
+        let mut overall = TerrestrialOverallType::random();
+        while (overall == O::Garden && (size == C::Tiny || size == C::Small)) ||
+              (overall == O::Hostile && size == C::Small)
+        {
+            overall = TerrestrialOverallType::random();
+        }
+        let r = 3.d6();
+        let sub = match (3.d6(), &overall, size) {
+            (_, _, C::AsteroidCluster) |
+            (_, O::Garden, C::Tiny)    |
+            (_, O::Garden, C::Small)   |
+            (_, O::Hostile, C::Small)  => unreachable!(),
+            
+            (_,     O::Hostile, C::Tiny) => S::Sulfur,
+            (..=9,  O::Barren,  C::Tiny) => S::Rock,
+            (_,     O::Barren,  C::Tiny) => S::Ice,
+
+            (..=5,  O::Barren,  C::Small) => S::Hadean,
+            (..=8,  O::Barren,  C::Small) => S::Ice,
+            (_,     O::Barren,  C::Small) => S::Rock,
+
+            (6|7|8, O::Hostile, C::Medium) => S::Greenhouse,
+            (..=16, O::Hostile, C::Medium) => S::Ammonia,
+            (_,     O::Hostile, C::Medium) => S::Chthonian,
+
+            (..=6,  O::Barren,  C::Medium) => S::Ice,
+            (..=8,  O::Barren,  C::Medium) => S::Hadean,
+            (_,     O::Barren,  C::Medium) => S::Ocean,
+
+            (..=13, O::Hostile, C::Large) => S::Ammonia,
+            (..=16, O::Hostile, C::Large) => S::Greenhouse,
+            (_,     O::Hostile, C::Large) => S::Chthonian,
+
+            (..=11, O::Barren,  C::Large) => S::Ocean,
+            (_,     O::Barren,  C::Large) => S::Ice,
+
+            (_,     O::Garden,  C::Medium) |
+            (_,     O::Garden,  C::Large)  => S::Garden,            
+        };
+
+        Self::random_oss(overall, sub, size)
+    }
+
+    fn random_oss(overall: TerrestrialOverallType, sub: TerrestrialSubType, size: SizeCategory) -> Self {
+        let atm = Atmosphere::random(sub.into(), size.into());
+        let hydrocover = Hydrocover::random(atm.as_ref(), sub.into(), size.into());
+
+        Self {
             name: UNNAMED.into(),
             overall,
             sub,
             size,
-            atm_mass,
-        })
+            atm,
+            hydrocover,
+        }
     }
 }
