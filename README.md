@@ -1,15 +1,15 @@
 # G4SSG-Core
 
 Multiverse, universe, galaxy, and/or star system generator core. Built
-more or less based on *GURPS 4e Space*, although gradually going for more
-scientific approach.
+partially based on *GURPS 4e Space* rules but with somewhat more real
+science at places.
 
 **W.I.P.** - YMMV, etc.
 
 ## `Cargo.toml`
 
 If/when Population-III stars get more or less confidently confirmed
-candidates, enable the "popiii_candidate" feature.
+candidates, enable the `popiii_candidate` feature.
 
 ## Multi-threading + Other "Noteworthy Stuff"
 
