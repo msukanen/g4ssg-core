@@ -2,10 +2,13 @@ use core::f64;
 use std::{collections::VecDeque, ops::RangeInclusive};
 
 use astrometrics::{AsCelestialRadii, AsMass, AsSpatialUnit, DefoAble, Mass, SpatialUnit, Temperature};
-use dicebag::{DiceExt, FixedNumberVariance, InclusiveRandomRange, PercentageVariance};
+use dicebag::*;
+use mshc::Named;
 use serde::{Deserialize, Serialize};
 
-use crate::{celestial::{GasGiantArrangement, gas_giant::orbit_can_contain_gg, orbital::{RawOrbitContent, random_orbital_spacing_ratio}}, evo::{CFG_STAR_DATA_MIN_MASS, Luminosity, StellarData, StellarDataChoice}, math::LogInterpolator, unit::{Zone, age::{AgeSpan, StellarPopulation}, metrics::kroupa_imf_icdf}};
+#[cfg(test)]
+use crate::UNNAMED;
+use crate::{celestial::{GasGiantArrangement, ab::{ABRegion, AsteroidBeltType}, gas_giant::*, orbital::{RawOrbitContent, OrbitContent, random_orbital_spacing_ratio}, terrestrial::Terrestrial}, evo::{CFG_STAR_DATA_MIN_MASS, Luminosity, StellarData, StellarDataChoice}, math::LogInterpolator, unit::{Zone, age::{AgeSpan, StellarPopulation}, metrics::kroupa_imf_icdf}};
 
 /// Giant star size categories from the smallest to the largest.
 #[derive(Debug, Deserialize, Serialize, Clone, PartialEq, Eq, PartialOrd, Ord)]
@@ -103,9 +106,9 @@ pub enum StarLifeStage {
     SMBH
 }
 
-#[derive(Debug, Deserialize, Serialize, Clone)]
+#[derive(Debug, Deserialize, Serialize, Clone, Named)]
 pub struct Star {
-    pub name: String,
+    name: String,
     mass: Mass,
     /// Surface temperature in Kelvin.
     k: Temperature,
@@ -142,8 +145,6 @@ const G: f64 = 6.67430e-11;
 const C: f64 = 2.9979258e8;
 // Schwarzschild rad: 2GM/c^2
 const TWO_G_OVER_C2: f64 = 2.0 * G / (C*C);
-#[cfg(test)]
-pub(crate) const UNNAMED: &'static str = "<unnamed>";
 
 impl Star {
     /// Generate a star in random.
@@ -324,30 +325,32 @@ impl Star {
         } else {
             (solid_zone.outer() / (0.05 * 1.d6() as f64 + 1.0), false)
         };
-        let mut orbits = VecDeque::new();
-        let mut curr_orbit = fst.clone();
-        orbits.push_back((curr_orbit.clone(), if fst_is_gg {Some(RawOrbitContent::GG)} else {None}));
+        let mut raw_orbits = VecDeque::new();
+        // …walking inwards…
+        let mut curr_orbit = fst;
+        raw_orbits.push_back(((curr_orbit, ABRegion::Mid), if fst_is_gg {Some(RawOrbitContent::GG)} else {None}));
         loop {
             curr_orbit /= random_orbital_spacing_ratio();
             if curr_orbit < *solid_zone.inner() || fz.contains(&curr_orbit) {
                 break;
             }
-            orbits.push_front((curr_orbit.clone(), None));
+            raw_orbits.push_front(((curr_orbit, ABRegion::Inner), None));
         }
-        curr_orbit = fst.clone();
+        // …and then outwards…
+        curr_orbit = fst;
         loop {
             curr_orbit *= random_orbital_spacing_ratio();
             if curr_orbit > *solid_zone.outer() || fz.contains(&curr_orbit) {
                 break;
             }
-            orbits.push_back((curr_orbit.clone(), None));
+            raw_orbits.push_back(((curr_orbit, ABRegion::Outer), None));
         }
 
         // plonk a few GGs in place, if able to.
         if fst_is_gg {
-            for o in orbits.iter_mut() {
+            for o in raw_orbits.iter_mut() {
                 match o {
-                    (distance, None) => if orbit_can_contain_gg(&gga, distance, &snow_line) {
+                    ((distance,_), None) => if orbit_can_contain_gg(&gga, distance, &snow_line) {
                         o.1 = Some(RawOrbitContent::GG);
                     }
                     _ => (/* ignore, already occupied */)
@@ -356,10 +359,10 @@ impl Star {
         }
 
         // …and after that dust settles, lets see about the rest…
-        for oidx in 0..orbits.len() {
-            let prev_is_gg = oidx > 0 && matches!(orbits[oidx-1].1, Some(RawOrbitContent::GG));
-            let next_is_gg = oidx + 1 < orbits.len() && matches!(orbits[oidx+1].1, Some(RawOrbitContent::GG));
-            let (distance, stuff) = &mut orbits[oidx];
+        for oidx in 0..raw_orbits.len() {
+            let prev_is_gg = oidx > 0 && matches!(raw_orbits[oidx-1].1, Some(RawOrbitContent::GG));
+            let next_is_gg = oidx + 1 < raw_orbits.len() && matches!(raw_orbits[oidx+1].1, Some(RawOrbitContent::GG));
+            let ((distance,_), stuff) = &mut raw_orbits[oidx];
 
             if stuff.is_none() {
                 *stuff = RawOrbitContent::random(prev_is_gg, next_is_gg, distance, fz, &solid_zone).into();
@@ -367,8 +370,19 @@ impl Star {
         }
 
         // Now that we know what sort of stuff goes where… lets put them there.
-        orbits.iter().for_each(|(d, content)|{
-
+        let mut orbits = vec![];
+        raw_orbits.iter_mut().for_each(|((distance, region), content)|{
+            use RawOrbitContent as R;
+            use OrbitContent as O;
+            orbits.push(match content {
+                None |
+                Some(R::Empty) => None,
+                Some(R::AB) => (*distance, O::AB(AsteroidBeltType::random(*region, None))).into(),
+                Some(R::GG) => (*distance, O::GG(GasGiant::random())).into(),
+                Some(R::KB) => (*distance, O::KB).into(),
+                Some(R::Oort) => (*distance, O::Oort).into(),
+                Some(R::T(sz)) => (*distance, O::T(Terrestrial::random_sized(*sz))).into(),
+            });
         });
         
         // "That's all folks!", with Looney Tunes…
@@ -403,46 +417,5 @@ impl Star {
             }
         }
         curve
-    }
-}
-
-#[cfg(test)]
-mod star_tests {
-    use crate::{celestial::star::{Star, StarGenCtx, StarLifeStage, UNNAMED}, unit::{Zone, age::StellarPopulation}};
-
-    const AGE_8KYR: StellarPopulation = StellarPopulation::I2(8.0 / 1_000_000.0);
-    const AGE_1MYR: StellarPopulation = StellarPopulation::I2(0.001);
-    const AGE_5GYR: StellarPopulation = StellarPopulation::I2(5.0);
-
-    #[test]
-    fn star_spam() {
-        const TIMES: usize = 100_000;
-        let mut limits = StarGenCtx::default();
-        for _x in 0..TIMES {
-            let _star = Star::random(UNNAMED, &AGE_5GYR, &Zone::FREE, &mut limits);
-        }
-    }
-
-    #[test]
-    fn edge_case_and_boundary_values() {
-        let _ = env_logger::try_init();
-        // to make [0.01,100.0] range simpler to step-by-step at 0.01 interval, use [1,10000] i32 insted and divide…
-        for m in 1..=10000 {
-            let mut limits = StarGenCtx::default();
-            let m = m as f64 / 100.0;
-            let star = Star::random(format!("{m:.2}").as_str(), &AGE_8KYR, &Zone::FREE, &mut limits);
-            if m < 0.08 {
-                assert!(matches!(star.stage, StarLifeStage::B(_)), "Not B?! {:?}", star);
-            } else if m < 3.0 {
-                assert!(matches!(star.stage, StarLifeStage::M), "Not M?! {:?}", star);
-            } else {
-                assert!(matches!(star.stage, StarLifeStage::MG | StarLifeStage::SG | StarLifeStage::WR), "Not MG|SG|WR?! {:?}", star);
-            }
-
-            let star = Star::random(format!("{m:.2}").as_str(), &AGE_1MYR, &Zone::FREE, &mut limits);
-            if m < (25.0 - f64::EPSILON) && matches!(star.stage, StarLifeStage::X) {
-                panic!("<25M☉ star ({}) should not result in a black hole!", star.mass)
-            }
-        }
     }
 }
