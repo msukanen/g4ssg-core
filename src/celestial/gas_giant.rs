@@ -2,8 +2,10 @@
 
 use astrometrics::SpatialUnit;
 use dicebag::DiceExt;
+use mshc::Named;
+use serde::{Deserialize, Serialize};
 
-use crate::unit::Zone;
+use crate::{UNNAMED, unit::Zone};
 
 /// An enum used in determining gas giant arrangement of any given star's local system.
 pub(crate) enum GasGiantArrangement {
@@ -63,5 +65,18 @@ pub(crate) fn orbit_can_contain_gg(gga: &Option<GasGiantArrangement>, distance: 
             if distance < snow_line && 3.d6() < 7 {true}
             else if distance >= snow_line && 3.d6() < 15 {true}
             else {false}
+    }
+}
+
+#[derive(Debug, Clone, Deserialize, Serialize, Named)]
+pub struct GasGiant {
+    name: String,
+}
+
+impl GasGiant {
+    pub fn random() -> Self {
+        Self {
+            name: UNNAMED.into(),
+        }
     }
 }
