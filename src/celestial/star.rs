@@ -11,7 +11,7 @@ use crate::UNNAMED;
 use crate::{celestial::{GasGiantArrangement, ab::{ABRegion, AsteroidBeltType}, gas_giant::*, orbital::{RawOrbitContent, OrbitContent, random_orbital_spacing_ratio}, terrestrial::Terrestrial}, evo::{CFG_STAR_DATA_MIN_MASS, Luminosity, StellarData, StellarDataChoice}, math::LogInterpolator, unit::{Zone, age::{AgeSpan, StellarPopulation}, metrics::kroupa_imf_icdf}};
 
 /// Giant star size categories from the smallest to the largest.
-#[derive(Debug, Deserialize, Serialize, Clone, PartialEq, Eq, PartialOrd, Ord)]
+#[derive(Debug, Deserialize, Serialize, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub enum GiantStarCategory {
     IV,
     III,
@@ -24,7 +24,7 @@ pub enum GiantStarCategory {
 }
 
 /// Brown dwarf types in ascending surface temperature order.
-#[derive(Debug, Deserialize, Serialize, Clone, PartialEq, PartialOrd)]
+#[derive(Debug, Deserialize, Serialize, Clone, Copy, PartialEq, PartialOrd)]
 pub enum BrownDwarfType {
     Y, T, L, M
 } impl BrownDwarfType {
@@ -82,7 +82,7 @@ impl TryFrom<Temperature> for BrownDwarfType {
 }
 
 /// Star's life stage — from main-sequence to giant(s).
-#[derive(Debug, Deserialize, Serialize, Clone, PartialEq)]
+#[derive(Debug, Deserialize, Serialize, Clone, Copy, PartialEq)]
 pub enum StarLifeStage {
     /// Neutron/pulsar.
     N,
@@ -392,10 +392,10 @@ impl Star {
             k,
             lum,
             stage,
-            pop: age.clone(),
+            pop: *age,
             rad,
             solid_zone, snow_line,
-            forbidden_zone: fz.clone()
+            forbidden_zone: fz.clone(),
         }
     }
     /// Some dubstep light curving is a-ok, right?
@@ -417,5 +417,37 @@ impl Star {
             }
         }
         curve
+    }
+
+    pub fn stage(&self) -> StarLifeStage { self.stage }
+    pub fn mass(&self) -> Mass { self.mass }
+}
+
+#[cfg(test)]
+mod star_tests {
+    #[test]
+    fn edge_case_and_boundary_values() {
+        use crate::{celestial::star::{Star, StarGenCtx, StarLifeStage}, unit::{Zone, age::StellarPopulation}};
+        const AGE_8KYR: StellarPopulation = StellarPopulation::I2(8.0 / 1_000_000.0);
+        const AGE_1MYR: StellarPopulation = StellarPopulation::I2(0.001);
+        _ = env_logger::try_init();
+        // to make [0.01,100.0] range simpler to step-by-step at 0.01 interval, use [1,10000] i32 insted and divide…
+        for x in 1..=10_000 {
+            let mut limits = StarGenCtx::default();
+            let m = x as f64 / 100.0;
+            let star = Star::random(format!("{m:.2}").as_str(), &AGE_8KYR, &Zone::FREE, &mut limits);
+            if m < 0.08 {
+                assert!(matches!(star.stage(), StarLifeStage::B(_)), "#{} Not B?! {:?}", x, star);
+            } else if m < 3.0 {
+                assert!(matches!(star.stage(), StarLifeStage::M), "Not M?! {:?}", star);
+            } else {
+                assert!(matches!(star.stage(), StarLifeStage::MG | StarLifeStage::SG | StarLifeStage::WR), "Not MG|SG|WR?! {:?}", star);
+            }
+
+            let star = Star::random(format!("{m:.2}").as_str(), &AGE_1MYR, &Zone::FREE, &mut limits);
+            if m < (25.0 - f64::EPSILON) && matches!(star.stage(), StarLifeStage::X) {
+                panic!("<25M☉ star ({}) should not result in a black hole!", star.mass())
+            }
+        }
     }
 }
