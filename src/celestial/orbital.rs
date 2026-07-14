@@ -7,7 +7,7 @@ use astrometrics::{AsSpatialUnit, SpatialUnit};
 use dicebag::{DiceExt, InclusiveRandomRange};
 use serde::{Deserialize, Serialize};
 
-use crate::{celestial::terrestrial::SizeCategory, unit::Zone};
+use crate::{celestial::{ab::AsteroidBeltType, gas_giant::GasGiant, terrestrial::{SizeCategory, Terrestrial}}, unit::Zone};
 
 pub(crate) const ORBIT_RATIO_MIN: f64 = 1.4;
 pub(crate) const ORBIT_RATIO_MAX: f64 = 2.0;
@@ -164,7 +164,7 @@ pub fn random_orbital_spacing_ratio() -> f64 {
 /// What's on the orbit?
 pub(crate) enum RawOrbitContent {
     Empty,// to distinguish from "not-yet-defined" None.
-    AB,// Asteroid belt or Debris (or both)
+    AB,// Asteroid belt or debris (or both)
     T (SizeCategory),
     GG,// Gas giant of some sort
     KB,// Kuiper belt
@@ -205,4 +205,12 @@ pub fn orbit_adjacent_to_inner_limit(distance: &SpatialUnit, limits: &Zone) -> b
 pub fn orbit_adjacent_to_outer_limit(distance: &SpatialUnit, limits: &Zone) -> bool {
     let range = (distance*1.4)..=(distance*2.0);
     range.contains(limits.outer())
+}
+
+pub enum OrbitContent {
+    AB (AsteroidBeltType),
+    T (Terrestrial),
+    GG (GasGiant),
+    KB,// Kuiper belt
+    Oort,// Oort cloud
 }
