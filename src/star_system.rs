@@ -2,15 +2,16 @@
 //! 
 //! [StarSystem] struct acts as the "root" of everything in any given star system.
 use dicebag::DiceExt;
+use mshc::Named;
 use serde::{Deserialize, Serialize};
 
 use crate::{unit::age::StellarPopulation, celestial::{CountCelestialMajors, orbital::{OSDMethod, OrbitEccentricity, OrbitSeparation}, star::StarGenCtx, system_composition::Composition}};
 
 
 /// "It's full of stars!", or at least one or a few…
-#[derive(Debug, Deserialize, Serialize, Clone)]
+#[derive(Debug, Deserialize, Serialize, Clone, Named)]
 pub struct StarSystem {
-    pub name: String,
+    name: String,
     age: StellarPopulation,
     composition: Composition,
 }
