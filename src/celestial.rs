@@ -1,7 +1,6 @@
 pub mod ab;
-pub mod gas_giant;
-//pub use gas_giant::GasGiant;
-pub(crate) use gas_giant::GasGiantArrangement;
+pub mod atmosphere; pub use atmosphere::*;
+pub mod gas_giant;  pub use gas_giant::*;
 pub mod orbital;
 pub mod star;
 pub mod system_composition;

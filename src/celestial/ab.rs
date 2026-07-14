@@ -25,6 +25,7 @@ pub enum AsteroidBeltType {
     M (ABSubtype),
     S (ABSubtype),
 } impl AsteroidBeltType {
+    /// Generate random asteroid belt type.
     pub fn random(region: ABRegion, albedo_hint: Option<f32>) -> Self {
         // Helper for S-kind
         fn ab_s(region: ABRegion) -> AsteroidBeltType {
