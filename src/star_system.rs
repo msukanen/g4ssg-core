@@ -44,8 +44,8 @@ impl StarSystem {
                 let b2 = Box::new(if let OrbitSeparation::D(_) = &s2 {
                     OrbitScaffolding::random(&age, OSDMethod::SC)
                 } else { OrbitScaffolding::S(age.clone()) });
-                let e1 = OrbitEccentricity::random(&s1);
-                let e2 = OrbitEccentricity::random(&s2);
+                let e1 = OrbitEccentricity::random_star_ecc(&s1);
+                let e2 = OrbitEccentricity::random_star_ecc(&s2);
                 OrbitScaffolding::T { p: age.clone(), s1, s2, e1, e2, b1, b2 }
             }
         };
@@ -87,7 +87,7 @@ pub(crate) enum OrbitScaffolding {
         } else {
             Self::S ( age.clone() )
         });
-        let e = OrbitEccentricity::random(&s);
+        let e = OrbitEccentricity::random_star_ecc(&s);
         Self::B { p: age.clone(), s, b, e }
     }
 
@@ -148,8 +148,8 @@ mod orbit_separation_tests {
                 let b2 = Box::new(if let OrbitSeparation::D(_) = &s2 {
                     OrbitScaffolding::random(&age, OSDMethod::SC)
                 } else { OrbitScaffolding::S(age) });
-                let e1 = OrbitEccentricity::random(&s1);
-                let e2 = OrbitEccentricity::random(&s2);
+                let e1 = OrbitEccentricity::random_star_ecc(&s1);
+                let e2 = OrbitEccentricity::random_star_ecc(&s2);
                 OrbitScaffolding::T { p: age, s1, s2, b1, b2, e1, e2 }
             };
         let _ = env_logger::try_init();

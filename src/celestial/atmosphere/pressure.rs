@@ -3,7 +3,7 @@
 //! Atmospheric pressure is measured in *atmospheres* (**atm**), with
 //! **1 atm** being equal to the avg. sealevel air pressure on Earth.
 //! 
-use astrometrics::{DefoAble, Mass, MetricsInternalType, SpatialUnit, Temperature};
+use astrometrics::MetricsInternalType;
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Deserialize, Serialize, PartialEq, Eq, PartialOrd, Ord)]

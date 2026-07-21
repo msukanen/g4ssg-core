@@ -1,25 +1,17 @@
 //! Terrestrial Planets, Planetoids, Moons, etc.
 
-use dicebag::{DiceExt, lo};
+use astrometrics::{AsMass, AsSpatialUnit, Cubed, DefoAble, Mass, MetricsInternalType, SpatialUnit, Temperature};
+use dicebag::DiceExt;
 use either::Either;
 use mshc::Named;
 use serde::{Deserialize, Serialize};
 
-use crate::{UNNAMED, celestial::{Atmosphere, ab::{ABRegion, AsteroidBeltType}, hydrocover::Hydrocover, orbital::OrbitContent}};
+use crate::{UNNAMED, celestial::{Atmosphere, SizeCategory, ab::{ABRegion, AsteroidBelt}, blackbody::determine_blackbody_k, moons::{Moons, RingSystemDetails}, orbital::{OrbitContent, OrbitEccentricity}, terrestrial::hydrocover::{Hydrocover, random_hydrocover}}};
 
-#[derive(Debug, Deserialize, Serialize, Clone, Copy, PartialEq, Eq)]
-pub enum SizeCategory {
-    /// Not really a planet at all; a literal *cluster* of asteroids more or less tightly packed.
-    AsteroidCluster,
-    /// A tiny planet/planetoid. In some contexts synonymous with 'Moon'.
-    Tiny,
-    /// Mercury, etc.
-    Small,
-    /// Earth, Venus, etc.
-    Medium,
-    /// E.g. Super-Earths, etc.
-    Large,
-}
+pub mod climate; use climate::*;
+pub mod d_n_g; use d_n_g::*;
+pub mod density; use density::*;
+pub mod hydrocover;
 
 #[derive(Debug, Clone, Copy, Deserialize, Serialize, PartialEq, Eq)]
 pub enum TerrestrialOverallType {
@@ -56,12 +48,21 @@ pub struct Terrestrial {
     sub: TerrestrialSubType,
     size: SizeCategory,
     atm: Option<Atmosphere>,
-    hydrocover: Option<f64>,
+    hydrocover: Option<MetricsInternalType>,
+    climate: Climate,
+    blackbody: Temperature,
+    core: Core,
+    density: f32,
+    radius: SpatialUnit,
+    g: MetricsInternalType,
+    moons: Moons,
+    orbital_period: MetricsInternalType,
+    ecc: OrbitEccentricity,
 }
 
 impl Terrestrial {
     /// Generate a random terrestrial planet(oid)… or an asteroid belt if things so judge.
-    pub fn random() -> Either<Self, OrbitContent> {
+    pub fn random(distance: SpatialUnit, parent_mass: Mass) -> Either<Self, OrbitContent> {
         use TerrestrialOverallType as O;
         use TerrestrialSubType as S;
         use SizeCategory::*;
@@ -78,7 +79,7 @@ impl Terrestrial {
             (..=8, O::Barren)  => (S::Rock, Tiny),
             (..=10, O::Barren) => (S::Ice, Tiny),
             (..=12, O::Hostile) => (S::Ammonia, Medium),
-            (..=12, O::Barren)  => return Either::Right(OrbitContent::AB(AsteroidBeltType::random(ABRegion::Mid, None))),
+            (..=12, O::Barren)  => return Either::Right(OrbitContent::AB(AsteroidBelt::random(ABRegion::Mid, None))),
             (..=14, O::Hostile) => (S::Ammonia, Large),
             (..=14, O::Barren)  => (S::Ocean, Medium),
             (..=16, O::Hostile) => (S::Greenhouse, Large),
@@ -90,20 +91,24 @@ impl Terrestrial {
             _ => (S::Garden, Large)
         };
 
-        Either::Left(Self::random_oss(overall, sub, size))
+        Either::Left(Self::random_oss(distance, parent_mass, overall, sub, size))
     }
 
-    pub fn random_sized(size: SizeCategory) -> Self {
+    pub fn random_sized(
+        distance: SpatialUnit,
+        parent_mass: Mass,
+        size: SizeCategory
+    ) -> Self {
         use TerrestrialOverallType as O;
         use TerrestrialSubType as S;
         use SizeCategory as C;
+
         let mut overall = TerrestrialOverallType::random();
         while (overall == O::Garden && (size == C::Tiny || size == C::Small)) ||
               (overall == O::Hostile && size == C::Small)
         {
             overall = TerrestrialOverallType::random();
         }
-        let r = 3.d6();
         let sub = match (3.d6(), &overall, size) {
             (_, _, C::AsteroidCluster) |
             (_, O::Garden, C::Tiny)    |
@@ -137,12 +142,36 @@ impl Terrestrial {
             (_,     O::Garden,  C::Large)  => S::Garden,            
         };
 
-        Self::random_oss(overall, sub, size)
+        Self::random_oss(distance, parent_mass, overall, sub, size)
     }
 
-    fn random_oss(overall: TerrestrialOverallType, sub: TerrestrialSubType, size: SizeCategory) -> Self {
-        let atm = Atmosphere::random(sub.into(), size.into());
-        let hydrocover = Hydrocover::random(atm.as_ref(), sub.into(), size.into());
+    fn random_oss(
+        distance: SpatialUnit,
+        parent_mass: Mass,
+        overall: TerrestrialOverallType,
+        sub: TerrestrialSubType,
+        size: SizeCategory
+    ) -> Self {
+        let mut atm = Atmosphere::random(sub.into(), size.into());
+        let hydrocover = random_hydrocover(atm.as_ref(), sub.into(), size.into());
+        let climate = Climate::random(sub.into(), size.into(), ABRegion::Mid);
+        let blackbody = determine_blackbody_k(
+                sub.into(),
+                size.into(),
+                atm.as_ref(),
+                hydrocover,
+                climate.avg_temperature()
+            ).unwrap_or_else(|e| panic!("Could not determine blackbody temperature! {e:?}"));
+        let core = Core::select(sub.into(), size.into());
+        let density = core.random_density();
+        let radius = random_radius(size.into(), blackbody, density);
+        let g = random_gravity(density, radius);
+        // calibrate the atmos
+        if let Some(atm) = &mut atm {
+            atm.adjust(sub, size, g);
+        }
+        let moons = Moons::random(false, size, radius, distance);
+        let orbital_period = (distance.au().cubed() / parent_mass.mo().raw()).raw().sqrt();
 
         Self {
             name: UNNAMED.into(),
@@ -151,6 +180,46 @@ impl Terrestrial {
             size,
             atm,
             hydrocover,
+            climate,
+            blackbody,
+            core,
+            density,
+            radius,
+            g,
+            moons,
+            orbital_period,
+            ecc: OrbitEccentricity::random_ecc(&distance, None, false, false),
         }
+    }
+}
+
+impl Hydrocover for TerrestrialSubType {
+    /// Return *potential* of liquid water or ice.
+    #[inline(always)]
+    fn has_water(&self) -> bool {
+        match self {
+            Self::Ammonia   |
+            Self::Chthonian |
+            Self::Hadean    |
+            Self::Sulfur    => false,
+            _ => true,
+        }
+    }
+}
+
+impl Hydrocover for Option<TerrestrialSubType> {
+    #[inline]
+    fn has_water(&self) -> bool {
+        match self {
+            None => false,
+            Some(h) => h.has_water()
+        }
+    }
+}
+
+impl RingSystemDetails for Terrestrial {
+    #[inline(always)]
+    fn ring_system(&self) -> Option<super::moons::RingSystem> {
+        self.moons.ring_system()
     }
 }

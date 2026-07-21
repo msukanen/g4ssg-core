@@ -4,10 +4,10 @@
 use std::cmp::Ordering;
 
 use astrometrics::{AsSpatialUnit, SpatialUnit};
-use dicebag::{DiceExt, InclusiveRandomRange};
+use dicebag::{DiceExt, InclusiveRandomRange, PercentageVariance};
 use serde::{Deserialize, Serialize};
 
-use crate::{celestial::{ab::AsteroidBeltType, gas_giant::GasGiant, terrestrial::{SizeCategory, Terrestrial}}, unit::Zone};
+use crate::{celestial::{GasGiantArrangement, SizeCategory, ab::AsteroidBelt, gas_giant::GasGiant, terrestrial::Terrestrial}, unit::Zone};
 
 pub(crate) const ORBIT_RATIO_MIN: f64 = 1.4;
 pub(crate) const ORBIT_RATIO_MAX: f64 = 2.0;
@@ -20,12 +20,12 @@ pub struct OrbitEccentricity {
     /// Average distance.
     avg: SpatialUnit,
 } impl OrbitEccentricity {
-    /// Generate random orbital eccentricity.
+    /// Generate random orbital eccentricity for a star.
     /// 
     /// # Args
+    /// - `osep`— separation to the nearest relevant neighbor.
     /// 
-    /// * `osep`— separation to the nearest relevant neighbor.
-    pub fn random(osep: &OrbitSeparation) -> Self {
+    pub fn random_star_ecc(osep: &OrbitSeparation) -> Self {
         let m = match osep {
             OrbitSeparation::VC(_) => -6,
             OrbitSeparation::C(_) => -4,
@@ -48,6 +48,48 @@ pub struct OrbitEccentricity {
                 _ => 0.95
             },
             avg: osep.as_metric()
+        }
+    }
+
+    /// Generate random orbital eccentricity for a planetary object.
+    /// 
+    /// # Args
+    /// - `osep`— separation to the nearest relevant neighbor.
+    /// 
+    pub fn random_ecc(distance: &SpatialUnit, gg_arrangement: Option<GasGiantArrangement>, gg: bool, iasl: bool) -> Self {
+        fn ecc_m(distance: &SpatialUnit, modf: i32) -> OrbitEccentricity {
+            let ecc = (match 3.d6() + modf {
+                ..=3 => 0.0,
+                ..=6 => 0.05,
+                ..=9 => 0.1,
+                ..=11 => 0.15,
+                12 => 0.2,
+                13 => 0.3,
+                14 => 0.4,
+                15 => 0.5,
+                16 => 0.6,
+                17 => 0.7,
+                _  => 0.8
+            } as f64).jitter_percentage(2.0).max(0.0);
+            OrbitEccentricity { ecc, avg: *distance }
+        }
+
+        /// Gas giant eccentricity.
+        fn gg_ecc(distance: &SpatialUnit, gga: Option<GasGiantArrangement>, iasl: bool) -> OrbitEccentricity {
+            use GasGiantArrangement as GGA;
+            ecc_m(distance, match gga {
+                None => return OrbitEccentricity { ecc: 0.0, avg: *distance },
+                Some(gga) => match gga {
+                    GGA::Eccentric if iasl => 4,
+                    _ => -6,
+                }
+            })
+        }
+
+        if gg {
+            gg_ecc(distance, gg_arrangement, iasl)
+        } else {
+            ecc_m(distance, 0)
         }
     }
 
@@ -166,7 +208,7 @@ pub(crate) enum RawOrbitContent {
     Empty,// to distinguish from "not-yet-defined" None.
     AB,// Asteroid belt or debris (or both)
     T (SizeCategory),
-    GG,// Gas giant of some sort
+    GG (Option<GasGiantArrangement>),// Gas giant of some sort
     KB,// Kuiper belt
     Oort,// Oort cloud
 } impl RawOrbitContent {
@@ -207,8 +249,9 @@ pub fn orbit_adjacent_to_outer_limit(distance: &SpatialUnit, limits: &Zone) -> b
     range.contains(limits.outer())
 }
 
+#[derive(Debug, Deserialize, Serialize, Clone)]
 pub enum OrbitContent {
-    AB (AsteroidBeltType),
+    AB (AsteroidBelt),
     T (Terrestrial),
     GG (GasGiant),
     KB,// Kuiper belt

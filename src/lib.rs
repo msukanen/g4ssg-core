@@ -5,6 +5,7 @@
 #![allow(unexpected_cfgs)]
 pub mod celestial;
 pub(crate) mod evo;
+pub mod error;
 pub mod math;
 pub mod star_system;
 pub mod unit;

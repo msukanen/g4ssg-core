@@ -1,10 +1,10 @@
 //! Climate; mainly for [Terrestrial] planet(oids).
 
-use astrometrics::{AsTemperature, MetricsInternalType, Temperature};
+use astrometrics::{AsTemperature, Temperature};
 use dicebag::{FixedNumberVariance, InclusiveRandomRange};
 use serde::{Deserialize, Serialize};
 
-use crate::celestial::{ab::ABRegion, terrestrial::{SizeCategory, TerrestrialSubType}};
+use crate::celestial::{SizeCategory, ab::ABRegion, terrestrial::TerrestrialSubType};
 
 #[derive(Debug, Clone, Copy, Deserialize, Serialize, PartialEq, Eq, PartialOrd, Ord)]
 pub enum ClimateType {
@@ -14,8 +14,8 @@ pub enum ClimateType {
     Chilly,
     Cool,
     Earth,
-    Warm,
     Tropical,
+    Warm,
     Hot,
     VeryHot,
     Infernal,
@@ -30,14 +30,15 @@ impl From<Temperature> for ClimateType {
         else if k < 278.0 { Self::Chilly }
         else if k < 289.0 { Self::Cool }
         else if k < 300.0 { Self::Earth }
-        else if k < 311.0 { Self::Warm }
-        else if k < 322.0 { Self::Tropical }
+        else if k < 311.0 { Self::Tropical }
+        else if k < 322.0 { Self::Warm }
         else if k < 333.0 { Self::Hot }
         else if k < 344.0 { Self::VeryHot }
         else { Self::Infernal }
     }
 }
 
+#[derive(Debug, Clone, Copy, Deserialize, Serialize, PartialEq)]
 pub struct Climate {
     kind: ClimateType,
     k: Temperature,
@@ -68,4 +69,7 @@ pub struct Climate {
 
         Self { kind: k.into(), k }
     }
+
+    pub fn kind(&self) -> ClimateType { self.kind }
+    pub fn avg_temperature(&self) -> Temperature { self.k }
 }

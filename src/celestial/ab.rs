@@ -3,6 +3,8 @@
 use dicebag::{DiceExt, IsOne};
 use serde::{Deserialize, Serialize};
 
+use crate::celestial::resources::ResourceValue;
+
 /// Asteroid belt regions.
 #[derive(Debug, Deserialize, Serialize, Clone, Copy)]
 pub enum ABRegion { Inner, Mid, Outer }
@@ -26,7 +28,7 @@ pub enum AsteroidBeltType {
     S (ABSubtype),
 } impl AsteroidBeltType {
     /// Generate random asteroid belt type.
-    pub fn random(region: ABRegion, albedo_hint: Option<f32>) -> Self {
+    fn random(region: ABRegion, albedo_hint: Option<f32>) -> Self {
         // Helper for S-kind
         fn ab_s(region: ABRegion) -> AsteroidBeltType {
             let roll = 1.d100();
@@ -70,5 +72,17 @@ pub enum AsteroidBeltType {
                 }
             }
         }
+    }
+}
+
+#[derive(Debug, Clone, Copy, Deserialize, Serialize)]
+pub struct AsteroidBelt {
+    kind: AsteroidBeltType,
+    resources: ResourceValue,
+} impl AsteroidBelt {
+    pub fn random(region: ABRegion, albedo_hint: Option<f32>) -> Self {
+        let kind = AsteroidBeltType::random(region, albedo_hint);
+        let resources = ResourceValue::random(None);
+        Self { kind, resources }
     }
 }

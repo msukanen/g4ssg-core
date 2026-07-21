@@ -13,6 +13,8 @@ const AU_M: f64 = 1.495978707e11;
 const ALPHA_0: f64 = 0.3;  // m < 0.08 M☉
 const ALPHA_1: f64 = 1.3;  // 0.08 M☉ <= m < 0.5 M☉
 const ALPHA_2: f64 = 2.3;  // m >= 0.5 M☉
+
+#[inline]
 fn calc_segment_area(min: f64, max: f64, alpha: f64) -> f64 {
     let eff_min = min.max(*CFG_STAR_DATA_MIN_MASS);
     let eff_max = max.min(*CFG_STAR_DATA_MAX_MASS);
@@ -22,6 +24,7 @@ fn calc_segment_area(min: f64, max: f64, alpha: f64) -> f64 {
     let p = 1.0 - alpha;
     (eff_max.powf(p) / p) - (eff_min.powf(p) / p)
 }
+
 lazy_static! {
     // Integrated probability densities for each segment...
     static ref KROUPA_C1: f64 = calc_segment_area(*CFG_STAR_DATA_MIN_MASS, 0.08, ALPHA_0);

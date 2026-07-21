@@ -1,13 +1,14 @@
 //! Hydrographic Cover — "hydrocover"
 //! 
 
+use astrometrics::MetricsInternalType;
 use dicebag::{DiceExt, InclusiveRandomRange, PercentageVariance};
 
 use crate::celestial::{Atmosphere, terrestrial::{SizeCategory, TerrestrialSubType}};
 
-pub struct Hydrocover;
-impl Hydrocover {
-    pub fn random(atm: Option<&Atmosphere>, sub: Option<TerrestrialSubType>, size: Option<SizeCategory>) -> Option<f64> {
+// pub struct Hydrocover;
+// impl Hydrocover {
+    pub fn random_hydrocover(atm: Option<&Atmosphere>, sub: Option<TerrestrialSubType>, size: Option<SizeCategory>) -> Option<MetricsInternalType> {
         use TerrestrialSubType as T;
         use SizeCategory as C;
         _ = atm?;
@@ -32,4 +33,8 @@ impl Hydrocover {
             _ => None
         }
     }
+// }
+
+pub trait Hydrocover {
+    fn has_water(&self) -> bool;
 }

@@ -8,7 +8,7 @@ use serde::{Deserialize, Serialize};
 
 #[cfg(test)]
 use crate::UNNAMED;
-use crate::{celestial::{GasGiantArrangement, ab::{ABRegion, AsteroidBeltType}, gas_giant::*, orbital::{RawOrbitContent, OrbitContent, random_orbital_spacing_ratio}, terrestrial::Terrestrial}, evo::{CFG_STAR_DATA_MIN_MASS, Luminosity, StellarData, StellarDataChoice}, math::LogInterpolator, unit::{Zone, age::{AgeSpan, StellarPopulation}, metrics::kroupa_imf_icdf}};
+use crate::{celestial::{GasGiantArrangement, ab::{ABRegion, AsteroidBelt}, gas_giant::*, orbital::{OrbitContent, RawOrbitContent, random_orbital_spacing_ratio}, terrestrial::Terrestrial}, evo::{CFG_STAR_DATA_MIN_MASS, Luminosity, StellarData, StellarDataChoice}, math::LogInterpolator, unit::{Zone, age::{AgeSpan, StellarPopulation}, metrics::kroupa_imf_icdf}};
 
 /// Giant star size categories from the smallest to the largest.
 #[derive(Debug, Deserialize, Serialize, Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
@@ -121,6 +121,7 @@ pub struct Star {
     solid_zone: Zone,
     snow_line: SpatialUnit,
     forbidden_zone: Zone,
+    orbits: Vec<(SpatialUnit, OrbitContent)>,
 }
 
 pub enum WhatCanNextStarBe {
@@ -136,7 +137,9 @@ pub enum WhatCanNextStarBe {
 pub struct StarGenCtx {
     smallest_mass: f64,
 } impl Default for StarGenCtx {
+    /// Generate a suitable default for [StarGenCtx].
     fn default() -> Self {
+        // by default "infinite" is the one and only "larger" value for smallest mass.
         Self { smallest_mass: f64::MAX }
     }
 }
@@ -147,13 +150,16 @@ const C: f64 = 2.9979258e8;
 const TWO_G_OVER_C2: f64 = 2.0 * G / (C*C);
 
 impl Star {
-    /// Generate a star in random.
+    /// Generate a star in random (to some degree).
     /// 
     /// # Args
-    /// * `name`— obvious…
-    /// * `age`— host [star system's][StarSystem] age/population.
-    /// * `fz`— forbidden zone.
-    /// * `limits`— upper limits for the generated star.
+    /// - `name`— obvious…
+    /// - `age`— host [star system's][StarSystem] age/population.
+    /// - `fz`— forbidden zone.
+    /// - `limits`— upper limits for the generated star.
+    /// 
+    /// The [Star] may or may not alter `limits`.
+    /// 
     pub fn random(name: &str, age: &StellarPopulation, fz: &Zone, limits: &mut StarGenCtx) -> Self {
         // Initial (probabilistic random) mass (refined later by current life stage).
         let mass = loop {
@@ -320,15 +326,16 @@ impl Star {
         // Walk the walk, the orbit walk…
         //
         let gga = GasGiantArrangement::random();
-        let (fst, fst_is_gg) = if let Some(gga) = &gga {
-            (gga.random_distance(&snow_line, &solid_zone), true)
-        } else {
-            (solid_zone.outer() / (0.05 * 1.d6() as f64 + 1.0), false)
-        };
-        let mut raw_orbits = VecDeque::new();
+        let (fst, fst_is_gg) =
+            if let Some(gga) = &gga {
+                (gga.random_distance(&snow_line, &solid_zone), true)
+            } else {
+                (solid_zone.outer() / (0.05 * 1.d6() as f64 + 1.0), false)
+            };
+        let mut raw_orbits: VecDeque<((SpatialUnit, ABRegion), Option<RawOrbitContent>)> = VecDeque::new();
         // …walking inwards…
         let mut curr_orbit = fst;
-        raw_orbits.push_back(((curr_orbit, ABRegion::Mid), if fst_is_gg {Some(RawOrbitContent::GG)} else {None}));
+        raw_orbits.push_back(((curr_orbit, ABRegion::Mid), if fst_is_gg {Some(RawOrbitContent::GG(gga))} else {None}));
         loop {
             curr_orbit /= random_orbital_spacing_ratio();
             if curr_orbit < *solid_zone.inner() || fz.contains(&curr_orbit) {
@@ -351,7 +358,8 @@ impl Star {
             for o in raw_orbits.iter_mut() {
                 match o {
                     ((distance,_), None) => if orbit_can_contain_gg(&gga, distance, &snow_line) {
-                        o.1 = Some(RawOrbitContent::GG);
+                        // mark the 1st GG with GGA; the others get None.
+                        o.1 = Some(RawOrbitContent::GG(if fst == *distance { gga } else { None }));
                     }
                     _ => (/* ignore, already occupied */)
                 }
@@ -360,29 +368,35 @@ impl Star {
 
         // …and after that dust settles, lets see about the rest…
         for oidx in 0..raw_orbits.len() {
-            let prev_is_gg = oidx > 0 && matches!(raw_orbits[oidx-1].1, Some(RawOrbitContent::GG));
-            let next_is_gg = oidx + 1 < raw_orbits.len() && matches!(raw_orbits[oidx+1].1, Some(RawOrbitContent::GG));
-            let ((distance,_), stuff) = &mut raw_orbits[oidx];
+            let prev_is_gg = oidx > 0 && matches!(raw_orbits[oidx-1].1, Some(RawOrbitContent::GG(_)));
+            let next_is_gg = oidx + 1 < raw_orbits.len() && matches!(raw_orbits[oidx+1].1, Some(RawOrbitContent::GG(_)));
+            let ((distance,_), maybe_content) = &mut raw_orbits[oidx];
 
-            if stuff.is_none() {
-                *stuff = RawOrbitContent::random(prev_is_gg, next_is_gg, distance, fz, &solid_zone).into();
+            if maybe_content.is_none() {
+                *maybe_content = RawOrbitContent::random(prev_is_gg, next_is_gg, distance, fz, &solid_zone).into();
             }
         }
 
         // Now that we know what sort of stuff goes where… lets put them there.
         let mut orbits = vec![];
-        raw_orbits.iter_mut().for_each(|((distance, region), content)|{
+        raw_orbits.iter().enumerate().for_each(|(idx, ((distance, region), content))|{
             use RawOrbitContent as R;
             use OrbitContent as O;
-            orbits.push(match content {
-                None |
-                Some(R::Empty) => None,
-                Some(R::AB) => (*distance, O::AB(AsteroidBeltType::random(*region, None))).into(),
-                Some(R::GG) => (*distance, O::GG(GasGiant::random())).into(),
-                Some(R::KB) => (*distance, O::KB).into(),
-                Some(R::Oort) => (*distance, O::Oort).into(),
-                Some(R::T(sz)) => (*distance, O::T(Terrestrial::random_sized(*sz))).into(),
-            });
+            match content {
+                Some(R::AB) => orbits.push((*distance, O::AB(AsteroidBelt::random(*region, None)))),
+                Some(R::GG(arr)) => orbits.push((*distance, O::GG(
+                        GasGiant::random(
+                            *distance,
+                            *&mass,
+                            *arr,
+                            None,
+                            *distance < snow_line || (idx > 0 && raw_orbits[idx-1].0.0 < snow_line)
+                        )))),
+                Some(R::KB) => orbits.push((*distance, O::KB)),
+                Some(R::Oort) => orbits.push((*distance, O::Oort)),
+                Some(R::T(sz)) => orbits.push((*distance, O::T(Terrestrial::random_sized(*distance, *&mass, *sz)))),
+                _ => ()
+            };
         });
         
         // "That's all folks!", with Looney Tunes…
@@ -396,6 +410,7 @@ impl Star {
             rad,
             solid_zone, snow_line,
             forbidden_zone: fz.clone(),
+            orbits
         }
     }
     /// Some dubstep light curving is a-ok, right?
@@ -421,6 +436,25 @@ impl Star {
 
     pub fn stage(&self) -> StarLifeStage { self.stage }
     pub fn mass(&self) -> Mass { self.mass }
+
+    // Count terrestrials…
+    pub fn num_terrestrials(&self) -> usize {
+        let mut c = 0;
+        for (_, o) in &self.orbits {
+            if matches!(*o, OrbitContent::T(_)) {
+                c += 1;
+            }
+        }
+        c
+    }
+
+    /// Get the orbital content.
+    /// 
+    /// Content isn't in any particular guaranteed order — filter as needed.
+    /// 
+    pub fn orbits(&self) -> &Vec<(SpatialUnit, OrbitContent)> {
+        &self.orbits
+    }
 }
 
 #[cfg(test)]
