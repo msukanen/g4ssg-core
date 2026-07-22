@@ -24,6 +24,7 @@ astrometrics = "0.1.12-b"
 mshc = { version = "0.1.4", features = ["derive"]}
 either = "1.16.0"
 rayon = "1.12.0"
+bitflags = { version = "2.13.1", features = ["serde"]}
 
 [features]
 default = []
