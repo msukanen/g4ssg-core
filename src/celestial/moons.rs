@@ -1,5 +1,5 @@
 //! Moons and moonlets.
-use astrometrics::{AsSpatialUnit, SpatialUnit};
+use astrometrics::{AsCelestialRadii, AsMass, AsSpatialUnit, Cubed, DefoAble, SpatialUnit};
 use dicebag::{DiceExt, InclusiveRandomRange};
 use serde::{Deserialize, Serialize};
 
@@ -169,6 +169,44 @@ impl Moons {
         }
         
         Self { moonlets: None, major: None, fringe: None }
+    }
+
+    /// Calculate the tidal force the moons generate in total.
+    /// 
+    /// # Args
+    /// - `parent_radius`
+    /// 
+    /// # Returns
+    /// Tidal force on the planet, in terms of the tidal force exerted by Earth's Moon upon Earth.
+    /// 
+    pub fn tidal_force(&self, parent_radius: SpatialUnit) -> f64 {
+        let mut tft = 0.0;
+
+        // moonlets and fringe debris are too small to exert any *noticeable* tidal force.
+        if let Some(major) = &self.major {
+            use SizeCategory as C;
+            for (s, d) in major {
+                // we use mean averages
+                let k = match s {
+                    C::AsteroidCluster => 0.45,
+                    C::Tiny  |
+                    C::Small => 0.75,
+                    _        => 0.95,
+                };
+                let sd = match s {
+                    C::AsteroidCluster => (0.97_f32 / k).sqrt() * 0.002,
+                    C::Tiny => (0.97_f32 / k).sqrt() * 0.014,
+                    C::Small => (0.96_f32 / k).sqrt() * 0.027,
+                    C::Medium => (0.95_f32 / k).sqrt() * 0.0475,
+                    C::Large => (0.95_f32 / k).sqrt() * 0.078,
+                };
+                let m = k * sd * sd * sd;
+                let t = (17_800_000.0 * m as f64 * parent_radius.re()).raw() / d.cubed().raw();
+                tft += t;
+            }
+        }
+
+        tft
     }
 }
 

@@ -5,7 +5,7 @@ use dicebag::{DiceExt, FixedNumberVariance};
 use mshc::Named;
 use serde::{Deserialize, Serialize};
 
-use crate::{UNNAMED, celestial::{SizeCategory, moons::{Moons, RingSystemDetails}, orbital::OrbitEccentricity}, math::massdensity_to_radius, unit::Zone};
+use crate::{UNNAMED, celestial::{SizeCategory, axial::random_axial_tilt, moons::{Moons, RingSystemDetails}, orbital::OrbitEccentricity, rotation::random_rotation_period, star::Star}, math::massdensity_to_radius, unit::Zone};
 
 /// An enum used in determining gas giant arrangement of any given star's local system.
 #[derive(Debug, Clone, Copy)]
@@ -80,6 +80,9 @@ pub struct GasGiant {
     g: MetricsInternalType,
     orbital_period: MetricsInternalType,
     ecc: OrbitEccentricity,
+    tidal_braking: f64,
+    rotation_period: f64,
+    axial_tilt: f64,
 }
 
 impl GasGiant {
@@ -112,7 +115,7 @@ impl GasGiant {
                 let idx = match r {
                     ..=8 => 0,
                     9|10 => 1,
-                    x   => (x - 9) as usize
+                    x   => (x - 11) as usize
                 };
                 let base = 100.0 + (50.0 * idx as f64);
                 let mass = base.jitter_within(25.0);
@@ -123,7 +126,7 @@ impl GasGiant {
                 let (base, jitter, idx) = match r {
                     ..=8 => (600.0, 100.0, 0),
                     9|10 => (800.0, 100.0, 1),
-                    x => ((1000.0 + (500.0 * (x-11) as f64)), 250.0, (x - 9) as usize)
+                    x => ((1000.0 + (500.0 * (x-11) as f64)), 250.0, (x - 11) as usize)
                 };
                 let mass = match r {
                     11 => base.jitter_within(jitter).max(900.0),
@@ -165,6 +168,10 @@ impl GasGiant {
         let g = (density * radius).raw();
         let orbital_period = (distance.au().cubed() / parent_mass.mo().raw()).raw().sqrt();
         let ecc = OrbitEccentricity::random_ecc(&distance, gg_arrangement, true, iasl);
+        let tidal_braking = Star::tidal_force_m(parent_mass, distance, radius);
+        let rotation_period = random_rotation_period(size, false, tidal_braking, orbital_period);
+        let axial_tilt = random_axial_tilt(tidal_braking);
+
 
         Self {
             name: UNNAMED.into(),
@@ -176,6 +183,9 @@ impl GasGiant {
             g,
             orbital_period,
             ecc,
+            tidal_braking,
+            rotation_period,
+            axial_tilt,
         }
     }
 }

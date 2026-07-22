@@ -1,7 +1,7 @@
 use core::f64;
 use std::{collections::VecDeque, ops::RangeInclusive};
 
-use astrometrics::{AsCelestialRadii, AsMass, AsSpatialUnit, DefoAble, Mass, SpatialUnit, Temperature};
+use astrometrics::{AsCelestialRadii, AsMass, AsSpatialUnit, Cubed, DefoAble, Mass, SpatialUnit, Temperature};
 use dicebag::*;
 use mshc::Named;
 use serde::{Deserialize, Serialize};
@@ -55,12 +55,34 @@ pub enum BrownDwarfType {
     }
 
     /// Get random luminosity by type.
-    pub fn random_lum(&self) -> f64 {
-        match self {
+    pub fn random_lum(&self, age: StellarPopulation) -> f64 {
+        let lum = match self {
             Self::M => (1e-3..=1e-1).random_of(),
             Self::L => (1e-4..=1e-3).random_of(),
             Self::T => (1e-5..=1e-4).random_of(),
             Self::Y => 1e-6,//…or less.
+        };
+        let age = age.gyr();
+        lum * match age {
+            _ if age <= 1.0 => 1.0,
+            _ if age <= 2.0 => 0.41,
+            _ if age <= 3.0 => 0.24,
+            _ if age <= 4.0 => 0.16,
+            _ if age <= 5.0 => 0.12,
+            _ if age <= 6.0 => 0.097,
+            _ if age <= 7.0 => 0.08,
+            _ if age <= 8.0 => 0.067,
+            _ if age <= 9.0 => 0.057,
+            _ if age <= 10.0 => 0.05,
+            _ if age <= 11.0 => 0.044,
+            _ if age <= 12.0 => 0.04,
+            _ if age <= 13.0 => 0.036,
+            _ if age <= 14.0 => 0.032,
+            _ => {
+                let lum = 0.03 / (1.0 + (age - 14.0).ln());
+                log::info!("BD luminosity multiplier for 14+ Gyr is … a bit of logarithmus at {lum}");
+                lum
+            }
         }
     }
 }
@@ -122,6 +144,7 @@ pub struct Star {
     snow_line: SpatialUnit,
     forbidden_zone: Zone,
     orbits: Vec<(SpatialUnit, OrbitContent)>,
+    flare_star: bool,
 }
 
 pub enum WhatCanNextStarBe {
@@ -147,7 +170,7 @@ pub struct StarGenCtx {
 const G: f64 = 6.67430e-11;
 const C: f64 = 2.9979258e8;
 // Schwarzschild rad: 2GM/c^2
-const TWO_G_OVER_C2: f64 = 2.0 * G / (C*C);
+const TWO_G_OVER_C2: f64 = 2.0 * G / (C*C);// or TG-C2 for Star Wars fans…
 
 impl Star {
     /// Generate a star in random (to some degree).
@@ -162,7 +185,7 @@ impl Star {
     /// 
     pub fn random(name: &str, age: &StellarPopulation, fz: &Zone, limits: &mut StarGenCtx) -> Self {
         // Initial (probabilistic random) mass (refined later by current life stage).
-        let mass = loop {
+        let (mass, is_bd) = loop {
             #[cfg(test)]// FYI: test treats `name` as a specific mass representation except when it's specifically [UNNAMED].
             let kr = |x:&str| if x == UNNAMED {kroupa_imf_icdf()} else {x.parse::<f64>().unwrap()};
             #[cfg(not(test))]// …but in production, `name` is irrelevant for real mass generation.
@@ -172,9 +195,21 @@ impl Star {
             const MIN_MASS_TOLERANCE: f64 = 0.0075;
             if mass <= limits.smallest_mass || (mass - *CFG_STAR_DATA_MIN_MASS).abs() < MIN_MASS_TOLERANCE {
                 limits.smallest_mass = mass;
-                break mass;
+                // randomize B candidate mass
+                if mass < 0.08 {
+                    break ((match 3.d6() {
+                        ..=8 => 0.015,
+                        9|10 => 0.02,
+                        11|12 => 0.03,
+                        13|14 => 0.04,
+                        15 => 0.05,
+                        16 => 0.06,
+                        _  => 0.07
+                    } as f64).jitter_within(0.00333).mo(), true)
+                }
+                break (mass.mo(), false);
             }
-        }.mo();
+        };
 
         // Initial MS surface [Temperature], [Luminosity] and stable/main [AgeSpan].
         let (k, orig_lum, span) = match StellarData::get(mass.into()) {
@@ -258,6 +293,11 @@ impl Star {
             _ => (mass, mass)
         };
 
+        let flare_star = match &stage {
+            StarLifeStage::M => orig_mass < 0.6.mo() && 3.d6() > 11,
+            _ => false
+        };
+
         // Surface K by current stage.
         let k: Temperature = match &stage {
                 StarLifeStage::M => k.jitter_within(100.0).into(),
@@ -281,7 +321,7 @@ impl Star {
 
         // Current luminosity.
         let lum = match &stage {
-            StarLifeStage::B(x) => x.random_lum(),
+            StarLifeStage::B(x) => x.random_lum(*age),
             StarLifeStage::D |
             StarLifeStage::M => match orig_lum {
                 Luminosity::LMinOnly(m) => m,
@@ -305,10 +345,10 @@ impl Star {
                 StarLifeStage::X |
                 StarLifeStage::SMBH => (TWO_G_OVER_C2 * mass).raw().ro(),
                 StarLifeStage::M => (155_000.0 * lum.sqrt() / k.sq().as_f64()).ro(),
-                _ => SpatialUnit::RO({
-                    const T_SUN: f64 = 5772.0;
-                    ((lum / (k.as_f64() / T_SUN)).powi(4)).sqrt()
-                    })
+                _ => {
+                        const T_SUN: f64 = 5772.0;
+                        ((lum / (k.as_f64() / T_SUN)).powi(4)).sqrt()
+                    }.ro()
             }
         };
 
@@ -394,7 +434,7 @@ impl Star {
                         )))),
                 Some(R::KB) => orbits.push((*distance, O::KB)),
                 Some(R::Oort) => orbits.push((*distance, O::Oort)),
-                Some(R::T(sz)) => orbits.push((*distance, O::T(Terrestrial::random_sized(*distance, *&mass, *sz)))),
+                Some(R::T(sz)) => orbits.push((*distance, O::T(Terrestrial::random_sized(*age, *distance, *&mass, *sz)))),
                 _ => ()
             };
         });
@@ -410,7 +450,8 @@ impl Star {
             rad,
             solid_zone, snow_line,
             forbidden_zone: fz.clone(),
-            orbits
+            orbits,
+            flare_star,
         }
     }
     /// Some dubstep light curving is a-ok, right?
@@ -455,11 +496,30 @@ impl Star {
     pub fn orbits(&self) -> &Vec<(SpatialUnit, OrbitContent)> {
         &self.orbits
     }
+
+    /// Calculate the [Star]'s tidal force vs any given planet at any given distance.
+    #[inline]
+    pub fn tidal_force(&self, distance: SpatialUnit, p_radius: SpatialUnit ) -> f64 {
+        Self::tidal_force_m(self.mass, distance, p_radius)
+    }
+
+    /// Calculate a (presumed) [Star]'s tidal force vs any given planet at any given distance.
+    #[inline]
+    pub fn tidal_force_m(mass: Mass, distance: SpatialUnit, p_radius: SpatialUnit ) -> f64 {
+        // someone will eventually mistakenly use/forget to convert some e.g. M♃ mass…
+        debug_assert!(matches!(mass, Mass::MO(_)), "Using tidal_force_m() with other but M☉ mass is not really optimal… You sure you're dealing with a star?");
+
+        (0.46 * mass.mo().raw() * p_radius.re().raw()) / distance.au().cubed().raw()
+    }
+
+    pub fn net_tidal_effect(&self, distance: SpatialUnit, p_radius: SpatialUnit, p_mass: Mass) -> f64 {
+        self.pop.gyr() * self.tidal_force(distance, p_radius) / p_mass.me().raw()
+    }
 }
 
 #[cfg(test)]
 mod star_tests {
-    #[test]
+    #[test]// we need to do this test locally as we need exact mass values (we use star's "name" for that) instead of `kroupa_imf_icdf()`-generated.
     fn edge_case_and_boundary_values() {
         use crate::{celestial::star::{Star, StarGenCtx, StarLifeStage}, unit::{Zone, age::StellarPopulation}};
         const AGE_8KYR: StellarPopulation = StellarPopulation::I2(8.0 / 1_000_000.0);

@@ -3,7 +3,7 @@
 
 use std::cmp::Ordering;
 
-use astrometrics::{AsSpatialUnit, SpatialUnit};
+use astrometrics::{AsCelestialRadii, AsMass, AsSpatialUnit, Cubed, DefoAble, Mass, SpatialUnit};
 use dicebag::{DiceExt, InclusiveRandomRange, PercentageVariance};
 use serde::{Deserialize, Serialize};
 
@@ -256,4 +256,31 @@ pub enum OrbitContent {
     GG (GasGiant),
     KB,// Kuiper belt
     Oort,// Oort cloud
+}
+
+/// Determine orbital period.
+/// 
+/// # Args
+/// - `avg_orbital_radius`
+/// - `parent_mass`
+/// 
+/// # Returns
+/// Orbital period in "Earth years".
+/// 
+pub fn determine_orbital_period(avg_orbital_radius: SpatialUnit, parent_mass: Mass) -> f64 {
+    (avg_orbital_radius.au().cubed().raw() / parent_mass.mo().raw()).sqrt()
+}
+
+/// Determine planetary satellite's orbital period.
+/// 
+/// # Args
+/// - `avg_orbital_radius`
+/// - `parent_mass`
+/// 
+/// # Returns
+/// Orbital period in "Earth days".
+/// 
+pub fn determine_satellite_orbital_period(avg_orbital_radius: SpatialUnit, parent_mass: Mass, satellite_mass: Option<Mass>) -> f64 {
+    let total_mass = parent_mass.me() + satellite_mass.unwrap_or_else(|| 0.0.me());
+    0.0588 * (avg_orbital_radius.re().cubed().raw() / total_mass.raw()).sqrt()
 }

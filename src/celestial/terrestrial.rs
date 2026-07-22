@@ -6,11 +6,12 @@ use either::Either;
 use mshc::Named;
 use serde::{Deserialize, Serialize};
 
-use crate::{UNNAMED, celestial::{Atmosphere, SizeCategory, ab::{ABRegion, AsteroidBelt}, blackbody::determine_blackbody_k, moons::{Moons, RingSystemDetails}, orbital::{OrbitContent, OrbitEccentricity}, terrestrial::hydrocover::{Hydrocover, random_hydrocover}}};
+use crate::{UNNAMED, celestial::{Atmosphere, SizeCategory, ab::{ABRegion, AsteroidBelt}, axial::random_axial_tilt, blackbody::determine_blackbody_k, moons::{Moons, RingSystemDetails}, orbital::{OrbitContent, OrbitEccentricity}, rotation::random_rotation_period, star::Star, terrestrial::{geologix::{TectonicActivity, VolcanicActivity}, hydrocover::{Hydrocover, random_hydrocover}}}, unit::age::StellarPopulation};
 
 pub mod climate; use climate::*;
 pub mod d_n_g; use d_n_g::*;
 pub mod density; use density::*;
+pub mod geologix;
 pub mod hydrocover;
 
 #[derive(Debug, Clone, Copy, Deserialize, Serialize, PartialEq, Eq)]
@@ -58,11 +59,16 @@ pub struct Terrestrial {
     moons: Moons,
     orbital_period: MetricsInternalType,
     ecc: OrbitEccentricity,
+    tidal_braking: f64,
+    rotation_period: f64,
+    axial_tilt: f64,
+    volcanism: Option<VolcanicActivity>,
+    tectonics: Option<TectonicActivity>,
 }
 
 impl Terrestrial {
     /// Generate a random terrestrial planet(oid)… or an asteroid belt if things so judge.
-    pub fn random(distance: SpatialUnit, parent_mass: Mass) -> Either<Self, OrbitContent> {
+    pub fn random(distance: SpatialUnit, parent_mass: Mass, age: StellarPopulation) -> Either<Self, OrbitContent> {
         use TerrestrialOverallType as O;
         use TerrestrialSubType as S;
         use SizeCategory::*;
@@ -91,10 +97,11 @@ impl Terrestrial {
             _ => (S::Garden, Large)
         };
 
-        Either::Left(Self::random_oss(distance, parent_mass, overall, sub, size))
+        Either::Left(Self::random_oss(age, distance, parent_mass, overall, sub, size))
     }
 
     pub fn random_sized(
+        age: StellarPopulation,
         distance: SpatialUnit,
         parent_mass: Mass,
         size: SizeCategory
@@ -142,10 +149,11 @@ impl Terrestrial {
             (_,     O::Garden,  C::Large)  => S::Garden,            
         };
 
-        Self::random_oss(distance, parent_mass, overall, sub, size)
+        Self::random_oss(age, distance, parent_mass, overall, sub, size)
     }
 
     fn random_oss(
+        age: StellarPopulation,
         distance: SpatialUnit,
         parent_mass: Mass,
         overall: TerrestrialOverallType,
@@ -172,6 +180,11 @@ impl Terrestrial {
         }
         let moons = Moons::random(false, size, radius, distance);
         let orbital_period = (distance.au().cubed() / parent_mass.mo().raw()).raw().sqrt();
+        let tidal_braking = Star::tidal_force_m(parent_mass, distance, radius) + moons.tidal_force(radius);
+        let rotation_period = random_rotation_period(size, false, tidal_braking, orbital_period);
+        let axial_tilt = random_axial_tilt(tidal_braking);
+        let volcanism = VolcanicActivity::random(age, size, sub.into(), g, Some(&moons), false);
+        let tectonics = TectonicActivity::random(volcanism, size, sub.into(), Some(&moons), hydrocover);
 
         Self {
             name: UNNAMED.into(),
@@ -189,6 +202,11 @@ impl Terrestrial {
             moons,
             orbital_period,
             ecc: OrbitEccentricity::random_ecc(&distance, None, false, false),
+            rotation_period,
+            tidal_braking,
+            axial_tilt,
+            volcanism,
+            tectonics,
         }
     }
 }
