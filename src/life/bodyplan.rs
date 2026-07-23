@@ -4,7 +4,7 @@ use astrometrics::MetricsInternalType;
 use dicebag::DiceExt;
 use serde::{Deserialize, Serialize};
 
-use crate::life::{habitat::{Habitat, WaterHabitat}, locomotion::Locomotion, size::Size, trophics::TrophicLevel};
+use crate::life::{habitat::{Habitat, LandHabitat, WaterHabitat}, locomotion::Locomotion, size::Size, trophics::TrophicLevel};
 
 #[derive(Debug, Clone, Deserialize, Serialize)]
 pub struct BodyPlan {
@@ -14,6 +14,7 @@ pub struct BodyPlan {
     /// if `None` then all existing limbs are just locomotive/striker
     pub manipulators: Option<Manipulators>,
     pub skeleton: Option<Skeleton>,
+    pub skin: Skin,
 } impl BodyPlan {
     pub fn random(
         gg: bool,
@@ -28,7 +29,8 @@ pub struct BodyPlan {
         let tail = Tail::random(locomotion, symmetry);
         let manipulators = Manipulators::random(gg, habitat, trophics, locomotion, symmetry, limbs);
         let skeleton = Skeleton::random(g, size, habitat, locomotion, symmetry);
-        Self { symmetry, limbs, tail, manipulators, skeleton }
+        let skin = Skin::random(trophics, habitat, locomotion, skeleton);
+        Self { symmetry, limbs, tail, manipulators, skeleton, skin }
     }
 }
 
@@ -136,18 +138,6 @@ pub enum Tail {
 
     DualPurpose { f1: Box<Self>, f2: Box<Self> },
 } impl Tail {
-    fn id(&self) -> u8 {
-        match self {
-            Self::Branching { .. } => 0,
-            Self::Constricting => 1,
-            Self::Featureless => 2,
-            Self::Gripping => 3,
-            Self::Long => 4,
-            Self::Striker { .. } => 5,
-            _ => u8::MAX
-        }
-    }
-
     pub(crate) fn random(locomotion: Locomotion, symmetry: Symmetry) -> Option<Self> {
         let modf = match symmetry {
             Symmetry::Spherical { .. } => return None,
@@ -308,6 +298,175 @@ pub enum Skeleton {
             6|7  => Self::External.into(),
             ..=10 => Self::Internal.into(),
             _     => Self::CombinationEI.into()
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, Deserialize, Serialize, PartialEq, Eq)]
+pub enum Skin {
+    Exoskeleton (ExoskeletonType),
+    Feathers (FeatherType),
+    Fur (FurType),
+    Skin (SkinType),
+    Scales (SkinScaleType),
+} impl Default for Skin {
+    #[inline]
+    fn default() -> Self { Self::Skin(SkinType::default()) }
+} impl Skin {
+    pub fn random(trophics: TrophicLevel, habitat: Habitat, locomotion: Locomotion, skeleton: Option<Skeleton>) -> Self {
+        match skeleton {
+            None => Self::Skin(SkinType::Blubber),
+            Some(x) if matches!(x, Skeleton::External | Skeleton::CombinationEI) => Self::Exoskeleton(ExoskeletonType::random(habitat, locomotion)),
+            _ => match 1.d6() {
+                ..=2 => Self::Skin(SkinType::random(trophics, habitat, locomotion)),
+                3    => Self::Scales(SkinScaleType::random(trophics, habitat, locomotion)),
+                4    => Self::Fur(FurType::random(trophics, habitat, locomotion)),
+                5    => Self::Feathers(FeatherType::random(habitat, locomotion)),
+                _    => Self::Exoskeleton(ExoskeletonType::random(habitat, locomotion))
+            }
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, Deserialize, Serialize, PartialEq, Eq, PartialOrd, Ord)]
+pub enum SkinType {
+    Soft,
+    Normal,
+    Hide { thick: bool },
+    Blubber,
+    ArmorShell,
+} impl Default for SkinType {
+    #[inline(always)] fn default() -> Self { Self::Normal }
+} impl SkinType {
+    fn random(trophics: TrophicLevel, habitat: Habitat, locomotion: Locomotion) -> Self {
+        let mut modf = match &habitat {
+            Habitat::Land(LandHabitat::Arctic) => 1,
+            Habitat::Land(LandHabitat::Desert) => -1,
+            Habitat::Water(_) => 1,
+            _ => 0
+        };
+        if trophics.contains(TrophicLevel::HERBIVORE) {
+            modf += 1;
+        }
+        if locomotion.intersects(Locomotion::WINGED_FLIGHT | Locomotion::BUOYANT_FLIGHT) {
+            modf -= 5;
+        }
+        match 2.d6() + modf {
+            ..=4 => Self::Soft,
+            5    => Self::Normal,
+            6|7  => Self::Hide { thick: false },
+            8    => Self::Hide { thick: true },
+            9    => Self::ArmorShell,
+            _    => Self::Blubber
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, Deserialize, Serialize, PartialEq, Eq, PartialOrd, Ord)]
+pub enum SkinScaleType {
+    Normal,
+    Tough { grade: u8 },
+    ArmorShell,
+} impl Default for SkinScaleType {
+    #[inline(always)] fn default() -> Self { Self::Normal }
+} impl SkinScaleType {
+    fn random(trophics: TrophicLevel, habitat: Habitat, locomotion: Locomotion) -> Self {
+        let mut modf = if matches!(habitat, Habitat::Land(LandHabitat::Desert)) {1} else {0};
+        if trophics.contains(TrophicLevel::HERBIVORE) {
+            modf += 1;
+        }
+        if locomotion.intersects(Locomotion::WINGED_FLIGHT | Locomotion::BUOYANT_FLIGHT) {
+            modf -= 2;
+        }
+        if locomotion.contains(Locomotion::DIGGING) {
+            modf -= 1;
+        }
+        match 2.d6() + modf {
+            ..=3 => Self::Normal,
+            ..=8 => Self::Tough { grade: 1 },
+            ..=10 => Self::Tough { grade: 3 },
+            _     => Self::ArmorShell,
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, Deserialize, Serialize, PartialEq, Eq, PartialOrd, Ord)]
+pub enum FurType {
+    Soft,
+    Coarse { grade: u8 },
+    Spines,
+} impl Default for FurType {
+    #[inline(always)] fn default() -> Self { Self::Coarse { grade: 1 } }
+} impl FurType {
+    fn random(trophics: TrophicLevel, habitat: Habitat, locomotion: Locomotion) -> Self {
+        let mut modf = match &habitat {
+            Habitat::Land(LandHabitat::Arctic) => 1,
+            Habitat::Land(LandHabitat::Desert) => -1,
+            _ => 0
+        };
+        if trophics.contains(TrophicLevel::HERBIVORE) {
+            modf += 1;
+        }
+        if locomotion.intersects(Locomotion::WINGED_FLIGHT | Locomotion::BUOYANT_FLIGHT) {
+            modf -= 1;
+        }
+        match 2.d6() + modf {
+            ..=5 => Self::Soft,
+            6|7  => Self::Coarse { grade: 1 },
+            8|9  => Self::Coarse { grade: 2 },
+            10|11 => Self::Coarse { grade: 3 },
+            _     => Self::Spines
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, Deserialize, Serialize, PartialEq, Eq, PartialOrd, Ord)]
+pub enum FeatherType {
+    Soft,
+    Warm,
+    Thick { grade: u8 },
+    Spines,
+} impl Default for FeatherType {
+    #[inline(always)] fn default() -> Self { Self::Warm }
+} impl FeatherType {
+    fn random(habitat: Habitat, locomotion: Locomotion) -> Self {
+        let mut modf = if locomotion.intersects(Locomotion::WINGED_FLIGHT | Locomotion::BUOYANT_FLIGHT) {1} else {0};
+        modf += match &habitat {
+            Habitat::Land(LandHabitat::Arctic) => 1,
+            Habitat::Land(LandHabitat::Desert) => -1,
+            _ => 0
+        };
+        match 2.d6() + modf {
+            ..=5 => Self::Soft,
+            ..=8 => Self::Warm,
+            9|10 => Self::Thick { grade: 1 },
+            11   => Self::Thick { grade: 2 },
+            _    => Self::Spines
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, Deserialize, Serialize, PartialEq, Eq, PartialOrd, Ord)]
+pub enum ExoskeletonType {
+    Light,
+    Tough,
+    Heavy,
+    ArmorShell,
+} impl Default for ExoskeletonType {
+    #[inline(always)] fn default() -> Self { Self::Tough }
+} impl ExoskeletonType {
+    fn random(habitat: Habitat, locomotion: Locomotion) -> Self {
+        let mut modf = if matches!(habitat, Habitat::Water(_)) {1} else {0};
+        if locomotion.is_empty() {
+            modf += 1;
+        } else if locomotion.intersects(Locomotion::WINGED_FLIGHT | Locomotion::BUOYANT_FLIGHT) {
+            modf -= 2;
+        }
+        match 1.d6() + modf {
+            ..=2 => Self::Light,
+            3|4  => Self::Tough,
+            5    => Self::Heavy,
+            _    => Self::ArmorShell
         }
     }
 }
