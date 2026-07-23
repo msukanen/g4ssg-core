@@ -72,4 +72,9 @@ pub struct Climate {
 
     pub fn kind(&self) -> ClimateType { self.kind }
     pub fn avg_temperature(&self) -> Temperature { self.k }
+
+    /// A haphazard guessimate about "space climate" ;)
+    pub fn space() -> Self {
+        Self { kind: ClimateType::Frozen, k: 140.k() }
+    }
 }

@@ -1,13 +1,13 @@
 //! Trophic level and strategy…
 
 use dicebag::{DiceExt, lo};
+use serde::{Deserialize, Serialize};
 
 use crate::{celestial::terrestrial::climate::Climate, life::habitat::{Habitat, LandHabitat, WaterHabitat}};
 
 bitflags::bitflags! {
-
+    #[derive(Debug, Clone, Copy, Deserialize, Serialize, PartialEq)]
     pub struct TrophicLevel: u32 {
-        
         const AUTOTROPH = 1 << 0;// usually combined with PHOTO-/CHEMOSYNTHETIC but not necessarily
         const PHOTOSYNTHETIC = 1 << 1;// always combined with AUTOTROPH
         const CHEMOSYNTHETIC = 1 << 2;// always combined with AUTOTROPH

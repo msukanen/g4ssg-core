@@ -15,6 +15,7 @@ pub enum LandHabitat {
     Jungle,
     Mountain,
     Plains,
+    PlanetaryInterior,
     Swampland,
     /// Whatever happens to go for a 'forest' on the planet…
     Woodlands,

@@ -24,7 +24,11 @@ pub enum ExoticBase {
             ..=6 => Self::NebulaDwelling,
             ..=15 => Self::Machine,
             ..=17 => Self::Magnetic,
-            _     => Self::Photonic
+            _     => match 1.d6() {
+                ..=4 => Self::Photonic,
+                5 => Self::Hyperstructural,
+                _ => Self::QuantumMorph
+            }
         }
     }
 }

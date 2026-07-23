@@ -1,7 +1,7 @@
 mod powerlaw;
 use std::f64::consts::PI;
 
-use astrometrics::{AsCelestialRadii, DefoAble, Mass, MetricsInternalType, SpatialUnit};
+use astrometrics::{AsCelestialRadii, AsMass, AsSpatialUnit, DefoAble, Mass, MetricsInternalType, SpatialUnit};
 pub use powerlaw::LogInterpolator;
 mod transform;
 pub use transform::inverse_transform_sample;
@@ -39,4 +39,24 @@ impl Cubert for MetricsInternalType {
 
 pub fn massdensity_to_radius(mass: Mass, density: f64) -> SpatialUnit {
     (3.0_f64 * mass / (4.0 * PI * density)).raw().cbrt().re()
+}
+
+pub trait ImperialSU {
+    fn yd2m(self) -> SpatialUnit;
+}
+
+pub trait ImperialM {
+    fn lbs2kg(self) -> Mass;
+}
+
+impl ImperialSU for f32 {
+    fn yd2m(self) -> SpatialUnit {
+        (self / 91.44).m()
+    }
+}
+
+impl ImperialM for f32 {
+    fn lbs2kg(self) -> Mass {
+        (self / 2.20462262).kg()
+    }
 }

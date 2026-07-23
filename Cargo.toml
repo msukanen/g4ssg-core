@@ -20,7 +20,7 @@ paste = "1.0.15"
 lazy_static = "1.5.0"
 serde_jsonc = "1.0.108"
 serde = { version = "1.0.228", features = ["derive"]}
-astrometrics = "0.1.12-b"
+astrometrics = "0.1.13"
 mshc = { version = "0.1.4", features = ["derive"]}
 either = "1.16.0"
 rayon = "1.12.0"
