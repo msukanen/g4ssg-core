@@ -175,7 +175,9 @@ pub enum ManipulatorType {
     BadGrip { num: u8 },
     Fine { num: u8 },
     Agile { num: u8 },
+    /// Bad-grip one(s) + fine one(s).
     BGF { bg: u8, fine: u8 },
+    /// Fine one(s) + agile one(s).
     FA { fine: u8, agile: u8 },
 }
 

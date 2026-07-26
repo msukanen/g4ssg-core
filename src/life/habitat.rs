@@ -1,5 +1,7 @@
 //! Life habitats.
 
+use std::fmt::Display;
+
 use dicebag::DiceExt;
 use serde::{Deserialize, Serialize};
 
@@ -32,6 +34,46 @@ pub enum LandHabitat {
             _  => Self::Jungle
         }
     }
+
+    pub fn iter() -> LandHabitatIter {
+        LandHabitatIter { idx: 0 }
+    }
+} pub struct LandHabitatIter {
+    idx: usize,
+} impl Iterator for LandHabitatIter {
+    type Item = LandHabitat;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        use LandHabitat::*;
+        let v = match self.idx {
+            0 => Arctic,
+            1 => Desert,
+            2 => IslandOrBeach,
+            3 => Jungle,
+            4 => Mountain,
+            5 => Plains,
+            6 => PlanetaryInterior,
+            7 => Swampland,
+            8 => Woodlands,
+            _ => return None
+        }.into();
+        self.idx += 1;
+        v
+    }
+} impl Display for LandHabitat {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", match self {
+            Self::Arctic => "arctic",
+            Self::Desert => "desert",
+            Self::IslandOrBeach => "island/beach",
+            Self::Jungle => "jungle",
+            Self::Mountain => "mountains",
+            Self::Plains => "plains",
+            Self::PlanetaryInterior => "planetary interior",
+            Self::Swampland => "swampland",
+            Self::Woodlands => "woodlands",
+        })
+    }
 }
 
 /// Water (or any fluid) based life habitat.
@@ -59,6 +101,43 @@ pub enum WaterHabitat {
             13 => Self::Sea,
             _  => Self::Reef
         }
+    }
+
+    pub fn iter() -> WaterHabitatIter {
+        WaterHabitatIter { idx: 0 }
+    }
+} pub struct WaterHabitatIter {
+    idx: usize,
+} impl Iterator for WaterHabitatIter {
+    type Item = WaterHabitat;
+    fn next(&mut self) -> Option<Self::Item> {
+        use WaterHabitat::*;
+        let v = match self.idx {
+            0 => Banks,
+            1 => DeepOceanVents,
+            2 => Lagoon,
+            3 => Lake,
+            4 => OpenOceanSurface,
+            5 => Reef,
+            6 => RiverOrStream,
+            7 => Sea,
+            _ => return None
+        }.into();
+        self.idx += 1;
+        v
+    }
+} impl Display for WaterHabitat {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", match self {
+            Self::Banks => "banks",
+            Self::DeepOceanVents => "deep ocean vents",
+            Self::Lagoon => "lagoons",
+            Self::Lake => "lakes",
+            Self::OpenOceanSurface => "open ocean surface",
+            Self::Reef => "reefs",
+            Self::RiverOrStream => "rivers or streams",
+            Self::Sea => "sea",
+        })
     }
 }
 
