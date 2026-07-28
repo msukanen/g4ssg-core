@@ -266,8 +266,6 @@ mod specialsense_tests {
     use crate::life::{bodyplan::{BodyPlan, Limbs, ManipulatorType, Manipulators, Skeleton, Skin, SkinType, Symmetry}, chemistry::ChemicalBasis, habitat::{Habitat, LandHabitat, WaterHabitat}, locomotion::Locomotion, senses::{hearing::Hearing, special::SpecialSense, vision::Vision}, size::Size, trophics::TrophicLevel};
     use super::SpecialSense as S;
 
-    const CASES: usize = 10_000;
-
     struct Specs {
         g: Option<MetricsInternalType>,
         cb: ChemicalBasis,

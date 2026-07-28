@@ -130,8 +130,8 @@ pub enum Size {
         modf += if locomotion.contains(L::WINGED_FLIGHT) {-3} else {0};
         
         let base_sz = SizeScale::random(modf);
-        let hl = base_sz.random_h();
-        let wt = Self::derive_wt(hl, g, cb, habitat, locomotion);
+        let mut hl = base_sz.random_h();
+        let wt = Self::derive_wt(&mut hl, g, cb, habitat, locomotion);
         match base_sz {
             SizeScale::S => Self::Small { hl, wt },
             SizeScale::H => Self::HumanScale { hl, wt },
@@ -140,7 +140,7 @@ pub enum Size {
     }
 
     pub(crate) fn derive_wt(
-        mut sz: SpatialUnit,
+        sz: &mut SpatialUnit,
         g: MetricsInternalType,
         cb: CB,
         habitat: H,
@@ -149,7 +149,7 @@ pub enum Size {
         // -- WEIGHT --
         let mut wt: Mass;
         if !matches!(habitat, H::Water(_)) && !locomotion.contains(L::BUOYANT_FLIGHT) {
-            sz = sz * match g {
+            *sz = *sz * match g {
                     _ if g >= 5.0 => 0.3,
                     _ if g >= 3.0 => 0.4,
                     _ if g >= 2.25 => 0.5,
@@ -176,9 +176,9 @@ pub enum Size {
             // silicon-based, the heavy weights
             CB::Silicon(_) => wt = wt * 2.0,
             // magnetics are itty-bitty tiny
-            CB::Exotic(ExoticBase::Magnetic) => sz = sz / 1_000.0,
+            CB::Exotic(ExoticBase::Magnetic) => *sz = *sz / 1_000.0,
             // plasma/hydrogen haven't much of density to speak of, but size…
-            CB::Plasma | CB::Hydrogen => { wt = wt / 10.0; sz = sz * 1_000.0 },
+            CB::Plasma | CB::Hydrogen => { wt = wt / 10.0; *sz = *sz * 1_000.0 },
             _ => ()
         }
         // space things are light; mass just gets in the way
@@ -191,8 +191,8 @@ pub enum Size {
 } impl Default for Size {
     /// We return something human-sized as default value.
     fn default() -> Self {
-        let hl = SizeScale::H.default_h();
-        let wt = Size::derive_wt(hl, 1.0, CB::Water, H::Land(LandHabitat::Plains), L::WALKING);
+        let mut hl = SizeScale::H.default_h();
+        let wt = Size::derive_wt(&mut hl, 1.0, CB::Water, H::Land(LandHabitat::Plains), L::WALKING);
         Self::HumanScale { hl, wt }
     }
 }

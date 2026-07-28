@@ -193,3 +193,36 @@ pub enum ReproductionStrategy {
         }
     }
 }
+
+#[derive(Debug, Clone, Copy, Deserialize, Serialize, PartialEq, Eq)]
+pub enum MatingBehavior {
+    MatingOnly,
+    Pair { temporary: bool },
+    Harem,
+    Hive,
+} impl MatingBehavior {
+    pub fn random(reproduction: &Reproduction) -> Self {
+        let mut modf = match reproduction.strategy {
+            ReproductionStrategy::K { strong: true, .. } => 1,
+            ReproductionStrategy::R { strong: true, .. } => -1,
+            _ => 0
+        };
+        modf += match reproduction.gestation {
+            Gestation::LiveBearing { .. } => 1,
+            Gestation::Spawning    |
+            Gestation::Pollination => -1,
+            _ => 0
+        };
+        modf += match reproduction.arrangement {
+            SexualArrangement::Hermaphrodite => -2,
+            _ => 0
+        };
+        match 2.d6() + modf {
+            ..=5 => Self::MatingOnly,
+            6|7  => Self::Pair { temporary: true },
+            8    => Self::Pair { temporary: false },
+            9|10 => Self::Harem,
+            _    => Self::Hive
+        }
+    }
+}
