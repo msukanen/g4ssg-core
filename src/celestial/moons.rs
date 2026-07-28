@@ -1,5 +1,5 @@
 //! Moons and moonlets.
-use astrometrics::{AsCelestialRadii, AsMass, AsSpatialUnit, Cubed, DefoAble, SpatialUnit};
+use astrometrics::{AsCelestialRadii, AsSpatialUnit, Cubed, DefoAble, SpatialUnit};
 use dicebag::{DiceExt, InclusiveRandomRange};
 use serde::{Deserialize, Serialize};
 

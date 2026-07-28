@@ -185,7 +185,7 @@ impl Star {
     /// 
     pub fn random(name: &str, age: &StellarPopulation, fz: &Zone, limits: &mut StarGenCtx) -> Self {
         // Initial (probabilistic random) mass (refined later by current life stage).
-        let (mass, is_bd) = loop {
+        let (mass, _is_bd) = loop {
             #[cfg(test)]// FYI: test treats `name` as a specific mass representation except when it's specifically [UNNAMED].
             let kr = |x:&str| if x == UNNAMED {kroupa_imf_icdf()} else {x.parse::<f64>().unwrap()};
             #[cfg(not(test))]// …but in production, `name` is irrelevant for real mass generation.

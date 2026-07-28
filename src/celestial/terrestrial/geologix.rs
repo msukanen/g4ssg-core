@@ -4,7 +4,7 @@ use astrometrics::MetricsInternalType;
 use dicebag::DiceExt;
 use serde::{Deserialize, Serialize};
 
-use crate::{celestial::{SizeCategory, moons::Moons, terrestrial::{TerrestrialSubType, hydrocover::Hydrocover}}, unit::age::StellarPopulation};
+use crate::{celestial::{SizeCategory, moons::Moons, terrestrial::TerrestrialSubType}, unit::age::StellarPopulation};
 
 /// Volcanic activity level.
 #[derive(Debug, Clone, Copy, Deserialize, Serialize, PartialEq, Eq, PartialOrd, Ord)]

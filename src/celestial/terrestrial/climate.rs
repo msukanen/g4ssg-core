@@ -43,7 +43,7 @@ pub struct Climate {
     kind: ClimateType,
     k: Temperature,
 } impl Climate {
-    pub fn random(sub: Option<TerrestrialSubType>, size: Option<SizeCategory>, ab_region: ABRegion) -> Self {
+    pub fn random(sub: Option<TerrestrialSubType>, size: Option<SizeCategory>, _ab_region: ABRegion) -> Self {
         use TerrestrialSubType as T;
         use SizeCategory as C;
         //TODO: region influence on local K
